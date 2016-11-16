@@ -12,7 +12,7 @@ namespace System.Yaml
     /// 
     /// <a href="http://www.faqs.org/rfcs/rfc4151.html">RFC4151 - The 'tag' URI Scheme</a>>
     /// </summary>
-    internal class YamlTagValidator: Parser<YamlTagValidator.Status>
+    internal class YamlTagValidator : Parser<YamlTagValidator.Status>
     {
         /// <summary>
         /// Not used in this parser
@@ -96,9 +96,9 @@ namespace System.Yaml
         }
         Func<char, bool> alphaNumCharset = Charset(c =>
                 c < 0x100 && (
-                    ( '0' <= c && c <= '9' ) ||
-                    ( 'A' <= c && c <= 'Z' ) ||
-                    ( 'a' <= c && c <= 'z' )
+                    ('0' <= c && c <= '9') ||
+                    ('A' <= c && c <= 'Z') ||
+                    ('a' <= c && c <= 'z')
                 )
             );
 
@@ -124,8 +124,8 @@ namespace System.Yaml
                 Accept(numCharset);
         }
         Func<char, bool> numCharset = Charset(c =>
-                c < 0x100 && 
-                ( '0' <= c && c <= '9' ) 
+                c < 0x100 &&
+                ('0' <= c && c <= '9')
             );
 
         private bool specific()
@@ -157,9 +157,9 @@ namespace System.Yaml
         }
         Func<char, bool> pcharCharsetSub = Charset(c =>
                 c < 0x100 && (
-                    ( '0' <= c && c <= '9' ) ||
-                    ( 'A' <= c && c <= 'Z' ) ||
-                    ( 'a' <= c && c <= 'z' ) ||
+                    ('0' <= c && c <= '9') ||
+                    ('A' <= c && c <= 'Z') ||
+                    ('a' <= c && c <= 'z') ||
                     "-._~!$&'()*+,;=:@".Contains(c)
                 )
             );
@@ -170,9 +170,9 @@ namespace System.Yaml
         }
         Func<char, bool> hexDigCharset = Charset(c =>
                 c < 0x100 && (
-                    ( '0' <= c && c <= '9' ) ||
-                    ( 'A' <= c && c <= 'F' ) ||
-                    ( 'a' <= c && c <= 'f' )
+                    ('0' <= c && c <= '9') ||
+                    ('A' <= c && c <= 'F') ||
+                    ('a' <= c && c <= 'f')
                 )
             );
 

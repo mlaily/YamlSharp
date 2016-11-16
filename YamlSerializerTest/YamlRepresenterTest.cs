@@ -13,11 +13,11 @@ using System.Globalization;
 namespace YamlSerializerTest
 {
     [TestFixture]
-    public class YamlRepresenterTest: YamlTestFixture
+    public class YamlRepresenterTest : YamlTestFixture
     {
 
         [Flags]
-        enum TestEnum: int { abc = 1, あいう = 2 };
+        enum TestEnum : int { abc = 1, あいう = 2 };
 
         [Test]
         public void TestTypeIsPrimitive()
@@ -45,7 +45,7 @@ namespace YamlSerializerTest
         public static string BuildResult(params string[] lines)
         {
             var result = "%YAML 1.2\r\n---\r\n";
-            foreach ( var line in lines )
+            foreach (var line in lines)
                 result += line + "\r\n";
             result += "...\r\n";
             return result;
@@ -176,13 +176,13 @@ namespace YamlSerializerTest
                 BuildResult("\"True\""),
                 YamlSerializer.Serialize("True"));
             Assert.AreEqual(
-                BuildResult(@"""\0\a\b"+"\t"+@"\v\f\e\""/\\\N\_\L\P"""),
+                BuildResult(@"""\0\a\b" + "\t" + @"\v\f\e\""/\\\N\_\L\P"""),
                 YamlSerializer.Serialize("\x00\x07\x08\x09\x0b\x0c\x1b\x22\x2f\x5c\x85\xa0\u2028\u2029"));
             Assert.AreEqual(
                 BuildResult("\"abc\\n\""),
                 YamlSerializer.Serialize("abc\n"));
             Assert.AreEqual(
-                BuildResult(@"""abc\n\",@"abc"""),
+                BuildResult(@"""abc\n\", @"abc"""),
                 YamlSerializer.Serialize("abc\nabc"));
         }
 
@@ -267,7 +267,7 @@ namespace YamlSerializerTest
                     "- \"-1\"",
                     "- \"-1.0E12\"",
                     "- \"True\"",
-                    @"- ""\0\a\b"+"\t"+@"\v\f\e\""/\\\N\_\L\P""",
+                    @"- ""\0\a\b" + "\t" + @"\v\f\e\""/\\\N\_\L\P""",
                     "- \"abc\\n\"",
                     @"- ""abc\n\",
                     @"  \ abc""",
@@ -282,7 +282,7 @@ namespace YamlSerializerTest
         [Test]
         public void TestArray2()
         {
-            var array1 = new short[] {1, 2, 3, 4};
+            var array1 = new short[] { 1, 2, 3, 4 };
             Assert.AreEqual(
                 BuildResult("!<!System.Int16[]> [1, 2, 3, 4]"),
                 YamlSerializer.Serialize(array1)
@@ -306,7 +306,7 @@ namespace YamlSerializerTest
                 YamlSerializer.Serialize(array3)
             );
 
-            var array4 = new short[2,2] { {1, 2}, {3, 4} };
+            var array4 = new short[2, 2] { { 1, 2 }, { 3, 4 } };
             Assert.AreEqual(
                 BuildResult("!<!System.Int16[,]> [[1, 2], [3, 4]]"),
                 YamlSerializer.Serialize(array4)
@@ -314,7 +314,7 @@ namespace YamlSerializerTest
 
             Assert.AreEqual(2, array4.Rank);
             Assert.AreEqual(8, sizeof(double));
-            var p= System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(array4, 0);
+            var p = System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(array4, 0);
             Assert.AreEqual(1, System.Runtime.InteropServices.Marshal.ReadInt16(p));
             p = System.Runtime.InteropServices.Marshal.UnsafeAddrOfPinnedArrayElement(array4, 1);
             Assert.AreEqual(2, System.Runtime.InteropServices.Marshal.ReadInt16(p));
@@ -338,10 +338,10 @@ namespace YamlSerializerTest
                     "  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ",
                     "  0, 0, 0, 0, 0, 0, 0, 0]"
                     ),
-                YamlSerializer.Serialize(new object[] { array8 }) 
+                YamlSerializer.Serialize(new object[] { array8 })
             );
 
-            array8[0]=1000;
+            array8[0] = 1000;
             Assert.AreEqual(
                 BuildResult(
                     "- !<!System.Int16[]> [1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ",
@@ -481,26 +481,26 @@ namespace YamlSerializerTest
 
             // Identical values in different numeric types can not be compared 
             // after being boxed.
-            Assert.IsTrue(( 0.0 ).Equals(0)); // double.Equals(double) converts int to double before comparison
+            Assert.IsTrue((0.0).Equals(0)); // double.Equals(double) converts int to double before comparison
             Assert.IsFalse(0.0.Equals((object)0));
-            Assert.IsFalse(( (object)0.0 ).Equals(0)); // !!
-            Assert.IsFalse(( (object)(float)0.0 ).Equals(0.0)); // !!
-            Assert.IsFalse( ( (object)0.0 ) == ((object)0)); // !!
+            Assert.IsFalse(((object)0.0).Equals(0)); // !!
+            Assert.IsFalse(((object)(float)0.0).Equals(0.0)); // !!
+            Assert.IsFalse(((object)0.0) == ((object)0)); // !!
             Assert.IsFalse(ValueType.Equals((object)0.0, (object)0)); // !!
             Assert.IsFalse(ValueType.Equals((object)0.0, (object)(float)0)); // !!
-            Assert.IsFalse(( (ValueType)0.0 ) == ( (ValueType)0 )); // !!
-            Assert.IsFalse(( (ValueType)0.0 ) == ( (ValueType)0 )); // !!
+            Assert.IsFalse(((ValueType)0.0) == ((ValueType)0)); // !!
+            Assert.IsFalse(((ValueType)0.0) == ((ValueType)0)); // !!
             Assert.IsFalse(Math.Equals((object)0, (object)0.0)); // !!!!
-            Assert.IsFalse(TypeDescriptor.Equals((object)0.0,(object)0));
-//            Assert.Throws<ArgumentException>(()=> 0.0.CompareTo( (object)0));
-//            Assert.Throws<InvalidCastException>(()=> ((double)(object)0).CompareTo((double)(object)(float)0.0));
+            Assert.IsFalse(TypeDescriptor.Equals((object)0.0, (object)0));
+            //            Assert.Throws<ArgumentException>(()=> 0.0.CompareTo( (object)0));
+            //            Assert.Throws<InvalidCastException>(()=> ((double)(object)0).CompareTo((double)(object)(float)0.0));
             Assert.IsTrue(0.0 == (double)(int)(object)0);
             Assert.IsTrue(0.0 == (double)(decimal)(object)(decimal)0);
             Assert.IsTrue(0 == (int)0.0);
             Assert.IsFalse(0 == (int)(double)(object)double.NaN); // !!
             object nan = double.NaN;
             object doubleNan = (double)nan;
-//            Assert.Throws<InvalidCastException>(() => 0.CompareTo((int)doubleNan)); // !!
+            //            Assert.Throws<InvalidCastException>(() => 0.CompareTo((int)doubleNan)); // !!
             Assert.IsFalse(double.NaN == double.NaN);
 
 
@@ -549,7 +549,7 @@ namespace YamlSerializerTest
 
             Assert.IsFalse(typeof(Test1).IsPrimitive);
             Assert.IsTrue(typeof(Test1).IsValueType);
-            Assert.IsFalse(typeof(Test1).IsPointer); 
+            Assert.IsFalse(typeof(Test1).IsPointer);
             Assert.IsTrue(typeof(Test1).IsSubclassOf(typeof(ValueType)));
             Assert.IsFalse(typeof(Test1).IsSerializable); // !
             Assert.IsFalse(typeof(Test1).IsClass);

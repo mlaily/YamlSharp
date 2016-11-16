@@ -34,7 +34,7 @@ namespace System.Yaml.Serialization
         /// <returns></returns>
         public static ObjectMemberAccessor FindFor(Type type)
         {
-            if ( !MemberAccessors.ContainsKey(type) )
+            if (!MemberAccessors.ContainsKey(type))
                 MemberAccessors[type] = new ObjectMemberAccessor(type);
             return MemberAccessors[type];
         }
@@ -45,30 +45,32 @@ namespace System.Yaml.Serialization
             if ( !TypeUtils.IsPublic(type) )
                 throw new ArgumentException(
                     "Can not serialize non-public type {0}.".DoFormat(type.FullName));
-            */ 
+            */
 
             // public properties
-            foreach ( var p in type.GetProperties(
-                    System.Reflection.BindingFlags.Instance | 
-                    System.Reflection.BindingFlags.Public | 
-                    System.Reflection.BindingFlags.GetProperty) ) {
+            foreach (var p in type.GetProperties(
+                    System.Reflection.BindingFlags.Instance |
+                    System.Reflection.BindingFlags.Public |
+                    System.Reflection.BindingFlags.GetProperty))
+            {
                 var prop = p; // create closures with this local variable
                 // not readable or parameters required to access the property
-                if ( !prop.CanRead || prop.GetGetMethod(false) == null || prop.GetIndexParameters().Count() != 0 )
+                if (!prop.CanRead || prop.GetGetMethod(false) == null || prop.GetIndexParameters().Count() != 0)
                     continue;
                 Func<object, object> get = obj => prop.GetValue(obj, EmptyObjectArray);
                 Action<object, object> set = null;
-                if ( prop.CanWrite && prop.GetSetMethod(false) != null )
+                if (prop.CanWrite && prop.GetSetMethod(false) != null)
                     set = (obj, value) => prop.SetValue(obj, value, EmptyObjectArray);
                 RegisterMember(type, prop, prop.PropertyType, get, set);
             }
 
             // public fields
-            foreach ( var f in type.GetFields(System.Reflection.BindingFlags.Instance |
+            foreach (var f in type.GetFields(System.Reflection.BindingFlags.Instance |
                     System.Reflection.BindingFlags.Public |
-                    System.Reflection.BindingFlags.GetField) ) {
+                    System.Reflection.BindingFlags.GetField))
+            {
                 var field = f;
-                if ( !field.IsPublic )
+                if (!field.IsPublic)
                     continue;
                 Func<object, object> get = obj => field.GetValue(obj);
                 Action<object, object> set = (obj, value) => field.SetValue(obj, value);
@@ -78,40 +80,46 @@ namespace System.Yaml.Serialization
             Type itype;
 
             // implements IDictionary
-            if ( type.GetInterface("System.Collections.IDictionary") != null ) {
+            if (type.GetInterface("System.Collections.IDictionary") != null)
+            {
                 IsDictionary = true;
-                IsReadOnly = obj => ( (System.Collections.IDictionary)obj ).IsReadOnly;
+                IsReadOnly = obj => ((System.Collections.IDictionary)obj).IsReadOnly;
                 // extract Key, Value types from IDictionary<??, ??>
                 itype = type.GetInterface("System.Collections.Generic.IDictionary`2");
-                if ( itype != null ) {
+                if (itype != null)
+                {
                     KeyType = itype.GetGenericArguments()[0];
                     ValueType = itype.GetGenericArguments()[1];
                 }
-            } else
+            }
+            else
                 // implements ICollection<T> 
-                if ( ( itype = type.GetInterface("System.Collections.Generic.ICollection`1") ) != null ) {
-                    ValueType = itype.GetGenericArguments()[0];
-                    var add = itype.GetMethod("Add", new Type[] { ValueType });
-                    CollectionAdd = (obj, value) => add.Invoke(obj, new object[] { value });
-                    var clear = itype.GetMethod("Clear", new Type[0]);
-                    CollectionClear = obj => clear.Invoke(obj, new object[0]);
-                    var isReadOnly = itype.GetProperty("IsReadOnly", new Type[0]).GetGetMethod();
-                    IsReadOnly = obj => (bool)isReadOnly.Invoke(obj, new object[0]);
-                } else
+                if ((itype = type.GetInterface("System.Collections.Generic.ICollection`1")) != null)
+            {
+                ValueType = itype.GetGenericArguments()[0];
+                var add = itype.GetMethod("Add", new Type[] { ValueType });
+                CollectionAdd = (obj, value) => add.Invoke(obj, new object[] { value });
+                var clear = itype.GetMethod("Clear", new Type[0]);
+                CollectionClear = obj => clear.Invoke(obj, new object[0]);
+                var isReadOnly = itype.GetProperty("IsReadOnly", new Type[0]).GetGetMethod();
+                IsReadOnly = obj => (bool)isReadOnly.Invoke(obj, new object[0]);
+            }
+            else
                     // implements IList 
-                    if ( ( itype = type.GetInterface("System.Collections.IList") ) != null ) {
-                        var add = itype.GetMethod("Add", new Type[] { typeof(object) });
-                        CollectionAdd = (obj, value) => add.Invoke(obj, new object[] { value });
-                        var clear = itype.GetMethod("Clear", new Type[0]);
-                        CollectionClear = obj => clear.Invoke(obj, new object[0]);
-                        /* IList<T> implements ICollection<T>
-                        // Extract Value Type from IList<T>
-                        itype = type.GetInterface("System.Collections.Generic.IList`1");
-                        if ( itype != null )
-                            ValueType = itype.GetGenericArguments()[0];     
-                         */
-                        IsReadOnly = obj => ((System.Collections.IList)obj).IsReadOnly;
-                    }
+                    if ((itype = type.GetInterface("System.Collections.IList")) != null)
+            {
+                var add = itype.GetMethod("Add", new Type[] { typeof(object) });
+                CollectionAdd = (obj, value) => add.Invoke(obj, new object[] { value });
+                var clear = itype.GetMethod("Clear", new Type[0]);
+                CollectionClear = obj => clear.Invoke(obj, new object[0]);
+                /* IList<T> implements ICollection<T>
+                // Extract Value Type from IList<T>
+                itype = type.GetInterface("System.Collections.Generic.IList`1");
+                if ( itype != null )
+                    ValueType = itype.GetGenericArguments()[0];     
+                 */
+                IsReadOnly = obj => ((System.Collections.IList)obj).IsReadOnly;
+            }
         }
 
         private void RegisterMember(Type type, System.Reflection.MemberInfo m, Type mType, Func<object, object> get, Action<object, object> set)
@@ -123,30 +131,36 @@ namespace System.Yaml.Serialization
             accessor.Get = get;
             accessor.Set = set;
 
-            if(set!=null){ // writeable ?
+            if (set != null)
+            { // writeable ?
                 accessor.SerializeMethod = YamlSerializeMethod.Assign;
-            } else {
+            }
+            else
+            {
                 accessor.SerializeMethod = YamlSerializeMethod.Never;
-                if ( mType.IsClass )
+                if (mType.IsClass)
                     accessor.SerializeMethod = YamlSerializeMethod.Content;
             }
             var attr1 = m.GetAttribute<YamlSerializeAttribute>();
-            if ( attr1 != null ) { // specified
-                if ( set == null ) { // read only member
-                    if ( attr1.SerializeMethod == YamlSerializeMethod.Assign ||
-                         ( mType.IsValueType && accessor.SerializeMethod == YamlSerializeMethod.Content ) )
+            if (attr1 != null)
+            { // specified
+                if (set == null)
+                { // read only member
+                    if (attr1.SerializeMethod == YamlSerializeMethod.Assign ||
+                         (mType.IsValueType && accessor.SerializeMethod == YamlSerializeMethod.Content))
                         throw new ArgumentException("{0} {1} is not writeable by {2}."
                             .DoFormat(mType.FullName, m.Name, attr1.SerializeMethod.ToString()));
                 }
                 accessor.SerializeMethod = attr1.SerializeMethod;
             }
-            if ( accessor.SerializeMethod == YamlSerializeMethod.Never )
+            if (accessor.SerializeMethod == YamlSerializeMethod.Never)
                 return; // no need to register
-            if ( accessor.SerializeMethod == YamlSerializeMethod.Binary ) {
-                if ( !mType.IsArray )
+            if (accessor.SerializeMethod == YamlSerializeMethod.Binary)
+            {
+                if (!mType.IsArray)
                     throw new InvalidOperationException("{0} {1} of {2} is not an array. Can not be serialized as binary."
                         .DoFormat(mType.FullName, m.Name, type.FullName));
-                if ( !TypeUtils.IsPureValueType(mType.GetElementType()) )
+                if (!TypeUtils.IsPureValueType(mType.GetElementType()))
                     throw new InvalidOperationException(
                         "{0} is not a pure ValueType. {1} {2} of {3} can not serialize as binary."
                         .DoFormat(mType.GetElementType(), mType.FullName, m.Name, type.FullName));
@@ -160,16 +174,17 @@ namespace System.Yaml.Serialization
             var shouldSerialize = type.GetMethod("ShouldSerialize" + m.Name,
                 System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic,
                 null, Type.EmptyTypes, new System.Reflection.ParameterModifier[0]);
-            if ( shouldSerialize != null && shouldSerialize.ReturnType == typeof(bool) && accessor.ShouldSeriealize == null )
+            if (shouldSerialize != null && shouldSerialize.ReturnType == typeof(bool) && accessor.ShouldSeriealize == null)
                 accessor.ShouldSeriealize = obj => (bool)shouldSerialize.Invoke(obj, EmptyObjectArray);
             var attr2 = m.GetAttribute<DefaultValueAttribute>();
-            if ( attr2 != null && accessor.ShouldSeriealize == null ) {
+            if (attr2 != null && accessor.ShouldSeriealize == null)
+            {
                 var defaultValue = attr2.Value;
-                if ( TypeUtils.IsNumeric(defaultValue) && defaultValue.GetType() != mType )
+                if (TypeUtils.IsNumeric(defaultValue) && defaultValue.GetType() != mType)
                     defaultValue = TypeUtils.CastToNumericType(defaultValue, mType);
                 accessor.ShouldSeriealize = obj => !TypeUtils.AreEqual(defaultValue, accessor.Get(obj));
             }
-            if ( accessor.ShouldSeriealize == null )
+            if (accessor.ShouldSeriealize == null)
                 accessor.ShouldSeriealize = obj => true;
 
             Accessors.Add(m.Name, accessor);
@@ -180,7 +195,7 @@ namespace System.Yaml.Serialization
         public Action<object> CollectionClear = null;
         public Type KeyType = null;
         public Type ValueType = null;
-        public Func<object,bool> IsReadOnly;
+        public Func<object, bool> IsReadOnly;
 
         public struct MemberInfo
         {

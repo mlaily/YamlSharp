@@ -35,12 +35,15 @@ namespace System.Yaml
         /// <typeparam name="AttributeType">取り出したい属性の型</typeparam>
         /// <returns>取り出した属性値</returns>
         public static AttributeType GetAttribute<AttributeType>(this System.Reflection.MemberInfo info)
-            where AttributeType: Attribute
+            where AttributeType : Attribute
         {
             var attrs = info.GetCustomAttributes(typeof(AttributeType), true);
-            if ( attrs.Length > 0 ) {
+            if (attrs.Length > 0)
+            {
                 return attrs.Last() as AttributeType;
-            } else {
+            }
+            else
+            {
                 return null;
             }
         }
@@ -52,10 +55,10 @@ namespace System.Yaml
         /// <returns></returns>
         public static Type GetType(string name)
         {
-            if ( AvailableTypes.ContainsKey(name) )
+            if (AvailableTypes.ContainsKey(name))
                 return AvailableTypes[name];
             Type type = Type.GetType(name);
-            if ( type == null ) // ロードされているすべてのアセンブリから探す
+            if (type == null) // ロードされているすべてのアセンブリから探す
                 type = System.AppDomain.CurrentDomain.GetAssemblies().Select(
                         asm => asm.GetType(name)).FirstOrDefault(t => t != null);
             return AvailableTypes[name] = type;
@@ -69,18 +72,18 @@ namespace System.Yaml
         /// <returns></returns>
         public static bool IsPureValueType(Type type)
         {
-            if ( type == typeof(IntPtr) )
+            if (type == typeof(IntPtr))
                 return false;
-            if ( type.IsPrimitive )
+            if (type.IsPrimitive)
                 return true;
-            if ( type.IsEnum )
+            if (type.IsEnum)
                 return true;
-            if ( !type.IsValueType )
+            if (!type.IsValueType)
                 return false;
             // struct
-            foreach ( var f in type.GetFields(
-                    BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance) )
-                if ( !IsPureValueType(f.FieldType) )
+            foreach (var f in type.GetFields(
+                    BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance))
+                if (!IsPureValueType(f.FieldType))
                     return false;
             return true;
         }
@@ -103,9 +106,9 @@ namespace System.Yaml
         /// <returns></returns>
         public static bool AreEqual(object a, object b)
         {
-            if ( a == null )
+            if (a == null)
                 return b == null;
-            if ( b == null )
+            if (b == null)
                 return false;
             return a.Equals(b) || b.Equals(a);
         }
@@ -117,7 +120,7 @@ namespace System.Yaml
         /// <returns>True if object is a numeric value.</returns>
         public static bool IsNumeric(object obj)
         {
-            if ( obj == null )
+            if (obj == null)
                 return false;
             Type type = obj.GetType();
             return type == typeof(sbyte) || type == typeof(short) || type == typeof(int) || type == typeof(long) ||
@@ -134,34 +137,34 @@ namespace System.Yaml
         public static object CastToNumericType(object obj, Type type)
         {
             var doubleValue = CastToDouble(obj);
-            if ( double.IsNaN(doubleValue) )
+            if (double.IsNaN(doubleValue))
                 return null;
 
-            if ( obj is decimal && type == typeof(decimal) )
+            if (obj is decimal && type == typeof(decimal))
                 return obj; // do not convert into double
 
             object result = null;
-            if ( type == typeof(sbyte) )
+            if (type == typeof(sbyte))
                 result = (sbyte)doubleValue;
-            if ( type == typeof(byte) )
+            if (type == typeof(byte))
                 result = (byte)doubleValue;
-            if ( type == typeof(short) )
+            if (type == typeof(short))
                 result = (short)doubleValue;
-            if ( type == typeof(ushort) )
+            if (type == typeof(ushort))
                 result = (ushort)doubleValue;
-            if ( type == typeof(int) )
+            if (type == typeof(int))
                 result = (int)doubleValue;
-            if ( type == typeof(uint) )
+            if (type == typeof(uint))
                 result = (uint)doubleValue;
-            if ( type == typeof(long) )
+            if (type == typeof(long))
                 result = (long)doubleValue;
-            if ( type == typeof(ulong) )
+            if (type == typeof(ulong))
                 result = (ulong)doubleValue;
-            if ( type == typeof(float) )
+            if (type == typeof(float))
                 result = (float)doubleValue;
-            if ( type == typeof(double) )
+            if (type == typeof(double))
                 result = doubleValue;
-            if ( type == typeof(decimal) )
+            if (type == typeof(decimal))
                 result = (decimal)doubleValue;
             return result;
         }
@@ -175,27 +178,27 @@ namespace System.Yaml
         {
             var result = double.NaN;
             var type = obj != null ? obj.GetType() : null;
-            if ( type == typeof(sbyte) )
+            if (type == typeof(sbyte))
                 result = (double)(sbyte)obj;
-            if ( type == typeof(byte) )
+            if (type == typeof(byte))
                 result = (double)(byte)obj;
-            if ( type == typeof(short) )
+            if (type == typeof(short))
                 result = (double)(short)obj;
-            if ( type == typeof(ushort) )
+            if (type == typeof(ushort))
                 result = (double)(ushort)obj;
-            if ( type == typeof(int) )
+            if (type == typeof(int))
                 result = (double)(int)obj;
-            if ( type == typeof(uint) )
+            if (type == typeof(uint))
                 result = (double)(uint)obj;
-            if ( type == typeof(long) )
+            if (type == typeof(long))
                 result = (double)(long)obj;
-            if ( type == typeof(ulong) )
+            if (type == typeof(ulong))
                 result = (double)(ulong)obj;
-            if ( type == typeof(float) )
+            if (type == typeof(float))
                 result = (double)(float)obj;
-            if ( type == typeof(double) )
+            if (type == typeof(double))
                 result = (double)obj;
-            if ( type == typeof(decimal) )
+            if (type == typeof(decimal))
                 result = (double)(decimal)obj;
             return result;
         }
@@ -209,15 +212,15 @@ namespace System.Yaml
         public static bool IsPublic(Type type)
         {
             return type.IsPublic ||
-                ( type.IsNestedPublic && type.IsNested && IsPublic(type.DeclaringType) );
+                (type.IsNestedPublic && type.IsNested && IsPublic(type.DeclaringType));
         }
 
         /// <summary>
         /// Equality comparer that uses Object.ReferenceEquals(x, y) to compare class values.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public class EqualityComparerByRef<T>: EqualityComparer<T>
-            where T: class
+        public class EqualityComparerByRef<T> : EqualityComparer<T>
+            where T : class
         {
             /// <summary>
             /// Determines whether two objects of type  T are equal by calling Object.ReferenceEquals(x, y).
@@ -255,7 +258,7 @@ namespace System.Yaml
         /// Calculate hash code by reference.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        public class HashCodeByRef<T> where T: class
+        public class HashCodeByRef<T> where T : class
         {
             /// <summary>
             /// Calculate hash code by reference.
@@ -269,7 +272,7 @@ namespace System.Yaml
                 var dm = new DynamicMethod(
                     "GetHashCodeByRef",                 // name of the dynamic method
                     typeof(int),                        // type of return value
-                    new Type[] { 
+                    new Type[] {
                         typeof(T)                       // type of "this"
                     },
                     typeof(EqualityComparerByRef<T>));  // owner
@@ -284,11 +287,11 @@ namespace System.Yaml
             }
         }
 
-        class RehashableDictionary<K, V>: IDictionary<K, V> where K: class
+        class RehashableDictionary<K, V> : IDictionary<K, V> where K : class
         {
             Dictionary<int, object> items = new Dictionary<int, object>();
-            
-            Dictionary<K, int> hashes = 
+
+            Dictionary<K, int> hashes =
                 new Dictionary<K, int>(EqualityComparerByRef<K>.Default);
 
             class KeyValue
@@ -308,13 +311,16 @@ namespace System.Yaml
 
             public void Add(K key, V value)
             {
-                if ( hashes.ContainsKey(key) )
+                if (hashes.ContainsKey(key))
                     throw new ArgumentException("Same key already exists.");
                 var entry = new KeyValue(key, value);
                 object item;
-                if ( items.TryGetValue(entry.hash, out item) ) {
+                if (items.TryGetValue(entry.hash, out item))
+                {
 
-                } else {
+                }
+                else
+                {
                 }
             }
 

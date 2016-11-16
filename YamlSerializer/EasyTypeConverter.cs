@@ -44,16 +44,19 @@ namespace System.Yaml.Serialization
 
         public static bool IsTypeConverterSpecified(Type type)
         {
-            if ( !TypeConverterSpecified.ContainsKey(type) )
+            if (!TypeConverterSpecified.ContainsKey(type))
                 RegisterTypeConverterFor(type);
             return TypeConverterSpecified[type];
         }
 
         private static TypeConverter FindConverter(Type type)
         {
-            if ( !TypeConverters.ContainsKey(type) ) {
+            if (!TypeConverters.ContainsKey(type))
+            {
                 return RegisterTypeConverterFor(type);
-            } else {
+            }
+            else
+            {
                 return TypeConverters[type];
             }
         }
@@ -61,12 +64,15 @@ namespace System.Yaml.Serialization
         private static TypeConverter RegisterTypeConverterFor(Type type)
         {
             var converter_attr = type.GetAttribute<TypeConverterAttribute>();
-            if ( converter_attr != null ) {
+            if (converter_attr != null)
+            {
                 // What is the difference between these two conditions?
                 TypeConverterSpecified[type] = true;
                 var converterType = TypeUtils.GetType(converter_attr.ConverterTypeName);
                 return TypeConverters[type] = Activator.CreateInstance(converterType) as TypeConverter;
-            } else {
+            }
+            else
+            {
                 // What is the difference between these two conditions?
                 TypeConverterSpecified[type] = false;
                 return TypeConverters[type] = TypeDescriptor.GetConverter(type);
@@ -75,12 +81,15 @@ namespace System.Yaml.Serialization
 
         public string ConvertToString(object obj)
         {
-            if ( obj == null )
+            if (obj == null)
                 return "null";
             var converter = FindConverter(obj.GetType());
-            if ( converter != null ) {
+            if (converter != null)
+            {
                 return converter.ConvertToString(null, Culture, obj);
-            } else {
+            }
+            else
+            {
                 return obj.ToString();
             }
         }

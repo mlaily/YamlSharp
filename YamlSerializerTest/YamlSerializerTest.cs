@@ -16,13 +16,13 @@ namespace YamlSerializerTest
     {
         public List<TestClass> list = new List<TestClass>();
     }
-    
-    public class ChildClass: TestClass
+
+    public class ChildClass : TestClass
     {
     }
 
     [Flags]
-    enum TestEnum: uint
+    enum TestEnum : uint
     {
         abc = 1,
         あいう = 2
@@ -30,7 +30,7 @@ namespace YamlSerializerTest
 
     public class Test1
     {
-        #pragma warning disable 169, 649
+#pragma warning disable 169, 649
         public int PublicProp { get; set; }         // processed (by assign)
         protected int ProtectedProp { get; set; }           // Ignored
         private int PrivateProp { get; set; }               // Ignored
@@ -43,7 +43,7 @@ namespace YamlSerializerTest
 
         public List<string> ClassPropByAssign // processed (by assign)
         { get; set; }
-        
+
         public int ReadOnlyValueProp { get; private set; }  // Ignored
         public List<string> ReadOnlyClassProp // processed (by content)
         { get; private set; }
@@ -68,7 +68,7 @@ namespace YamlSerializerTest
             ReadOnlyClassProp = new List<string>();
             ClassPropByContent = new List<string>();
         }
-        #pragma warning restore 169, 649
+#pragma warning restore 169, 649
     }
 
     public class Test2
@@ -93,13 +93,13 @@ namespace YamlSerializerTest
         public static string BuildResult(params string[] lines)
         {
             var result = "%YAML 1.2\r\n---\r\n";
-            foreach ( var line in lines )
+            foreach (var line in lines)
                 result += line + "\r\n";
             result += "...\r\n";
             return result;
         }
 
-        YamlSerializer serializer= new YamlSerializer();
+        YamlSerializer serializer = new YamlSerializer();
 
         [Test]
         public void SequentialWrite()
@@ -121,8 +121,8 @@ namespace YamlSerializerTest
             // 1.1
             // ...
             Assert.AreEqual(
-                BuildResult("a")+
-                BuildResult("1")+
+                BuildResult("a") +
+                BuildResult("1") +
                 BuildResult("1.1"),
                 yaml);
 
@@ -180,7 +180,7 @@ namespace YamlSerializerTest
             test1.ReadOnlyClassProp.Add("def");
             test1.ClassPropByContent.Add("ghi");
             var rand = new Random(0);
-            for ( int i = 0; i < test1.IntArrayFieldBinary.Length; i++ )
+            for (int i = 0; i < test1.IntArrayFieldBinary.Length; i++)
                 test1.IntArrayFieldBinary[i] = rand.Next();
 
             string yaml = serializer.Serialize(test1);
@@ -234,28 +234,28 @@ namespace YamlSerializerTest
                     yaml);
 
             object restored = serializer.Deserialize(yaml)[0];
-            Assert.AreEqual(test1.PublicField, ( (Test1)restored ).PublicField);
-            Assert.AreEqual(test1.PublicProp, ( (Test1)restored ).PublicProp);
-            Assert.AreEqual(test1.ReadOnlyClassProp, ( (Test1)restored ).ReadOnlyClassProp);
-            Assert.AreEqual(test1.ClassPropByContent, ( (Test1)restored ).ClassPropByContent);
-            Assert.AreEqual(test1.IntArrayFieldBinary, ( (Test1)restored ).IntArrayFieldBinary);
+            Assert.AreEqual(test1.PublicField, ((Test1)restored).PublicField);
+            Assert.AreEqual(test1.PublicProp, ((Test1)restored).PublicProp);
+            Assert.AreEqual(test1.ReadOnlyClassProp, ((Test1)restored).ReadOnlyClassProp);
+            Assert.AreEqual(test1.ClassPropByContent, ((Test1)restored).ClassPropByContent);
+            Assert.AreEqual(test1.IntArrayFieldBinary, ((Test1)restored).IntArrayFieldBinary);
         }
 
         [Test]
         public void ObjectArray()
         {
-            object obj = new object[]{ 
+            object obj = new object[]{
                 null,
-                "abc", 
-                true, 
-                1, 
+                "abc",
+                true,
+                1,
                 (Byte)1,
-                1.0, 
+                1.0,
                 "1",
                 new double[]{ 1.1, 2, -3 },
                 new string[]{ "def", "ghi", "1" },
-                new System.Drawing.Point(1,3), 
-                new YamlScalar("brabrabra") 
+                new System.Drawing.Point(1,3),
+                new YamlScalar("brabrabra")
             };
 
             string yaml = serializer.Serialize(obj);
@@ -337,10 +337,10 @@ namespace YamlSerializerTest
                 yaml);
             object restored = serializer.Deserialize(yaml)[0];
             Assert.AreEqual(obj, restored);
-            Assert.AreSame(( (object[])restored )[0], ( (object[])restored )[1]);
-            Assert.AreNotSame(( (object[])restored )[2], ( (object[])restored )[3]);
+            Assert.AreSame(((object[])restored)[0], ((object[])restored)[1]);
+            Assert.AreNotSame(((object[])restored)[2], ((object[])restored)[3]);
         }
-        
+
         [Test]
         public void RecursiveObjectsTest()
         {
@@ -388,12 +388,12 @@ namespace YamlSerializerTest
                 yaml);
 
             object restored = serializer.Deserialize(yaml)[0];
-            Assert.AreSame(restored, ( (TestClass)restored ).list[0]);
-            Assert.AreSame(restored, ( (TestClass)restored ).list[1]);
-            Assert.AreSame(restored, ( (TestClass)restored ).list[2].list[0]);
-            Assert.AreSame(restored, ( (TestClass)restored ).list[3]);
-            Assert.AreSame(( (TestClass)restored ).list[2], ( (TestClass)restored ).list[4]);
-            Assert.IsInstanceOf<ChildClass>(( (TestClass)restored ).list[2]);
+            Assert.AreSame(restored, ((TestClass)restored).list[0]);
+            Assert.AreSame(restored, ((TestClass)restored).list[1]);
+            Assert.AreSame(restored, ((TestClass)restored).list[2].list[0]);
+            Assert.AreSame(restored, ((TestClass)restored).list[3]);
+            Assert.AreSame(((TestClass)restored).list[2], ((TestClass)restored).list[4]);
+            Assert.IsInstanceOf<ChildClass>(((TestClass)restored).list[2]);
         }
 
         [Test]
@@ -408,9 +408,9 @@ namespace YamlSerializerTest
                 "1",
                 "a ",
                 "- a",
-                "abc\n", 
-                "abc\r\ndef\r\n", 
-                "abc\r\ndef\r\nghi", 
+                "abc\n",
+                "abc\r\ndef\r\n",
+                "abc\r\ndef\r\nghi",
                 new double[]{ 1.1, 2, -3, 3.12, 13.2 },
                 new int[,] { { 1, 3}, {4, 5}, {10, 1} },
                 new string[]{ "jkl", "mno\r\npqr" },
@@ -481,13 +481,13 @@ namespace YamlSerializerTest
                 yaml);
 
             object restored = serializer.Deserialize(yaml)[0];
-            var dict2= (Dictionary<object, object>)( (object[])restored )[0];
+            var dict2 = (Dictionary<object, object>)((object[])restored)[0];
             Assert.AreEqual(dict.Count, dict2.Count);
             Assert.AreEqual(dict.Keys.First(), dict2.Keys.First());
             Assert.AreEqual(dict.Values.First().GetType(), dict2.Values.First().GetType());
             Assert.AreEqual(
-                ( (object[])obj ).Skip(1).ToArray(),
-                ( (object[])restored ).Skip(1).ToArray());
+                ((object[])obj).Skip(1).ToArray(),
+                ((object[])restored).Skip(1).ToArray());
         }
 
         [Test]
@@ -614,10 +614,10 @@ namespace YamlSerializerTest
                     @"- ""\r\n\",
                     @"  \r\n\",
                     @"  abc""",
-                    @"- ""\r\n\",                       
+                    @"- ""\r\n\",
                     @"  \r\n\",
                     @"  abc  """,
-                    @"- "" \\ \"" \a \b \e \f "+"\t"+@" \v \0 \_ \N \L \P""",
+                    @"- "" \\ \"" \a \b \e \f " + "\t" + @" \v \0 \_ \N \L \P""",
                     "- \",a\"",
                     "- \"]a\"",
                     "- \"}a\"",
@@ -643,9 +643,9 @@ namespace YamlSerializerTest
             public char b;
             public override bool Equals(object obj)
             {
-                return ( obj is ArrayTestElement2 ) &&
-                    ( (ArrayTestElement2)obj ).a == a &&
-                    ( (ArrayTestElement2)obj ).b == b;
+                return (obj is ArrayTestElement2) &&
+                    ((ArrayTestElement2)obj).a == a &&
+                    ((ArrayTestElement2)obj).b == b;
             }
             public override int GetHashCode()
             {
@@ -665,7 +665,7 @@ namespace YamlSerializerTest
             public ArrayTestElement[] StructArray1 = new ArrayTestElement[100];
 
             [YamlSerialize(YamlSerializeMethod.Binary)]
-            public ArrayTestElement[,] StructArray2 = new ArrayTestElement[10,10];
+            public ArrayTestElement[,] StructArray2 = new ArrayTestElement[10, 10];
         }
 
         [Test]
@@ -673,66 +673,67 @@ namespace YamlSerializerTest
         {
             var rand = new Random(0);
             var a1 = new int[100];
-            for ( int i = 0; i < a1.Length; i++ )
+            for (int i = 0; i < a1.Length; i++)
                 a1[i] = rand.Next();
             var yaml = serializer.Serialize(a1);
             Assert.AreEqual(a1, serializer.Deserialize(yaml)[0]);
 
             var a2 = new byte[100];
-            for ( int i = 0; i < a2.Length; i++ )
+            for (int i = 0; i < a2.Length; i++)
                 a2[i] = Convert.ToByte(rand.Next() & 0xff);
             yaml = serializer.Serialize(a2);
             Assert.AreEqual(a2, serializer.Deserialize(yaml)[0]);
 
             var a3 = new double[100];
-            for ( int i = 0; i < a3.Length; i++ )
+            for (int i = 0; i < a3.Length; i++)
                 a3[i] = rand.NextDouble();
             yaml = serializer.Serialize(a3);
             var a3restored = (double[])serializer.Deserialize(yaml)[0];
-            for ( int i = 0; i < a3.Length; i++ )
+            for (int i = 0; i < a3.Length; i++)
                 Assert.AreEqual(a3[i].ToString(), a3restored[i].ToString());
 
-            var a4 = new double[10,10];
-            for ( int i = 0; i < a4.Length; i++ )
+            var a4 = new double[10, 10];
+            for (int i = 0; i < a4.Length; i++)
                 a4[i / 10, i % 10] = rand.NextDouble();
             yaml = serializer.Serialize(a4);
             var a4restored = (double[,])serializer.Deserialize(yaml)[0];
-            for ( int i = 0; i < a4.Length; i++ )
+            for (int i = 0; i < a4.Length; i++)
                 Assert.AreEqual(a4[i / 10, i % 10].ToString(), a4restored[i / 10, i % 10].ToString());
 
             var a5 = new ArrayTestElement[100];
-            var a6 =new ArrayTestElement[10,10];
+            var a6 = new ArrayTestElement[10, 10];
             var a7 = new ArrayTestElement2[100];
             var a8 = new ArrayTestElement2[10, 10];
             var a9 = new ArrayTestClass();
 
-            for ( int i = 0; i < 100; i++ ) {
+            for (int i = 0; i < 100; i++)
+            {
                 a5[i].a = rand.Next();
-                a5[i].b = (char)( rand.Next() & 0xffff );
+                a5[i].b = (char)(rand.Next() & 0xffff);
                 a6[i % 10, i / 10].a = rand.Next();
-                a6[i % 10, i / 10].b = (char)( rand.Next() & 0xffff );
+                a6[i % 10, i / 10].b = (char)(rand.Next() & 0xffff);
                 a7[i] = new ArrayTestElement2();
                 a7[i].a = rand.Next();
                 a7[i].b = (char)(rand.Next() & 0xff);
                 a8[i % 10, i / 10] = new ArrayTestElement2();
                 a8[i % 10, i / 10].a = rand.Next();
-                a8[i % 10, i / 10].b = (char)( rand.Next() & 0xffff );
+                a8[i % 10, i / 10].b = (char)(rand.Next() & 0xffff);
                 a9.IntArray1[i] = rand.Next();
                 a9.IntArray2[i % 10, i / 10] = rand.Next();
                 a9.StructArray1[i].a = rand.Next();
-                a9.StructArray1[i].b = (char)( rand.Next() & 0xffff );
+                a9.StructArray1[i].b = (char)(rand.Next() & 0xffff);
                 a9.StructArray2[i % 10, i / 10].a = rand.Next();
-                a9.StructArray2[i % 10, i / 10].b = (char)( rand.Next() & 0xffff );
+                a9.StructArray2[i % 10, i / 10].b = (char)(rand.Next() & 0xffff);
             }
-            
+
             yaml = serializer.Serialize(a5);
             var a5restored = (ArrayTestElement[])serializer.Deserialize(yaml)[0];
             Assert.AreEqual(a5, a5restored);
-            
+
             yaml = serializer.Serialize(a6);
             var a6restored = (ArrayTestElement[,])serializer.Deserialize(yaml)[0];
             Assert.AreEqual(a6, a6restored);
-            
+
             yaml = serializer.Serialize(a7);
             var a7restored = (ArrayTestElement2[])serializer.Deserialize(yaml)[0];
             Assert.AreEqual(a7, a7restored);
@@ -749,8 +750,8 @@ namespace YamlSerializerTest
             Assert.AreEqual(a9.StructArray2, a9restored.StructArray2);
 
             var a10 = new TestEnum[10];
-            for ( int i = 0; i < a10.Length; i++ )
-                a10[i] = ( rand.Next() & 1 ) == 0 ? TestEnum.abc : TestEnum.あいう;
+            for (int i = 0; i < a10.Length; i++)
+                a10[i] = (rand.Next() & 1) == 0 ? TestEnum.abc : TestEnum.あいう;
             yaml = serializer.Serialize(a10);
             var a10restored = (TestEnum[])serializer.Deserialize(yaml)[0];
             Assert.AreEqual(a10, a10restored);
@@ -824,9 +825,12 @@ Color: Red
 ";
 
             SolidBrush b = null;
-            try {
+            try
+            {
                 b = (SolidBrush)serializer.Deserialize(yaml)[0];
-            } catch ( MissingMethodException ) {
+            }
+            catch (MissingMethodException)
+            {
                 // SolidBrush has no default constructor!
             }
 
@@ -838,13 +842,13 @@ Color: Red
             b = (SolidBrush)serializer.Deserialize(yaml)[0];
 
             Assert.AreEqual(b.Color, Color.Red);
-        
+
         }
 
         [Test]
         public void TestMappingToDictionary()
         {
-            var obj= (Dictionary<object,object>)serializer.Deserialize(
+            var obj = (Dictionary<object, object>)serializer.Deserialize(
                 "{a: 1, 2: 1.0}"
                 )[0];
             Assert.AreEqual(obj["a"], 1);
@@ -864,7 +868,7 @@ Color: Red
             var obj = new TestClass();
             obj.list.Add(new ChildClass());
             var serializer = new YamlSerializer();
-            var yaml= serializer.Serialize(obj);
+            var yaml = serializer.Serialize(obj);
             Assert.AreEqual(
                 BuildResult(
                     "!YamlSerializerTest.TestClass",

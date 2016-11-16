@@ -11,12 +11,12 @@ using YamlSerializerTest.Properties;
 namespace YamlSerializerTest
 {
     [TestFixture]
-    public class YamlPresenterTest: YamlNodeManipulator
+    public class YamlPresenterTest : YamlNodeManipulator
     {
         public static string BuildResult(params string[] lines)
         {
-            var result= "%YAML 1.2\r\n---\r\n";
-            foreach ( var line in lines )
+            var result = "%YAML 1.2\r\n---\r\n";
+            foreach (var line in lines)
                 result += line + "\r\n";
             result += "...\r\n";
             return result;
@@ -29,7 +29,7 @@ namespace YamlSerializerTest
         {
             Assert.AreEqual(
                 BuildResult("\"1\": \"1\""),
-                YamlPresenter.ToYaml(map(str("1"),str("1")))
+                YamlPresenter.ToYaml(map(str("1"), str("1")))
                 );
             Assert.AreEqual(
                 BuildResult("abc"),
@@ -100,7 +100,7 @@ namespace YamlSerializerTest
         [Test]
         public void TestNullScalar()
         {
-            YamlNode node= str("!!null", "null");
+            YamlNode node = str("!!null", "null");
             Assert.AreEqual(
                 BuildResult("null"),
                 YamlPresenter.ToYaml(node)
@@ -253,7 +253,7 @@ namespace YamlSerializerTest
                     "- !!float 123",
                     "- ",
                     "- - a",
-                    "  - b",                                                     
+                    "  - b",
                     "  - a: b"
                     ),
                 YamlPresenter.ToYaml(
@@ -268,7 +268,7 @@ namespace YamlSerializerTest
                         seq(
                             str("a"),
                             str("b"),
-                            map(str("a"),str("b"))
+                            map(str("a"), str("b"))
                         )
                     )
                 )
@@ -302,7 +302,7 @@ namespace YamlSerializerTest
                 YamlPresenter.ToYaml(
                     map(
                         str("abc"), str("def"),
-                        seq( str("a"), str("b") ), str("b"),
+                        seq(str("a"), str("b")), str("b"),
                         str("1"), str("!!float", "3.3"),
                         str("@"), map(
                                 str("a"), str("b"),
@@ -394,7 +394,7 @@ namespace YamlSerializerTest
                     "  - *A",
                     "- *B"
                     ),
-                seq(s, 
+                seq(s,
                     m,
                     s,
                     seq(str("A"), s),
@@ -407,7 +407,7 @@ namespace YamlSerializerTest
         [Test]
         public void TestPerformanceOfMemoryStream()
         {
-            const int n= 1000000;
+            const int n = 1000000;
 
             // how to use memory stream
             var ms = new System.IO.MemoryStream();
@@ -423,16 +423,16 @@ namespace YamlSerializerTest
             tw = new System.IO.StreamWriter(ms);
 
             var t = DateTime.Now;
-            for ( int i = 0; i < n; i++ )
+            for (int i = 0; i < n; i++)
                 tw.WriteLine("abc"); // not so slow
-            System.Diagnostics.Debug.WriteLine(( DateTime.Now - t ).ToString());
+            System.Diagnostics.Debug.WriteLine((DateTime.Now - t).ToString());
 
             var sb = new StringBuilder();
 
             t = DateTime.Now;
-            for ( int i = 0; i < n; i++ )
+            for (int i = 0; i < n; i++)
                 sb.AppendLine("abc");
-            System.Diagnostics.Debug.WriteLine(( DateTime.Now - t ).ToString());
+            System.Diagnostics.Debug.WriteLine((DateTime.Now - t).ToString());
         }
 
         [Test]

@@ -11,30 +11,34 @@ using YamlSerializerTest.Properties;
 
 namespace YamlSerializerTest
 {
-    public abstract class YamlTestFixture: YamlNodeManipulator
+    public abstract class YamlTestFixture : YamlNodeManipulator
     {
         public void AssertAreEqual(YamlNode expected, YamlNode result)
         {
             Assert.AreEqual(expected.GetType(), result.GetType());
             Assert.AreEqual(expected.Tag, result.Tag,
                 "Tag was different between expected ({0}) and result ({1}).", expected, result);
-            if ( expected is YamlScalar ) {
+            if (expected is YamlScalar)
+            {
                 var expectedScalar = (YamlScalar)expected;
                 var resultScalar = (YamlScalar)result;
                 Assert.AreEqual(expectedScalar.Value, resultScalar.Value);
             }
-            if ( expected is YamlSequence ) {
+            if (expected is YamlSequence)
+            {
                 var expectedSequence = (YamlSequence)expected;
                 var resultSequence = (YamlSequence)result;
                 Assert.AreEqual(expectedSequence.Count, resultSequence.Count);
-                for ( int i = 0; i < expectedSequence.Count; i++ )
+                for (int i = 0; i < expectedSequence.Count; i++)
                     AssertAreEqual(expectedSequence[i], resultSequence[i]);
             }
-            if ( expected is YamlMapping ) {
+            if (expected is YamlMapping)
+            {
                 var expectedMapping = (YamlMapping)expected;
                 var resultMapping = (YamlMapping)result;
                 Assert.AreEqual(expectedMapping.Count, resultMapping.Count);
-                foreach ( var entry in expectedMapping ) {
+                foreach (var entry in expectedMapping)
+                {
                     Assert.IsTrue(resultMapping.ContainsKey(entry.Key),
                         "Mapping node {0} does not contain a key {1}.",
                             resultMapping, entry.Key);
@@ -46,7 +50,7 @@ namespace YamlSerializerTest
         {
             AssertResultsWithoutCheckWarning(result, expected);
             var s = "";
-            foreach ( var w in parser.Warnings )
+            foreach (var w in parser.Warnings)
                 s += "   " + w + "\r\n";
             Assert.AreEqual(nwarnings, parser.Warnings.Count,
                 "Number of warnings was different\r\n{0}", s);
@@ -59,14 +63,14 @@ namespace YamlSerializerTest
         {
             AssertResultsWithoutCheckWarning(result, expected);
             var s = "Expected:\r\n";
-            foreach ( var w in warnings )
+            foreach (var w in warnings)
                 s += "   " + w + "\r\n";
             s += "But was:\r\n";
-            foreach ( var w in parser.Warnings )
+            foreach (var w in parser.Warnings)
                 s += "   " + w + "\r\n";
             Assert.AreEqual(warnings.Length, parser.Warnings.Count,
                 "Number of warnings was different\r\n{0}", s);
-            for ( int i = 0; i < warnings.Length; i++ )
+            for (int i = 0; i < warnings.Length; i++)
                 Assert.AreEqual(warnings[i], parser.Warnings[i],
                     string.Format("Warning message #{0} was different", i));
         }
@@ -74,7 +78,7 @@ namespace YamlSerializerTest
         {
             Assert.AreEqual(expected.Length, result.Count,
                 "Number of result nodes is different");
-            for ( int i = 0; i < result.Count; i++ )
+            for (int i = 0; i < result.Count; i++)
                 AssertAreEqual(expected[i], result[i]);
         }
         public void AssertResults(List<YamlNode> result, params YamlNode[] expected)
@@ -84,20 +88,26 @@ namespace YamlSerializerTest
         }
         public void AssertParseError(Action action, string expectingErrorMessage)
         {
-            try {
+            try
+            {
                 action();
                 Assert.Fail("ParseErrorException expected but not occurred.");
-            } catch ( ParseErrorException e ) {
+            }
+            catch (ParseErrorException e)
+            {
                 Assert.AreEqual(expectingErrorMessage, e.Message.Split('\n')[1],
                     "ParseErrorException message was different.");
             }
         }
         public void AssertParseError(Action action)
         {
-            try {
+            try
+            {
                 action();
                 Assert.Fail("ParseErrorException expected but not occurred.");
-            } catch ( ParseErrorException ) {
+            }
+            catch (ParseErrorException)
+            {
             }
         }
 
@@ -108,10 +118,11 @@ namespace YamlSerializerTest
     namespace YamlVersion1_2_20090721
     {
         [TestFixture]
-        public class Chapter2_1: YamlTestFixture
+        public class Chapter2_1 : YamlTestFixture
         {
             // Example 2.1.  Sequence of Scalars ball players) 
-            [Test] public void TestExample2_1()
+            [Test]
+            public void TestExample2_1()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_1),
@@ -124,12 +135,13 @@ namespace YamlSerializerTest
             }
 
             // Example 2.2.  Mapping Scalars to Scalars (player statistics) 
-            [Test] public void TestExample2_2()
+            [Test]
+            public void TestExample2_2()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_2),
                     map(
-                        str("hr"),  str("!!int", "65"),
+                        str("hr"), str("!!int", "65"),
                         str("avg"), str("!!float", "0.278"),
                         str("rbi"), str("!!int", "147")
                     )
@@ -137,7 +149,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.3.  Mapping Scalars to Sequences (ball clubs in each league) 
-            [Test] public void TestExample2_3()
+            [Test]
+            public void TestExample2_3()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_3),
@@ -159,7 +172,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.4.  Sequence of Mappings (players’ statistics) 
-            [Test] public void TestExample2_4()
+            [Test]
+            public void TestExample2_4()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_4),
@@ -179,7 +193,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.5. Sequence of Sequences
-            [Test] public void TestExample2_5()
+            [Test]
+            public void TestExample2_5()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_5),
@@ -192,7 +207,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.6. Mapping of Mappings
-            [Test] public void TestExample2_6()
+            [Test]
+            public void TestExample2_6()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_6),
@@ -212,10 +228,11 @@ namespace YamlSerializerTest
         }
 
         [TestFixture]
-        public class Chapter2_2: YamlTestFixture
+        public class Chapter2_2 : YamlTestFixture
         {
             // Example 2.7.  Two Documents in a Stream (each with a leading comment) 
-            [Test] public void TestExample2_7()
+            [Test]
+            public void TestExample2_7()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_7),
@@ -233,7 +250,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.8.  Play by Play Feed from a Game 
-            [Test] public void TestExample2_8()
+            [Test]
+            public void TestExample2_8()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_8),
@@ -252,7 +270,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.9.  Single Document with Two Comments 
-            [Test] public void TestExample2_9()
+            [Test]
+            public void TestExample2_9()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_9),
@@ -269,7 +288,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.10.  Node for "Sammy Sosa" appears twice in this document 
-            [Test] public void TestExample2_10()
+            [Test]
+            public void TestExample2_10()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_10),
@@ -284,16 +304,17 @@ namespace YamlSerializerTest
                 );
 
                 System.Diagnostics.Debugger.Log(1, "info", Resources.Example2_10);
-                var result = (YamlMapping)( parser.Parse(Resources.Example2_10)[0] );
+                var result = (YamlMapping)(parser.Parse(Resources.Example2_10)[0]);
                 Assert.AreSame(
-                    ( (YamlSequence)result[str("hr")] )[1],
-                    ( (YamlSequence)result[str("rbi")] )[0]
+                    ((YamlSequence)result[str("hr")])[1],
+                    ((YamlSequence)result[str("rbi")])[0]
                 );
 
             }
 
             // Example 2.11. Mapping between Sequences
-            [Test] public void TestExample2_11()
+            [Test]
+            public void TestExample2_11()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_11),
@@ -308,7 +329,7 @@ namespace YamlSerializerTest
                             str("New York Yankees"), str("Atlanta Braves")
                             ),
                         seq(
-                            str("!!timestamp", "2001-07-02"), 
+                            str("!!timestamp", "2001-07-02"),
                             str("!!timestamp", "2001-08-12"),
                             str("!!timestamp", "2001-08-14")
                             )
@@ -317,7 +338,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.12. Compact Nested Mapping
-            [Test] public void TestExample2_12()
+            [Test]
+            public void TestExample2_12()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_12),
@@ -340,11 +362,12 @@ namespace YamlSerializerTest
         }
 
         [TestFixture]
-        public class Chapter2_3: YamlTestFixture
+        public class Chapter2_3 : YamlTestFixture
         {
 
             // Example 2.13.  In literals, newlines are preserved 
-            [Test] public void TestExample2_13()
+            [Test]
+            public void TestExample2_13()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_13),
@@ -354,7 +377,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.14.  In the folded scalars, newlines become spaces 
-            [Test] public void TestExample2_14()
+            [Test]
+            public void TestExample2_14()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_14),
@@ -364,17 +388,19 @@ namespace YamlSerializerTest
             }
 
             // Example 2.15.  Folded newlines are preserved for "more indented" and blank lines 
-            [Test] public void TestExample2_15()
+            [Test]
+            public void TestExample2_15()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_15),
-                    str(Resources.Example2_15Result.Replace("\r\n","\n"))
+                    str(Resources.Example2_15Result.Replace("\r\n", "\n"))
                 );
 
             }
 
             // Example 2.16.  Indentation determines scope
-            [Test] public void TestExample2_16()
+            [Test]
+            public void TestExample2_16()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_16),
@@ -391,7 +417,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.17. Quoted Scalars
-            [Test] public void TestExample2_17()
+            [Test]
+            public void TestExample2_17()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_17),
@@ -408,7 +435,8 @@ namespace YamlSerializerTest
             }
 
             // Example 2.18. Multi-line Flow Scalars
-            [Test] public void TestExample2_18()
+            [Test]
+            public void TestExample2_18()
             {
                 AssertResults(
                     parser.Parse(Resources.Example2_18),
@@ -421,14 +449,15 @@ namespace YamlSerializerTest
         }
 
         [TestFixture]
-        public class Chapter5: YamlTestFixture
+        public class Chapter5 : YamlTestFixture
         {
             // Example 5.1. Byte Order Mark
-            [Test] public void TestExample5_1()
+            [Test]
+            public void TestExample5_1()
             {
                 AssertResults(
                     parser.Parse("\ufeff# Comment only.")
-                    /* nothing */
+                /* nothing */
                 );
 
                 // Valid Byte Order Mark
@@ -444,7 +473,8 @@ namespace YamlSerializerTest
             }
 
             // Example 5.2. Invalid Byte Order Mark
-            [Test] public void TestExample5_2()
+            [Test]
+            public void TestExample5_2()
             {
                 AssertParseError(() =>
                     parser.Parse(
@@ -464,20 +494,24 @@ namespace YamlSerializerTest
                 );
 
                 // Other Invalid Char \x##
-                try {
+                try
+                {
                     parser.Parse(
                         "- Invalid char appears\n" +
                         "\0\n" +
                         "- Inside a document.\n");
                     Assert.Fail("ParseErrorException expected but not occurred.");
-                } catch ( ParseErrorException e ) {
+                }
+                catch (ParseErrorException e)
+                {
                     Assert.AreEqual("An illegal character '\\x00' appeared.", e.Message.Split('\n')[1]);
                 }
 
             }
 
             // Example 5.3. Block Structure Indicators
-            [Test] public void TestExample5_3()
+            [Test]
+            public void TestExample5_3()
             {
                 AssertResults(
                     parser.Parse(Resources.Example5_3),
@@ -495,7 +529,8 @@ namespace YamlSerializerTest
             }
 
             // Example 5.4. Flow Collection Indicators
-            [Test] public void TestExample5_4()
+            [Test]
+            public void TestExample5_4()
             {
                 AssertResults(
                     parser.Parse(Resources.Example5_4),
@@ -513,17 +548,19 @@ namespace YamlSerializerTest
             }
 
             // Example 5.5. Comment Indicator
-            [Test] public void TestExample5_5()
+            [Test]
+            public void TestExample5_5()
             {
                 AssertResults(
                     parser.Parse(Resources.Example5_5)
-                    /* nothing */
+                /* nothing */
                 );
 
             }
 
             // Example 5.6. Node Property Indicators
-            [Test] public void TestExample5_6()
+            [Test]
+            public void TestExample5_6()
             {
                 YamlNode n;
                 AssertResults(
@@ -537,7 +574,8 @@ namespace YamlSerializerTest
             }
 
             // Example 5.7. Block Scalar Indicators
-            [Test] public void TestExample5_7()
+            [Test]
+            public void TestExample5_7()
             {
                 AssertResults(
                     parser.Parse(Resources.Example5_7),
@@ -550,7 +588,8 @@ namespace YamlSerializerTest
             }
 
             // Example 5.8. Quoted Scalar Indicators
-            [Test] public void TestExample5_8()
+            [Test]
+            public void TestExample5_8()
             {
                 AssertResults(
                     parser.Parse(Resources.Example5_8),
@@ -563,7 +602,8 @@ namespace YamlSerializerTest
             }
 
             // Example 5.9. Directive Indicator
-            [Test] public void TestExample5_9()
+            [Test]
+            public void TestExample5_9()
             {
                 AssertResults(
                     parser.Parse(Resources.Example5_9),
@@ -572,7 +612,8 @@ namespace YamlSerializerTest
             }
 
             // Example 5.10. Invalid use of Reserved Indicators
-            [Test] public void TestExample5_10()
+            [Test]
+            public void TestExample5_10()
             {
                 AssertParseError(() =>
                     parser.Parse(Resources.Example5_10),
@@ -582,7 +623,8 @@ namespace YamlSerializerTest
             }
 
             // Example 5.11. Line Break Characters
-            [Test] public void TestExample5_11()
+            [Test]
+            public void TestExample5_11()
             {
                 AssertResults(
                     parser.Parse(Resources.Example5_11),
@@ -630,7 +672,8 @@ namespace YamlSerializerTest
             }
 
             // Example 5.12. Tabs and Spaces
-            [Test] public void TestExample5_12()
+            [Test]
+            public void TestExample5_12()
             {
                 AssertResults(
                     parser.Parse(Resources.Example5_12),
@@ -647,7 +690,8 @@ namespace YamlSerializerTest
             }
 
             // Example 5.13. Escaped Characters
-            [Test] public void TestExample5_13()
+            [Test]
+            public void TestExample5_13()
             {
                 AssertResults(
                     parser.Parse(Resources.Example5_13),
@@ -677,7 +721,7 @@ namespace YamlSerializerTest
         }
 
         [TestFixture]
-        public class Chapter6: YamlTestFixture
+        public class Chapter6 : YamlTestFixture
         {
             [Test] // Example 6.1. Indentation Spaces
             public void TestExample6_1()
@@ -809,7 +853,7 @@ namespace YamlSerializerTest
             {
                 AssertResults(
                     parser.Parse(Resources.Example6_10)
-                    /* This stream contains no documents, only comments. */
+                /* This stream contains no documents, only comments. */
                 );
 
             }
@@ -1012,7 +1056,7 @@ namespace YamlSerializerTest
             [Test]
             public void TestExample6_25()
             {
-                AssertParseError(()=>
+                AssertParseError(() =>
                     parser.Parse(Resources.Example6_25a),
                     "Empty local tag was found."
                 );
@@ -1087,11 +1131,11 @@ namespace YamlSerializerTest
         }
 
         [TestFixture]
-        public class Chapter7: YamlTestFixture
+        public class Chapter7 : YamlTestFixture
         {
             [Test] // Example 7.1. Alias Nodes
             public void TestExample7_1()
-            {                         
+            {
                 AssertResults(
                     parser.Parse(Resources.Example7_1),
                     map(
@@ -1125,7 +1169,7 @@ namespace YamlSerializerTest
 
             [Test] // Example 7.3. Completely Empty Flow Nodes
             public void TestExample7_3()
-            {                                               
+            {
                 AssertResults(
                     parser.Parse(Resources.Example7_3),
                     map(
@@ -1160,7 +1204,7 @@ namespace YamlSerializerTest
 
             [Test] // Example 7.6. Double Quoted Lines
             public void TestExample7_6()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example7_6),
                     str(" 1st non-empty,\n2nd non-empty, 3rd non-empty ")
@@ -1192,7 +1236,7 @@ namespace YamlSerializerTest
 
             [Test] // Example 7.9. Single Quoted Lines
             public void TestExample7_9()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example7_9),
                     str(" 1st non-empty,\n2nd non-empty, 3rd non-empty ")
@@ -1201,7 +1245,7 @@ namespace YamlSerializerTest
 
             [Test] // Example 7.10. Plain Characters
             public void TestExample7_10()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example7_10),
                     seq(
@@ -1223,7 +1267,7 @@ namespace YamlSerializerTest
 
             [Test] // Example 7.11. Plain Scalars
             public void TestExample7_11()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example7_11),
                     map(
@@ -1237,7 +1281,7 @@ namespace YamlSerializerTest
 
             [Test] // Example 7.12. Plain Lines
             public void TestExample7_12()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example7_12),
                     str("1st non-empty,\n2nd non-empty, 3rd non-empty")
@@ -1246,19 +1290,19 @@ namespace YamlSerializerTest
 
             [Test] // Example 7.13. Flow Sequence
             public void TestExample7_13()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example7_13),
                     seq(
                         seq(str("one"), str("two")),
                         seq(str("three"), str("four"))
-                    )                            
+                    )
                 );
             }
 
             [Test] // Example 7.14. Flow Sequence Entries
             public void TestExample7_14()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example7_14),
                     seq(
@@ -1308,13 +1352,13 @@ namespace YamlSerializerTest
 
             [Test] // Example 7.17. Flow Mapping Separate Values
             public void TestExample7_17()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example7_17),
                     map(
                         str("unquoted"), str("separate"),
                         str("http://foo.com"), str("!!null", ""),
-                        str("omitted"), str("!!null", ""), 
+                        str("omitted"), str("!!null", ""),
                         str("!!null", ""), str("omitted")
                     )
                 );
@@ -1420,7 +1464,7 @@ namespace YamlSerializerTest
         }
 
         [TestFixture]
-        public class Chapter8: YamlTestFixture
+        public class Chapter8 : YamlTestFixture
         {
             [Test] // Example 8.1. Block Scalar Header
             public void TestExample8_1()
@@ -1454,7 +1498,7 @@ namespace YamlSerializerTest
             [Test] // Example 8.3. Invalid Block Scalar Indentation Indicators
             public void TestExample8_3()
             {
-                AssertParseError(()=>
+                AssertParseError(() =>
                     parser.Parse(Resources.Example8_3a),
                     "Too many indentation was found."
                 );
@@ -1472,7 +1516,7 @@ namespace YamlSerializerTest
 
             [Test] // Example 8.4. Chomping Final Line Break
             public void TestExample8_4()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example8_4),
                     map(
@@ -1485,14 +1529,14 @@ namespace YamlSerializerTest
                 // Todo: should be error?
                 AssertResultsWithWarnings(
                     parser.Parse("test: >+\n abc\n def\n"),
-                    new string[]{ "Warning: Keep line breaks for folded text '>+' is invalid at line 2 column 1." },
-                    map(str("test"),str("abc def\n"))
+                    new string[] { "Warning: Keep line breaks for folded text '>+' is invalid at line 2 column 1." },
+                    map(str("test"), str("abc def\n"))
                 );
             }
 
             [Test] // Example 8.5. Chomping Trailing Lines
             public void TestExample8_5()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example8_5),
                     map(
@@ -1661,7 +1705,7 @@ namespace YamlSerializerTest
 
             [Test] // Example 8.21. Block Scalar Nodes
             public void TestExample8_21()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example8_21),
                     map(
@@ -1673,25 +1717,25 @@ namespace YamlSerializerTest
 
             [Test] // Example 8.22. Block Collection Nodes
             public void TestExample8_22()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example8_22),
                     map(
                         str("sequence"), seq(
                             str("entry"),
-                            seq( str("nested") )
+                            seq(str("nested"))
                         ),
                         str("mapping"), map(
                             str("foo"), str("bar")
                         )
-                    )    
+                    )
                 );
             }
 
         }
 
         [TestFixture]
-        public class Chapter9: YamlTestFixture
+        public class Chapter9 : YamlTestFixture
         {
             [Test] // Example 9.1. Document Prefix
             public void TestExample9_1()
@@ -1733,7 +1777,7 @@ namespace YamlSerializerTest
 
             [Test] // Example 9.5. Directives Documents
             public void TestExample9_5()
-            {   
+            {
                 AssertResultsWithWarnings(
                     parser.Parse(Resources.Example9_5),
                     1,
@@ -1787,7 +1831,7 @@ namespace YamlSerializerTest
 
             [Test] // Example 9.6. Stream
             public void TestExample9_6()
-            {   
+            {
                 AssertResults(
                     parser.Parse(Resources.Example9_6),
                     str("Document"),
@@ -1814,25 +1858,25 @@ namespace YamlSerializerTest
 
             public bool Evaluate()
             {
-                if ( next == null )
+                if (next == null)
                     return condition();
                 var rewind = PrepareRewind();
                 var result = condition() && next.EvaluateInternal();
-                if ( !result )
+                if (!result)
                     Rewind(rewind);
                 return result;
             }
 
             public bool EvaluateInternal()
             {
-                if ( next == null )
+                if (next == null)
                     return condition();
                 return condition() && next.Evaluate();
             }
 
             public Rule Duplicate()
             {
-                var result= new Rule(condition);
+                var result = new Rule(condition);
                 result.next = next;
                 return result;
             }
@@ -1840,9 +1884,12 @@ namespace YamlSerializerTest
             public static Rule operator +(Rule a, Rule b)
             {
                 var result = a.Duplicate();
-                if ( result.next == null ) {
+                if (result.next == null)
+                {
                     result.next = b;
-                } else {
+                }
+                else
+                {
                     result.next = result.next + b;
                 }
                 return result;
@@ -1850,46 +1897,51 @@ namespace YamlSerializerTest
 
             public static Rule operator *(Rule a, Repeat repeat)
             {
-                switch ( repeat ) {
-                case Repeat.ZeroOrOne:
-                    return (Rule)( () => {
-                        a.Evaluate();
-                        return true;
-                    } );
-                case Repeat.OneOrMany:
-                    return (Rule)( () => {
-                        if ( !a.Evaluate() )
-                            return false;
-                        while ( a.Evaluate() )
-                            ;
-                        return true;
-                    } );
-                case Repeat.Any:
-                    return (Rule)( () => {
-                        while ( a.Evaluate() )
-                            ;
-                        return true;
-                    } );
+                switch (repeat)
+                {
+                    case Repeat.ZeroOrOne:
+                        return (Rule)(() =>
+                        {
+                            a.Evaluate();
+                            return true;
+                        });
+                    case Repeat.OneOrMany:
+                        return (Rule)(() =>
+                        {
+                            if (!a.Evaluate())
+                                return false;
+                            while (a.Evaluate())
+                                ;
+                            return true;
+                        });
+                    case Repeat.Any:
+                        return (Rule)(() =>
+                        {
+                            while (a.Evaluate())
+                                ;
+                            return true;
+                        });
                 }
                 return null;
             }
 
             public static Rule operator *(Rule a, int n)
             {
-                return (Rule)( () => {
-                    for ( int i = 0; i < n; i++ )
-                        if ( !a.Evaluate() )
+                return (Rule)(() =>
+                {
+                    for (int i = 0; i < n; i++)
+                        if (!a.Evaluate())
                             return false;
                     return true;
-                } );
+                });
             }
 
             public static Rule operator |(Rule a, Rule b)
             {
-                return new Rule( () => a.Evaluate() || b.Evaluate() );
+                return new Rule(() => a.Evaluate() || b.Evaluate());
             }
 
-            public static implicit operator Rule (Func<bool> condition)
+            public static implicit operator Rule(Func<bool> condition)
             {
                 return new Rule(condition);
             }
@@ -1901,22 +1953,23 @@ namespace YamlSerializerTest
 
         }
 
-        public enum Repeat: uint {
+        public enum Repeat : uint
+        {
             ZeroOrOne,
             OneOrMany,
             Any
         }
 
         [TestFixture]
-        public class Extra: YamlTestFixture
+        public class Extra : YamlTestFixture
         {
             [Test]
             public void TestRuleObject()
             {
-                Rule rule = (Rule)( () => true );
+                Rule rule = (Rule)(() => true);
                 Rule rule2 = rule + rule + rule | rule * Repeat.Any;
-                Rule rule3 = ( ( rule2 + rule ) | rule ) * Repeat.OneOrMany;
-                Rule rule4 = ( rule3 * 4 ) * Repeat.ZeroOrOne;
+                Rule rule3 = ((rule2 + rule) | rule) * Repeat.OneOrMany;
+                Rule rule4 = (rule3 * 4) * Repeat.ZeroOrOne;
             }
 
             [Test]
@@ -1926,17 +1979,17 @@ namespace YamlSerializerTest
                 list.Add(0);
                 list.Add(10);
                 list.Add(20);
-                Assert.AreEqual( 0, list.BinarySearch(  0 ));
-                Assert.AreEqual(-2, list.BinarySearch(  5 ));
-                Assert.AreEqual( 1, list.BinarySearch( 10 ));
-                Assert.AreEqual(-3, list.BinarySearch( 15 ));
-                Assert.AreEqual( 2, list.BinarySearch( 20 ));
-                Assert.AreEqual(-4, list.BinarySearch( 25 ));
+                Assert.AreEqual(0, list.BinarySearch(0));
+                Assert.AreEqual(-2, list.BinarySearch(5));
+                Assert.AreEqual(1, list.BinarySearch(10));
+                Assert.AreEqual(-3, list.BinarySearch(15));
+                Assert.AreEqual(2, list.BinarySearch(20));
+                Assert.AreEqual(-4, list.BinarySearch(25));
             }
 
-            [Test] 
+            [Test]
             public void Test1()
-            {   
+            {
                 AssertResults(
                     parser.Parse(@"\"),
                     str(@"\")

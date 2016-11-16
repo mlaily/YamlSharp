@@ -11,7 +11,7 @@ using System.Diagnostics;
 using System.IO;
 
 namespace System.Yaml.Serialization
-{                   
+{
     /// <summary>
     /// <para><see cref="YamlSerializer"/> class has instance methods <see cref="Serialize(object)"/> and <see cref="Deserialize(string,Type[])"/>, 
     /// with which C# native objects can be converted into / from YAML text without any preparations.</para>
@@ -705,7 +705,7 @@ namespace System.Yaml.Serialization
         /// <param name="obj">Object to be serialized.</param>
         public void SerializeToFile(string YamlFileName, object obj)
         {
-            using ( var s = new FileStream(YamlFileName, FileMode.Create, FileAccess.Write) )
+            using (var s = new FileStream(YamlFileName, FileMode.Create, FileAccess.Write))
                 Serialize(s, obj);
         }
 
@@ -723,11 +723,15 @@ namespace System.Yaml.Serialization
             var parser = new YamlParser();
             var nodes = parser.Parse(yaml, c);
             var objects = new List<object>();
-            for ( int i = 0; i < nodes.Count; i++ ) {
+            for (int i = 0; i < nodes.Count; i++)
+            {
                 var node = nodes[i];
-                if ( i < types.Length ) {
+                if (i < types.Length)
+                {
                     objects.Add(constructor.NodeToObject(node, types[i], c));
-                } else {
+                }
+                else
+                {
                     objects.Add(constructor.NodeToObject(node, null, c));
                 }
             }
@@ -767,7 +771,7 @@ namespace System.Yaml.Serialization
         /// <returns>C# object(s) deserialized from YAML text.</returns>
         public object[] DeserializeFromFile(string YamlFileName, params Type[] types)
         {
-            using ( var s = new FileStream(YamlFileName, FileMode.Open, FileAccess.Read) )
+            using (var s = new FileStream(YamlFileName, FileMode.Open, FileAccess.Read))
                 return Deserialize(s, types);
         }
     }
@@ -829,7 +833,7 @@ namespace System.Yaml.Serialization
     /// </summary>
     /// <seealso cref="YamlSerializeAttribute"/>
     /// <seealso cref="YamlSerializer"/>
-    public sealed class YamlSerializeAttribute: Attribute
+    public sealed class YamlSerializeAttribute : Attribute
     {
         internal YamlSerializeMethod SerializeMethod;
         /// <summary>

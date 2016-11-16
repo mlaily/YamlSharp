@@ -17,7 +17,7 @@ namespace System.Yaml
         Func<string, object[], bool> error;
 
         #region Debug.Assert
-        #if DEBUG
+#if DEBUG
         /// <summary>
         /// Since System.Diagnostics.Debug.Assert is too anoying while development,
         /// this class temporarily override Debug.Assert action.
@@ -30,11 +30,11 @@ namespace System.Yaml
             }
             public static void Assert(bool condition, string message)
             {
-                if ( !condition )
+                if (!condition)
                     throw new Exception("assertion failed: " + message);
             }
         }
-        #endif
+#endif
         #endregion
 
         public YamlTagPrefixes(Func<string, object[], bool> error)
@@ -52,31 +52,33 @@ namespace System.Yaml
         }
         public void SetupDefaultTagPrefixes()
         {
-            if ( !TagPrefixes.ContainsKey("!") )
+            if (!TagPrefixes.ContainsKey("!"))
                 TagPrefixes.Add("!", "!");
-            if ( !TagPrefixes.ContainsKey("!!") )
+            if (!TagPrefixes.ContainsKey("!!"))
                 TagPrefixes.Add("!!", YamlNode.DefaultTagPrefix);
         }
         public void Add(string tag_handle, string tag_prefix)
         {
-            if ( TagPrefixes.ContainsKey(tag_handle) ) {
-                switch ( tag_handle ) {
-                case "!":
-                    Error("Primary tag prefix is already defined as '{0}'.", TagPrefixes["!"]);
-                    break;
-                case "!!":
-                    Error("Secondary tag prefix is already defined as '{0}'.", TagPrefixes["!!"]);
-                    break;
-                default:
-                    Error("Tag prefix for the handle {0} is already defined as '{1}'.", tag_handle, TagPrefixes[tag_handle]);
-                    break;
+            if (TagPrefixes.ContainsKey(tag_handle))
+            {
+                switch (tag_handle)
+                {
+                    case "!":
+                        Error("Primary tag prefix is already defined as '{0}'.", TagPrefixes["!"]);
+                        break;
+                    case "!!":
+                        Error("Secondary tag prefix is already defined as '{0}'.", TagPrefixes["!!"]);
+                        break;
+                    default:
+                        Error("Tag prefix for the handle {0} is already defined as '{1}'.", tag_handle, TagPrefixes[tag_handle]);
+                        break;
                 }
             }
             TagPrefixes.Add(tag_handle, tag_prefix);
         }
         public string Resolve(string tag_handle, string tag_name)
         {
-            if ( !TagPrefixes.ContainsKey(tag_handle) )
+            if (!TagPrefixes.ContainsKey(tag_handle))
                 Error("Tag handle {0} is not registered.", tag_handle);
             var tag = TagPrefixes[tag_handle] + tag_name;
             return tag;

@@ -58,12 +58,13 @@ namespace System.Yaml
     {
         public static string Escape(string s)
         {
-            return NonUriChar.Replace(s, m => {
+            return NonUriChar.Replace(s, m =>
+            {
                 var c = m.Value[0];
-                return ( c == ' ' ) ? "+" :
-                       ( c < 0x80 ) ? IntToHex(c) :
-                       ( c < 0x0800 ) ? IntToHex(( ( c >> 6 ) & 0x1f ) + 0xc0, ( c & 0x3f ) + 0x80) :
-                       IntToHex(( ( c >> 12 ) & 0x0f ) + 0xe0, ( ( c >> 6 ) & 0x3f ) + 0x80, ( c & 0x3f ) + 0x80);
+                return (c == ' ') ? "+" :
+                       (c < 0x80) ? IntToHex(c) :
+                       (c < 0x0800) ? IntToHex(((c >> 6) & 0x1f) + 0xc0, (c & 0x3f) + 0x80) :
+                       IntToHex(((c >> 12) & 0x0f) + 0xe0, ((c >> 6) & 0x3f) + 0x80, (c & 0x3f) + 0x80);
             }
             );
         }
@@ -71,12 +72,13 @@ namespace System.Yaml
 
         public static string EscapeForTag(string s)
         {
-            return NonTagChar.Replace(s, m => {
+            return NonTagChar.Replace(s, m =>
+            {
                 var c = m.Value[0];
-                return ( c == ' ' ) ? "+" :
-                       ( c < 0x80 ) ? IntToHex(c) :
-                       ( c < 0x0800 ) ? IntToHex(( ( c >> 6 ) & 0x1f ) + 0xc0, ( c & 0x3f ) + 0x80) :
-                       IntToHex(( ( c >> 12 ) & 0x0f ) + 0xe0, ( ( c >> 6 ) & 0x3f ) + 0x80, ( c & 0x3f ) + 0x80);
+                return (c == ' ') ? "+" :
+                       (c < 0x80) ? IntToHex(c) :
+                       (c < 0x0800) ? IntToHex(((c >> 6) & 0x1f) + 0xc0, (c & 0x3f) + 0x80) :
+                       IntToHex(((c >> 12) & 0x0f) + 0xe0, ((c >> 6) & 0x3f) + 0x80, (c & 0x3f) + 0x80);
             }
             );
         }
@@ -86,22 +88,22 @@ namespace System.Yaml
         static string IntToHex(int c)
         {
             return new string(new char[] {
-                '%', intToHex[c>>4], intToHex[c&0x0f], 
+                '%', intToHex[c>>4], intToHex[c&0x0f],
             });
         }
         static string IntToHex(int c1, int c2)
         {
             return new string(new char[] {
-                '%', intToHex[c1>>4], intToHex[c1&0x0f], 
-                '%', intToHex[c2>>4], intToHex[c2&0x0f], 
+                '%', intToHex[c1>>4], intToHex[c1&0x0f],
+                '%', intToHex[c2>>4], intToHex[c2&0x0f],
             });
         }
         static string IntToHex(int c1, int c2, int c3)
         {
             return new string(new char[] {
-                '%', intToHex[c1>>4], intToHex[c1&0x0f], 
-                '%', intToHex[c2>>4], intToHex[c2&0x0f], 
-                '%', intToHex[c3>>4], intToHex[c3&0x0f], 
+                '%', intToHex[c1>>4], intToHex[c1&0x0f],
+                '%', intToHex[c2>>4], intToHex[c2&0x0f],
+                '%', intToHex[c3>>4], intToHex[c3&0x0f],
             });
         }
 
@@ -112,26 +114,30 @@ namespace System.Yaml
             var result = new StringBuilder();
             var p = 0;
             int pp;
-            while ( ( pp = s.IndexOf('%', p) ) >= 0 ) {
+            while ((pp = s.IndexOf('%', p)) >= 0)
+            {
                 result.Append(s.Substring(p, pp - p));
                 p = pp;
-                var c0 = ( HexToInt(s[p + 1]) << 4 ) + HexToInt(s[p + 2]);
-                if ( c0 < 0x80 ) {
+                var c0 = (HexToInt(s[p + 1]) << 4) + HexToInt(s[p + 2]);
+                if (c0 < 0x80)
+                {
                     p += 3;
                     result.Append((char)c0);
                     continue;
                 }
-                var c1 = ( HexToInt(s[p + 4]) << 4 ) + HexToInt(s[p + 5]);
-                if ( c0 < 0xe0 ) {
+                var c1 = (HexToInt(s[p + 4]) << 4) + HexToInt(s[p + 5]);
+                if (c0 < 0xe0)
+                {
                     p += 6;
-                    var c = (char)( ( ( c0 & 0x1f ) << 6 ) + ( c1 & 0x7f ) );
+                    var c = (char)(((c0 & 0x1f) << 6) + (c1 & 0x7f));
                     result.Append(c);
                     continue;
                 }
-                var c2 = ( HexToInt(s[p + 7]) << 4 ) + HexToInt(s[p + 8]);
-                if ( c0 < 0xf1 ) {
+                var c2 = (HexToInt(s[p + 7]) << 4) + HexToInt(s[p + 8]);
+                if (c0 < 0xf1)
+                {
                     p += 9;
-                    var c = (char)( ( ( c0 & 0x0f ) << 12 ) + ( ( c1 & 0x7f ) << 6 ) + ( c2 & 0x7f ) );
+                    var c = (char)(((c0 & 0x0f) << 12) + ((c1 & 0x7f) << 6) + (c2 & 0x7f));
                     result.Append(c);
                     continue;
                 }

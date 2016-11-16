@@ -18,14 +18,14 @@ namespace YamlSerializerTest
         YamlSerializer serializer;
         public YamlConstructorTest()
         {
-            serializer= new YamlSerializer();
+            serializer = new YamlSerializer();
         }
 
         [Test]
         public void TestReflection()
         {
             var arrayType = typeof(int[]);
-            var array1= (int[])arrayType.GetConstructor(new Type[] { typeof(int) }).Invoke(new object[] { 4 });
+            var array1 = (int[])arrayType.GetConstructor(new Type[] { typeof(int) }).Invoke(new object[] { 4 });
             Assert.AreEqual(4, array1.Length);
         }
 
@@ -50,11 +50,12 @@ namespace YamlSerializerTest
             public int a, b;
         }
 
-        class TestStructTypeConverter: TypeConverter
+        class TestStructTypeConverter : TypeConverter
         {
             public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
             {
-                if ( sourceType == typeof(string) ) {
+                if (sourceType == typeof(string))
+                {
                     return true;
                 }
                 return base.CanConvertFrom(context, sourceType);
@@ -62,8 +63,9 @@ namespace YamlSerializerTest
 
             public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
             {
-                if ( value is string ) {
-                    string[] v = ( (string)value ).Split(new char[] { ',' });
+                if (value is string)
+                {
+                    string[] v = ((string)value).Split(new char[] { ',' });
                     var result = new TestStructWithTypeConverter();
                     result.a = int.Parse(v[0]);
                     result.b = int.Parse(v[1]);
@@ -74,7 +76,8 @@ namespace YamlSerializerTest
 
             public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
             {
-                if ( destinationType == typeof(string) ) {
+                if (destinationType == typeof(string))
+                {
                     return true;
                 }
                 return base.CanConvertFrom(context, destinationType);
@@ -82,8 +85,9 @@ namespace YamlSerializerTest
 
             public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
             {
-                if ( destinationType == typeof(string) ) {
-                    return ( (TestStructWithTypeConverter)value ).a + "," + ( (TestStructWithTypeConverter)value ).b;
+                if (destinationType == typeof(string))
+                {
+                    return ((TestStructWithTypeConverter)value).a + "," + ((TestStructWithTypeConverter)value).b;
                 }
                 return base.ConvertTo(context, culture, value, destinationType);
             }
@@ -128,7 +132,7 @@ namespace YamlSerializerTest
             public List<TestStruct> Items { get; set; }
             public TestStruct2()
             {
-                Items= new List<TestStruct> ();
+                Items = new List<TestStruct>();
             }
         }
 
@@ -138,7 +142,7 @@ namespace YamlSerializerTest
             var array1 = new int[] { 1, 2, 3, 4 };
             AssertSuccessRestored(array1);
 
-            var array2 = new int[,] { {1, 2}, {3, 4} };
+            var array2 = new int[,] { { 1, 2 }, { 3, 4 } };
             AssertSuccessRestored(array2);
 
             var array3 = new TestStructWithTypeConverter[5];
@@ -166,8 +170,8 @@ namespace YamlSerializerTest
         public void TagResolver()
         {
             YamlSerializer serialiser = new YamlSerializer();
-            var m = ( new Regex(@"([-+]?)([0-9]+)") ).Match("0123");
-            
+            var m = (new Regex(@"([-+]?)([0-9]+)")).Match("0123");
+
             Assert.AreEqual(123, serialiser.Deserialize("123")[0]);
             Assert.AreEqual(123, serializer.Deserialize("12_3")[0]);
             Assert.AreEqual(-123, serializer.Deserialize("-123")[0]);
@@ -269,11 +273,11 @@ namespace YamlSerializerTest
             Assert.AreEqual(new DateTime(1999, 12, 30, 23, 00, 00, 010, DateTimeKind.Utc).ToLocalTime(), serializer.Deserialize("1999-12-31 1:00:00.010 +2")[0]);
             Assert.AreEqual(new DateTime(2000, 1, 1, 1, 00, 00, 000, DateTimeKind.Utc).ToLocalTime(), serializer.Deserialize("1999-12-31 23:00:00 -2")[0]);
 
-            Assert.AreEqual("1999/12/30 23:00:00", ( new DateTime(1999, 12, 30, 23, 00, 00, 010) ).ToString());
+            Assert.AreEqual("1999/12/30 23:00:00", (new DateTime(1999, 12, 30, 23, 00, 00, 010)).ToString());
             YamlScalar node;
             YamlNode.DefaultConfig.TagResolver.Encode(time, out node);
             var recovered = DateTime.Parse(node.Value);
-            Assert.IsTrue(time - recovered < new TimeSpan(0,0,0,0,1));
+            Assert.IsTrue(time - recovered < new TimeSpan(0, 0, 0, 0, 1));
             recovered = DateTime.Parse("1999-12-31T00:00:01Z");
             recovered = DateTime.Parse("1999-12-31T00:00:01+9");
             recovered = DateTime.Parse("1999-12-31T00:00:01+9:00");
@@ -289,7 +293,7 @@ namespace YamlSerializerTest
         {
             var brush = new YamlMapping("Color", "Blue");
             brush.Tag = "!System.Drawing.SolidBrush";
-            Assert.Throws<MissingMethodException>(()=>constructor.NodeToObject(brush, YamlNode.DefaultConfig));
+            Assert.Throws<MissingMethodException>(() => constructor.NodeToObject(brush, YamlNode.DefaultConfig));
             var config = new YamlConfig();
             config.AddActivator<System.Drawing.SolidBrush>(() => new System.Drawing.SolidBrush(System.Drawing.Color.Black));
             Assert.AreEqual(System.Drawing.Color.Blue, ((System.Drawing.SolidBrush)constructor.NodeToObject(brush, config)).Color);

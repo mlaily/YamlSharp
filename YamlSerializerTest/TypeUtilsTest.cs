@@ -70,8 +70,8 @@ namespace YamlSerializerTest
         {
             Assert.AreEqual((object)0, (object)0.0);
 
-            Assert.IsFalse( (object)0 == (object)0 );
-            Assert.IsFalse(( (object)0 ).Equals((object)0.0));
+            Assert.IsFalse((object)0 == (object)0);
+            Assert.IsFalse(((object)0).Equals((object)0.0));
             Assert.IsFalse(((object)0.0).Equals((object)0));
 
             Assert.IsTrue(TypeUtils.CastToNumericType(1, typeof(double)).Equals((double)1));
@@ -97,7 +97,7 @@ namespace YamlSerializerTest
             public string text;
             public override bool Equals(object obj)
             {
-                return ( obj is TestClass ) && ( (TestClass)obj ).text == text;
+                return (obj is TestClass) && ((TestClass)obj).text == text;
             }
             public override int GetHashCode()
             {
@@ -126,7 +126,7 @@ namespace YamlSerializerTest
             list.Add(a);
             Assert.IsTrue(list.Contains(b));
             Assert.IsFalse(list.Contains(b, ComparerByRef));
-            
+
             Assert.IsTrue(DefaultComparer.Equals(a, a));    // same object
             Assert.IsTrue(ComparerByRef.Equals(a, a));      // same object
 

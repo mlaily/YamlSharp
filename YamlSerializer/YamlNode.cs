@@ -378,7 +378,7 @@ namespace System.Yaml
         public void AddRule<T>(string tag, string regex, Func<Match, T> decode, Func<T, string> encode)
         {
             TagResolver.AddRule<T>(tag, regex, decode, encode);
-        }           
+        }
         internal YamlTagResolver TagResolver = new YamlTagResolver();
 
         /// <summary>
@@ -414,18 +414,19 @@ namespace System.Yaml
         /// </code>
         /// </example>
         public void AddActivator<T>(Func<object> activator)
-            where T: class
+            where T : class
         {
             Activator.Add<T>(activator);
         }
-        internal System.Yaml.Serialization.ObjectActivator Activator = 
+        internal System.Yaml.Serialization.ObjectActivator Activator =
             new System.Yaml.Serialization.ObjectActivator();
 
         /// <summary>
         /// Gets or sets CultureInfo with which the .NET native values are converted
         /// to / from string. Currently, this is not to be changed from CultureInfo.InvariantCulture.
         /// </summary>
-        internal CultureInfo Culture {
+        internal CultureInfo Culture
+        {
             get { return TypeConverter.Culture; }
             set { TypeConverter.Culture = value; }
         }
@@ -737,7 +738,7 @@ namespace System.Yaml
     /// 
     /// </code>
     /// </example>
-    public abstract class YamlNode: IRehashableKey
+    public abstract class YamlNode : IRehashableKey
     {
         #region Non content values
         /// <summary>
@@ -783,9 +784,10 @@ namespace System.Yaml
         /// </para>
         /// </remarks>
         public string Tag
-        { 
+        {
             get { return tag; }
-            set {
+            set
+            {
                 /* strict tag check
                 if ( value.StartsWith("!!") )
                     throw new ArgumentException(
@@ -799,7 +801,7 @@ namespace System.Yaml
             }
         }
         string tag;
-//        static YamlTagValidator TagValidator = new YamlTagValidator();
+        //        static YamlTagValidator TagValidator = new YamlTagValidator();
         /// <summary>
         /// YAML Tag for this node, which represents the type of node's value.
         /// The <see cref="Tag"/> property is returned in a shorthand style.
@@ -818,7 +820,8 @@ namespace System.Yaml
         public override int GetHashCode()
         {
             // caches hash code
-            if ( HashInvalid ) {
+            if (HashInvalid)
+            {
                 HashCode = GetHashCodeCore();
                 HashInvalid = false;
             }
@@ -839,13 +842,17 @@ namespace System.Yaml
         protected virtual void OnChanged()
         {
             // avoiding inifinite loop
-            if ( !ToBeRehash ) {
-                try {
+            if (!ToBeRehash)
+            {
+                try
+                {
                     HashInvalid = true;
                     ToBeRehash = true;
-                    if ( Changed != null )
+                    if (Changed != null)
                         Changed(this, EventArgs.Empty);
-                } finally {
+                }
+                finally
+                {
                     ToBeRehash = false;
                 }
             }
@@ -891,7 +898,7 @@ namespace System.Yaml
         /// <returns>True if the <see cref="YamlNode"/> logically equals to the <paramref name="obj"/>; otherwise false.</returns>
         public override bool Equals(object obj)
         {
-            if ( obj == null || !( obj is YamlNode ) )
+            if (obj == null || !(obj is YamlNode))
                 return false;
             var repository = new ObjectRepository();
             return Equals((YamlNode)obj, repository);
@@ -909,9 +916,9 @@ namespace System.Yaml
         /// </summary>
         internal class ObjectRepository
         {
-            Dictionary<YamlNode, int> nodes_a = 
+            Dictionary<YamlNode, int> nodes_a =
                 new Dictionary<YamlNode, int>(TypeUtils.EqualityComparerByRef<YamlNode>.Default);
-            Dictionary<YamlNode, int> nodes_b = 
+            Dictionary<YamlNode, int> nodes_b =
                 new Dictionary<YamlNode, int>(TypeUtils.EqualityComparerByRef<YamlNode>.Default);
             Stack<YamlNode> stack_a = new Stack<YamlNode>();
             Stack<YamlNode> stack_b = new Stack<YamlNode>();
@@ -921,7 +928,7 @@ namespace System.Yaml
                 public int count { get; private set; }
                 public Status(int c)
                 {
-                    count= c;
+                    count = c;
                 }
             }
 
@@ -930,11 +937,13 @@ namespace System.Yaml
                 int ai, bi;
                 bool ar = nodes_a.TryGetValue(a, out ai);
                 bool br = nodes_b.TryGetValue(b, out bi);
-                if ( ar && br && ai == bi ) {
+                if (ar && br && ai == bi)
+                {
                     identity = true;
                     return true;
                 }
-                if ( ar ^ br ) {
+                if (ar ^ br)
+                {
                     identity = false;
                     return true;
                 }
@@ -942,7 +951,8 @@ namespace System.Yaml
                 nodes_b.Add(b, nodes_b.Count);
                 stack_a.Push(a);
                 stack_b.Push(b);
-                if ( a == b ) {
+                if (a == b)
+                {
                     identity = true;
                     return true;
                 }
@@ -956,7 +966,8 @@ namespace System.Yaml
                 set
                 {
                     var count = value.count;
-                    while ( stack_a.Count > count ) {
+                    while (stack_a.Count > count)
+                    {
                         var a = stack_a.Pop();
                         nodes_a.Remove(a);
                         var b = stack_b.Pop();
@@ -989,12 +1000,13 @@ namespace System.Yaml
         {
             YamlNode a = this;
             bool identity;
-            if ( repository.AlreadyAppeared(a, b, out identity) ) {
+            if (repository.AlreadyAppeared(a, b, out identity))
+            {
                 skip = true;
                 return identity;
             }
             skip = false;
-            if ( a.GetType() != b.GetType() || a.Tag != b.Tag )
+            if (a.GetType() != b.GetType() || a.Tag != b.Tag)
                 return false;
             return true;
         }
@@ -1077,7 +1089,7 @@ namespace System.Yaml
         /// <param name="config"><see cref="YamlConfig">YAML configuration</see> to customize serialization.</param>
         public void ToYamlFile(string FileName, YamlConfig config)
         {
-            using ( var s = new FileStream(FileName, FileMode.Create) )
+            using (var s = new FileStream(FileName, FileMode.Create))
                 DefaultPresenter.ToYaml(s, this, config);
         }
         #endregion
@@ -1131,7 +1143,7 @@ namespace System.Yaml
         /// <returns>YAML nodes</returns>
         public static YamlNode[] FromYaml(Stream s)
         {
-            using ( var sr = new StreamReader(s) )
+            using (var sr = new StreamReader(s))
                 return FromYaml(sr);
         }
         /// <summary>
@@ -1142,7 +1154,7 @@ namespace System.Yaml
         /// <param name="config"><see cref="YamlConfig">YAML configuration</see> to customize serialization.</param>
         public static YamlNode[] FromYaml(Stream s, YamlConfig config)
         {
-            using ( var sr = new StreamReader(s) )
+            using (var sr = new StreamReader(s))
                 return FromYaml(sr, config);
         }
         /// <summary>
@@ -1173,7 +1185,7 @@ namespace System.Yaml
         /// <returns>YAML nodes</returns>
         public static YamlNode[] FromYamlFile(string FileName)
         {
-            using ( var s = new FileStream(FileName, FileMode.Open) )
+            using (var s = new FileStream(FileName, FileMode.Open))
                 return FromYaml(s);
         }
         /// <summary>
@@ -1184,7 +1196,7 @@ namespace System.Yaml
         /// <param name="config"><see cref="YamlConfig">YAML configuration</see> to customize serialization.</param>
         public static YamlNode[] FromYamlFile(string FileName, YamlConfig config)
         {
-            using ( var s = new FileStream(FileName, FileMode.Open) )
+            using (var s = new FileStream(FileName, FileMode.Open))
                 return FromYaml(s, config);
         }
 
@@ -1254,7 +1266,7 @@ namespace System.Yaml
         /// <returns>Tag in formal style.</returns>
         public static string ExpandTag(string tag)
         {
-            if ( tag.StartsWith("!!") )
+            if (tag.StartsWith("!!"))
                 return DefaultTagPrefix + tag.Substring(2);
             return tag;
         }
@@ -1278,7 +1290,7 @@ namespace System.Yaml
         /// <returns>Tag in compact style.</returns>
         public static string ShorthandTag(string tag)
         {
-            if ( tag != null && tag.StartsWith(DefaultTagPrefix) )
+            if (tag != null && tag.StartsWith(DefaultTagPrefix))
                 return "!!" + tag.Substring(DefaultTagPrefix.Length);
             return tag;
         }
@@ -1312,7 +1324,7 @@ namespace System.Yaml
     /// Assert.IsTrue(int_node1 != int_node2);
     /// </code>
     /// </example>
-    public class YamlScalar: YamlNode
+    public class YamlScalar : YamlNode
     {
         /// <summary>
         /// String expression of the node value.
@@ -1372,7 +1384,7 @@ namespace System.Yaml
             YamlScalar node = value;
             Tag = node.Tag;
             Value = node.Value;
-        } 
+        }
 
         /// <summary>
         /// Implicit conversion from string to <see cref="YamlScalar"/>.
@@ -1431,14 +1443,18 @@ namespace System.Yaml
             base.OnChanged();
             UpdateNativeObject();
         }
-        
+
         void UpdateNativeObject()
         {
             object value;
-            if ( NativeObjectAvailable = DefaultConfig.TagResolver.Decode(this, out value) ) {
+            if (NativeObjectAvailable = DefaultConfig.TagResolver.Decode(this, out value))
+            {
                 NativeObject = value;
-            } else {
-                if ( ( ShorthandTag() == "!!float" ) && ( Value != null ) && new Regex(@"0|[1-9][0-9]*").IsMatch(Value) ) {
+            }
+            else
+            {
+                if ((ShorthandTag() == "!!float") && (Value != null) && new Regex(@"0|[1-9][0-9]*").IsMatch(Value))
+                {
                     NativeObject = Convert.ToDouble(Value);
                     NativeObjectAvailable = true;
                 }
@@ -1457,17 +1473,18 @@ namespace System.Yaml
         /// properties by the language default equality operator.</para>
         /// </remarks>
         [Yaml.Serialization.YamlSerialize(System.Yaml.Serialization.YamlSerializeMethod.Never)]
-        public object NativeObject {
+        public object NativeObject
+        {
             get
             {
-                if ( !NativeObjectAvailable )
+                if (!NativeObjectAvailable)
                     throw new InvalidOperationException("NativeObject is not available.");
                 return nativeObject;
             }
             private set
             {
                 nativeObject = value;
-            } 
+            }
         }
         object nativeObject;
         /// <summary>
@@ -1478,23 +1495,29 @@ namespace System.Yaml
         internal override bool Equals(YamlNode b, ObjectRepository repository)
         {
             bool skip;
-            if(! base.EqualsSub(b, repository, out skip) )
+            if (!base.EqualsSub(b, repository, out skip))
                 return false;
-            if(skip)
+            if (skip)
                 return true;
             YamlScalar aa = this;
             YamlScalar bb = (YamlScalar)b;
-            if ( NativeObjectAvailable ) {
-                return bb.NativeObjectAvailable && 
-                    (aa.NativeObject == null ? 
-                        bb.NativeObject==null :
-                        aa.NativeObject.Equals(bb.NativeObject) );
-            } else {
-                if ( ShorthandTag() == "!!str" ) {
+            if (NativeObjectAvailable)
+            {
+                return bb.NativeObjectAvailable &&
+                    (aa.NativeObject == null ?
+                        bb.NativeObject == null :
+                        aa.NativeObject.Equals(bb.NativeObject));
+            }
+            else
+            {
+                if (ShorthandTag() == "!!str")
+                {
                     return aa.Value == bb.Value;
-                } else {
+                }
+                else
+                {
                     // Node with non standard tag is compared by its identity.
-                    return false; 
+                    return false;
                 }
             }
         }
@@ -1505,16 +1528,25 @@ namespace System.Yaml
         /// <returns>Hash code</returns>
         protected override int GetHashCodeCore()
         {
-            if ( NativeObjectAvailable ) {
-                if ( NativeObject == null ) {
+            if (NativeObjectAvailable)
+            {
+                if (NativeObject == null)
+                {
                     return 0;
-                } else {
+                }
+                else
+                {
                     return NativeObject.GetHashCode();
                 }
-            } else {
-                if ( ShorthandTag() == "!!str" ) {
-                    return ( Value.GetHashCode() * 193 ) ^ Tag.GetHashCode();
-                } else {
+            }
+            else
+            {
+                if (ShorthandTag() == "!!str")
+                {
+                    return (Value.GetHashCode() * 193) ^ Tag.GetHashCode();
+                }
+                else
+                {
                     return TypeUtils.HashCodeByRef<YamlScalar>.GetHashCode(this);
                 }
             }
@@ -1522,11 +1554,11 @@ namespace System.Yaml
 
         internal override string ToString(ref int length)
         {
-            var tag= ShorthandTag() == "!!str" ? "" : ShorthandTag() + " ";
+            var tag = ShorthandTag() == "!!str" ? "" : ShorthandTag() + " ";
             length -= tag.Length + 1;
-            if ( length <= 0 )
+            if (length <= 0)
                 return tag + "\"" + "...";
-            if ( Value.Length > length )
+            if (Value.Length > length)
                 return tag + "\"" + Value.Substring(0, length) + "...";
             length -= Value.Length + 1;
             return tag + "\"" + Value + "\"";
@@ -1538,14 +1570,14 @@ namespace System.Yaml
     /// 
     /// <see cref="YamlMapping"/> and <see cref="YamlSequence"/> inherites from this class.
     /// </summary>
-    public abstract class YamlComplexNode: YamlNode
+    public abstract class YamlComplexNode : YamlNode
     {
         /// <summary>
         /// Calculate hash code from <see cref="YamlNode.Tag"/> property and all child nodes.
         /// The result is cached.
         /// </summary>
         /// <returns>Hash value for the object.</returns>
-        protected override int GetHashCodeCore() 
+        protected override int GetHashCodeCore()
         {
             return GetHashCodeCoreSub(0,
                 new Dictionary<YamlNode, int>(
@@ -1601,7 +1633,7 @@ namespace System.Yaml
     /// Assert.IsTrue( map1.Equals( map2 ) );
     /// </code>
     /// </example>
-    public class YamlMapping: YamlComplexNode, IDictionary<YamlNode, YamlNode>
+    public class YamlMapping : YamlComplexNode, IDictionary<YamlNode, YamlNode>
     {
         RehashableDictionary<YamlNode, YamlNode> mapping =
             new RehashableDictionary<YamlNode, YamlNode>();
@@ -1617,65 +1649,75 @@ namespace System.Yaml
         /// <returns></returns>
         protected override int GetHashCodeCoreSub(int path, Dictionary<YamlNode, int> dict)
         {
-            if ( dict.ContainsKey(this) )
+            if (dict.ContainsKey(this))
                 return dict[this].GetHashCode() * 27 + path;
             dict.Add(this, path);
 
             // Unless !!map, the hash code is based on the node's identity.
-            if ( ShorthandTag() != "!!map" )
+            if (ShorthandTag() != "!!map")
                 return TypeUtils.HashCodeByRef<YamlMapping>.GetHashCode(this);
 
             var result = Tag.GetHashCode();
-            foreach ( var item in this ) {
+            foreach (var item in this)
+            {
                 int hash_for_key;
-                if ( item.Key is YamlComplexNode ) {
+                if (item.Key is YamlComplexNode)
+                {
                     hash_for_key = GetHashCodeCoreSub(path * 317, dict);
-                } else {
+                }
+                else
+                {
                     hash_for_key = item.Key.GetHashCode();
                 }
                 result += hash_for_key * 971;
-                if ( item.Value is YamlComplexNode ) {
+                if (item.Value is YamlComplexNode)
+                {
                     result += GetHashCodeCoreSub(path * 317 + hash_for_key * 151, dict);
-                } else {
+                }
+                else
+                {
                     result += item.Value.GetHashCode() ^ hash_for_key;
                 }
             }
             return result;
         }
-        
+
         internal override bool Equals(YamlNode b, ObjectRepository repository)
         {
             YamlNode a = this;
 
             bool skip;
-            if ( !base.EqualsSub(b, repository, out skip) )
+            if (!base.EqualsSub(b, repository, out skip))
                 return false;
-            if ( skip )
+            if (skip)
                 return true;
 
             // Unless !!map, the hash equality is evaluated by the node's identity.
-            if ( ShorthandTag() != "!!map" )
+            if (ShorthandTag() != "!!map")
                 return false;
 
             var aa = this;
             var bb = (YamlMapping)b;
-            if ( aa.Count != bb.Count )
+            if (aa.Count != bb.Count)
                 return false;
 
-            var status= repository.CurrentStatus;
-            foreach ( var item in this ) {
+            var status = repository.CurrentStatus;
+            foreach (var item in this)
+            {
                 var candidates = bb.ItemsFromHashCode(item.Key.GetHashCode());
-                KeyValuePair<YamlNode, YamlNode> theone = new KeyValuePair<YamlNode,YamlNode>();
-                if ( !candidates.Any(subitem => {
-                    if ( item.Key.Equals(subitem.Key, repository) ) {
+                KeyValuePair<YamlNode, YamlNode> theone = new KeyValuePair<YamlNode, YamlNode>();
+                if (!candidates.Any(subitem =>
+                {
+                    if (item.Key.Equals(subitem.Key, repository))
+                    {
                         theone = subitem;
                         return true;
                     }
                     repository.CurrentStatus = status;
                     return false;
-                }) )
+                }))
                     return false;
-                if(!item.Value.Equals(theone.Value, repository))
+                if (!item.Value.Equals(theone.Value, repository))
                     return false;
             }
             return true;
@@ -1705,23 +1747,23 @@ namespace System.Yaml
         {
             mapping.Added += ChildAdded;
             mapping.Removed += ChildRemoved;
-            if ( nodes.Length / 2 != nodes.Length / 2.0 )
+            if (nodes.Length / 2 != nodes.Length / 2.0)
                 throw new ArgumentException("Even number of arguments are expected.");
             Tag = DefaultTagPrefix + "map";
-            for ( int i = 0; i < nodes.Length; i += 2 )
+            for (int i = 0; i < nodes.Length; i += 2)
                 Add(nodes[i + 0], nodes[i + 1]);
         }
 
         void CheckDuplicatedKeys()
         {
-            foreach ( var entry in this )
+            foreach (var entry in this)
                 CheckDuplicatedKeys(entry.Key);
         }
 
         void CheckDuplicatedKeys(YamlNode key)
         {
-            foreach(var k in mapping.ItemsFromHash(key.GetHashCode()))
-                if( ( k.Key != key ) && k.Key.Equals(key) )
+            foreach (var k in mapping.ItemsFromHash(key.GetHashCode()))
+                if ((k.Key != key) && k.Key.Equals(key))
                     throw new InvalidOperationException("Duplicated key found.");
         }
 
@@ -1761,21 +1803,26 @@ namespace System.Yaml
         {
             // find merge key
             var merge_key = Keys.FirstOrDefault(key => key.Tag == YamlNode.ExpandTag("!!merge"));
-            if ( merge_key == null )
+            if (merge_key == null)
                 return;
 
             // merge the value
             var value = this[merge_key];
-            if ( value is YamlMapping ) {
+            if (value is YamlMapping)
+            {
                 Remove(merge_key);
                 Merge((YamlMapping)value);
-            } else
-            if ( value is YamlSequence ) {
+            }
+            else
+            if (value is YamlSequence)
+            {
                 Remove(merge_key);
-                foreach ( var item in (YamlSequence)value )
-                    if ( item is YamlMapping )
+                foreach (var item in (YamlSequence)value)
+                    if (item is YamlMapping)
                         Merge((YamlMapping)item);
-            } else {
+            }
+            else
+            {
                 // ** ignore
                 // throw new InvalidOperationException(
                 //     "Can't merge the value into a mapping: " + value.ToString());
@@ -1783,8 +1830,8 @@ namespace System.Yaml
         }
         void Merge(YamlMapping map)
         {
-            foreach ( var entry in map ) 
-                if ( !ContainsKey(entry.Key) )
+            foreach (var entry in map)
+                if (!ContainsKey(entry.Key))
                     Add(entry.Key, entry.Value);
         }
 
@@ -1795,22 +1842,24 @@ namespace System.Yaml
         internal override string ToString(ref int length)
         {
             var s = "";
-            var t = ( ShorthandTag() == "!!map" ? "" : ShorthandTag() + " " );
+            var t = (ShorthandTag() == "!!map" ? "" : ShorthandTag() + " ");
             length -= t.Length + 2;
-            if ( length < 0 )
+            if (length < 0)
                 return "{" + t + "...";
-            foreach ( var entry in this ) {
-                if ( s != "" ) {
+            foreach (var entry in this)
+            {
+                if (s != "")
+                {
                     s += ", ";
                     length -= 2;
                 }
                 s += entry.Key.ToString(ref length);
-                if ( length < 0 )
+                if (length < 0)
                     return "{" + t + s;
                 s += ": ";
                 length -= 2;
                 s += entry.Value.ToString(ref length);
-                if ( length < 0 )
+                if (length < 0)
                     return "{" + t + s;
             }
             return "{" + t + s + "}";
@@ -1827,7 +1876,7 @@ namespace System.Yaml
         /// <param name="value">The node to use as the value of the element to add.</param>
         public void Add(YamlNode key, YamlNode value)
         {
-            if ( key == null || value == null )
+            if (key == null || value == null)
                 throw new ArgumentNullException("Key and value must be a valid YamlNode.");
             mapping.Add(key, value);
         }
@@ -1891,7 +1940,7 @@ namespace System.Yaml
         #region ICollection<KeyValuePair<Node,Node>> members
         void ICollection<KeyValuePair<YamlNode, YamlNode>>.Add(KeyValuePair<YamlNode, YamlNode> item)
         {
-            ( (ICollection<KeyValuePair<YamlNode, YamlNode>>)mapping ).Add(item);
+            ((ICollection<KeyValuePair<YamlNode, YamlNode>>)mapping).Add(item);
         }
         /// <summary>
         /// Removes all entries from the <see cref="YamlMapping"/>.
@@ -1907,11 +1956,11 @@ namespace System.Yaml
         /// <returns>true if item is found in the <see cref="YamlMapping"/> otherwise, false.</returns>
         public bool Contains(KeyValuePair<YamlNode, YamlNode> item)
         {
-            return ( (ICollection<KeyValuePair<YamlNode, YamlNode>>)mapping ).Contains(item);
+            return ((ICollection<KeyValuePair<YamlNode, YamlNode>>)mapping).Contains(item);
         }
         void ICollection<KeyValuePair<YamlNode, YamlNode>>.CopyTo(KeyValuePair<YamlNode, YamlNode>[] array, int arrayIndex)
         {
-            ( (ICollection<KeyValuePair<YamlNode, YamlNode>>)mapping ).CopyTo(array, arrayIndex);
+            ((ICollection<KeyValuePair<YamlNode, YamlNode>>)mapping).CopyTo(array, arrayIndex);
         }
         /// <summary>
         /// Returns the number of entries in a <see cref="YamlMapping"/>.
@@ -1926,7 +1975,7 @@ namespace System.Yaml
         }
         bool ICollection<KeyValuePair<YamlNode, YamlNode>>.Remove(KeyValuePair<YamlNode, YamlNode> item)
         {
-            return ( (ICollection<KeyValuePair<YamlNode, YamlNode>>)mapping ).Remove(item);
+            return ((ICollection<KeyValuePair<YamlNode, YamlNode>>)mapping).Remove(item);
         }
         #endregion
         #region IEnumerable<KeyValuePair<Node,Node>> members
@@ -1953,7 +2002,7 @@ namespace System.Yaml
     /// Use <see cref="IList&lt;YamlNode&gt;">IList&lt;YamlNode&gt;</see> interface 
     /// to manipulate child nodes.
     /// </summary>
-    public class YamlSequence: YamlComplexNode, IList<YamlNode>, IDisposable
+    public class YamlSequence : YamlComplexNode, IList<YamlNode>, IDisposable
     {
         /// <summary>
         /// Create a sequence node that has <paramref name="nodes"/> as its child.
@@ -1962,7 +2011,7 @@ namespace System.Yaml
         public YamlSequence(params YamlNode[] nodes)
         {
             Tag = DefaultTagPrefix + "seq";
-            for ( int i = 0; i < nodes.Length; i++ )
+            for (int i = 0; i < nodes.Length; i++)
                 Add(nodes[i]);
         }
 
@@ -1986,20 +2035,24 @@ namespace System.Yaml
         /// <returns></returns>
         protected override int GetHashCodeCoreSub(int path, Dictionary<YamlNode, int> dict)
         {
-            if ( dict.ContainsKey(this) )
+            if (dict.ContainsKey(this))
                 return dict[this].GetHashCode() * 27 + path;
             dict.Add(this, path);
 
             // Unless !!seq, the hash code is based on the node's identity.
-            if ( ShorthandTag() != "!!seq" )
+            if (ShorthandTag() != "!!seq")
                 return TypeUtils.HashCodeByRef<YamlSequence>.GetHashCode(this);
 
             var result = Tag.GetHashCode();
-            for ( int i=0; i<Count; i++) {
-                var item= sequence[i];
-                if ( item is YamlComplexNode ) {
+            for (int i = 0; i < Count; i++)
+            {
+                var item = sequence[i];
+                if (item is YamlComplexNode)
+                {
                     result += GetHashCodeCoreSub(path * 317 ^ i.GetHashCode(), dict);
-                } else {
+                }
+                else
+                {
                     result += item.GetHashCode() ^ i.GetHashCode();
                 }
             }
@@ -2010,28 +2063,28 @@ namespace System.Yaml
         {
             YamlNode a = this;
             bool skip;
-            if ( !base.EqualsSub(b, repository, out skip) )
+            if (!base.EqualsSub(b, repository, out skip))
                 return false;
-            if ( skip )
+            if (skip)
                 return true;
 
             // Unless !!seq, the hash equality is evaluated by the node's identity.
-            if ( ShorthandTag() != "!!seq" )
+            if (ShorthandTag() != "!!seq")
                 return false;
 
             var aa = this;
             var bb = (YamlSequence)b;
-            if ( aa.Count != bb.Count )
+            if (aa.Count != bb.Count)
                 return false;
 
             var iter_a = aa.GetEnumerator();
             var iter_b = bb.GetEnumerator();
-            while ( iter_a.MoveNext() && iter_b.MoveNext() )
-                if ( !iter_a.Current.Equals(iter_b.Current, repository) )
+            while (iter_a.MoveNext() && iter_b.MoveNext())
+                if (!iter_a.Current.Equals(iter_b.Current, repository))
                     return false;
             return true;
         }
-        
+
         void OnItemAdded(YamlNode item)
         {
             item.Changed += ItemChanged;
@@ -2044,21 +2097,23 @@ namespace System.Yaml
         {
             OnChanged();
         }
-        
+
         internal override string ToString(ref int length)
         {
-            var t = ( ShorthandTag() == "!!seq" ? "" : ShorthandTag() + " " );
+            var t = (ShorthandTag() == "!!seq" ? "" : ShorthandTag() + " ");
             length -= t.Length + 2;
-            if ( length < 0 )
+            if (length < 0)
                 return "[" + t + "...";
             var s = "";
-            foreach ( var item in this ) {
-                if ( item != this.First() ) {
+            foreach (var item in this)
+            {
+                if (item != this.First())
+                {
                     s += ", ";
                     length -= 2;
                 }
                 s += item.ToString(ref length);
-                if ( length < 0 )
+                if (length < 0)
                     return "[" + t + s;
             }
             return "[" + t + s + "]";
@@ -2121,12 +2176,16 @@ namespace System.Yaml
         public YamlNode this[int index]
         {
             get { return sequence[index]; }
-            set {
-                if ( index < sequence.Count ) {
+            set
+            {
+                if (index < sequence.Count)
+                {
                     var item = sequence[index];
                     sequence[index] = value;
                     OnItemRemoved(item);
-                } else {
+                }
+                else
+                {
                     sequence[index] = value;
                 }
                 OnItemAdded(value);
@@ -2148,7 +2207,7 @@ namespace System.Yaml
         {
             var old = sequence;
             sequence = new List<YamlNode>();
-            foreach ( var item in old )
+            foreach (var item in old)
                 OnItemRemoved(item);
         }
         /// <summary>
@@ -2199,7 +2258,7 @@ namespace System.Yaml
         }
         bool ICollection<YamlNode>.IsReadOnly
         {
-            get { return ( (ICollection<YamlNode>)sequence ).IsReadOnly; }
+            get { return ((ICollection<YamlNode>)sequence).IsReadOnly; }
         }
         /// <summary>
         /// Removes the first occurrence of a specific node from the <see cref="YamlSequence"/>.
@@ -2211,7 +2270,7 @@ namespace System.Yaml
         public bool Remove(YamlNode node)
         {
             var i = sequence.FindIndex(item => item.Equals(node));
-            if ( i < 0 )
+            if (i < 0)
                 return false;
             var item2 = sequence[i];
             sequence.RemoveAt(i);
@@ -2228,7 +2287,7 @@ namespace System.Yaml
         }
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
-            return ( (System.Collections.IEnumerable)sequence ).GetEnumerator();
+            return ((System.Collections.IEnumerable)sequence).GetEnumerator();
         }
         #endregion
     }
@@ -2326,8 +2385,8 @@ namespace System.Yaml
         /// <returns>Created sequence node.</returns>
         protected static YamlSequence seq_tag(string tag, params YamlNode[] nodes)
         {
-            var result= new YamlSequence(nodes);
-            result.Tag= tag;
+            var result = new YamlSequence(nodes);
+            result.Tag = tag;
             return result;
         }
         /// <summary>

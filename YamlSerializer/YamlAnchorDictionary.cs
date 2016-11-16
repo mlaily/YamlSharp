@@ -35,18 +35,21 @@ namespace System.Yaml
         {
             get
             {
-                if ( !Items.ContainsKey(anchor_name) )
+                if (!Items.ContainsKey(anchor_name))
                     Error("Anchor {0} has not been registered.", anchor_name);
                 return Items[anchor_name];
             }
         }
         public void Add(string anchor_name, YamlNode node)
         {
-            if ( Items.ContainsKey(anchor_name) ) {
+            if (Items.ContainsKey(anchor_name))
+            {
                 // override an existing anchor
                 ItemsToRewind.Push(new RewindInfo(anchor_name, this[anchor_name]));
                 Items[anchor_name] = node;
-            } else {
+            }
+            else
+            {
                 ItemsToRewind.Push(new RewindInfo(anchor_name, null));
                 Items.Add(anchor_name, node);
             }
@@ -56,13 +59,17 @@ namespace System.Yaml
             get { return ItemsToRewind.Count; }
             set
             {
-                if ( RewindDepth < value )
+                if (RewindDepth < value)
                     throw new ArgumentOutOfRangeException();
-                while ( value < RewindDepth ) {
+                while (value < RewindDepth)
+                {
                     var rewind_item = ItemsToRewind.Pop();
-                    if ( rewind_item.old_value == null ) {
+                    if (rewind_item.old_value == null)
+                    {
                         Items.Remove(rewind_item.anchor_name);
-                    } else {
+                    }
+                    else
+                    {
                         Items[rewind_item.anchor_name] = rewind_item.old_value;
                     }
                 }

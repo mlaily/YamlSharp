@@ -20,8 +20,8 @@ namespace System.Yaml
     /// </summary>
     /// <typeparam name="K">Type of key. Must implements <see cref="IRehashableKey"/>.</typeparam>
     /// <typeparam name="V">Type of value.</typeparam>
-    class RehashableDictionary<K, V>: IDisposable, IDictionary<K, V>
-        where K: class, IRehashableKey
+    class RehashableDictionary<K, V> : IDisposable, IDictionary<K, V>
+        where K : class, IRehashableKey
     {
         class KeyValue
         {
@@ -71,18 +71,23 @@ namespace System.Yaml
             // remove old entry
             var item = items[oldHash];
             KeyValue kv = null;
-            if ( item is KeyValue ) {
+            if (item is KeyValue)
+            {
                 // only one item was found whose hash code equals to oldHash.
                 kv = (KeyValue)item;
                 // must be found
                 Debug.Assert(kv.key == key);
                 items.Remove(oldHash);
-            } else {
+            }
+            else
+            {
                 // several items were found whose hash codes equal to oldHash.
                 var list = (List<KeyValue>)item;
-                for ( int i = 0; i < list.Count; i++ ) {
+                for (int i = 0; i < list.Count; i++)
+                {
                     kv = list[i];
-                    if ( kv.key == key ) {
+                    if (kv.key == key)
+                    {
                         list.RemoveAt(i);
                         break;
                     }
@@ -90,30 +95,36 @@ namespace System.Yaml
                     Debug.Assert(i + 1 < list.Count);
                 }
                 // only one item is left, whose hash code equals to oldHash.
-                if ( list.Count == 1 )
+                if (list.Count == 1)
                     items[oldHash] = list.First();
             }
 
             // add new entry
-            if ( items.TryGetValue(newHash, out item) ) {
-                if ( item is KeyValue ) {
+            if (items.TryGetValue(newHash, out item))
+            {
+                if (item is KeyValue)
+                {
                     // must not exist already
-                    Debug.Assert(!( (KeyValue)item ).key.Equals(key));
+                    Debug.Assert(!((KeyValue)item).key.Equals(key));
                     var list = new List<KeyValue>();
                     list.Add((KeyValue)item);
                     list.Add(kv);
                     items[newHash] = list;
-                } else {
-                    // must not exist already
-                    Debug.Assert(!( item as List<KeyValue> ).Any(li => li.key.Equals(key)));
-                    ( item as List<KeyValue> ).Add(kv);
                 }
-            } else {
+                else
+                {
+                    // must not exist already
+                    Debug.Assert(!(item as List<KeyValue>).Any(li => li.key.Equals(key)));
+                    (item as List<KeyValue>).Add(kv);
+                }
+            }
+            else
+            {
                 items[newHash] = kv;
             }
         }
 
-        public class DictionaryEventArgs: EventArgs
+        public class DictionaryEventArgs : EventArgs
         {
             public K Key;
             public V Value;
@@ -128,7 +139,7 @@ namespace System.Yaml
         {
             // set observer
             key.Changed += new EventHandler(KeyChanged);
-            if ( Added != null )
+            if (Added != null)
                 Added(this, new DictionaryEventArgs(key, value));
         }
         public event EventHandler<DictionaryEventArgs> Added;
@@ -142,7 +153,7 @@ namespace System.Yaml
         {
             // remove observer
             key.Changed -= new EventHandler(KeyChanged);
-            if ( Removed != null )
+            if (Removed != null)
                 Removed(this, new DictionaryEventArgs(key, value));
         }
         public event EventHandler<DictionaryEventArgs> Removed;
@@ -157,25 +168,30 @@ namespace System.Yaml
         {
             var newkv = new KeyValue(key, value);
             FindItem(key, false, default(V),
-                (hash) => {                             // not found hash
+                (hash) =>
+                {                             // not found hash
                     items.Add(hash, newkv);
                     hashes.Add(key, hash);
                 },
-                (hash, oldkv) => {                      // hash hit one entry but key not found
+                (hash, oldkv) =>
+                {                      // hash hit one entry but key not found
                     var list = new List<KeyValue>();
                     list.Add(oldkv);
                     items[hash] = list;
                     list.Add(newkv);
                     hashes.Add(key, hash);
                 },
-                (hash, oldkv) => {                      // hash hit one entry and key found
+                (hash, oldkv) =>
+                {                      // hash hit one entry and key found
                     ReplaceKeyValue(oldkv, newkv, exclusive);
                 },
-                (hash, list) => {                       // hash hit several entries but key not found
+                (hash, list) =>
+                {                       // hash hit several entries but key not found
                     list.Add(newkv);
                     hashes.Add(key, hash);
                 },
-                (hash, oldkv, list, i) => {             // hash hit several entries and key found
+                (hash, oldkv, list, i) =>
+                {             // hash hit several entries and key found
                     ReplaceKeyValue(oldkv, newkv, exclusive);
                 }
                 );
@@ -184,7 +200,7 @@ namespace System.Yaml
 
         void ReplaceKeyValue(KeyValue oldkv, KeyValue newkv, bool exclusive)
         {
-            if ( exclusive )
+            if (exclusive)
                 throw new InvalidOperationException("Same key already exists.");
             var oldkv_saved = new KeyValue(oldkv.key, oldkv.value);
             oldkv.key = newkv.key;
@@ -198,15 +214,17 @@ namespace System.Yaml
             bool result = true;
             FindItem(key, compareValue, value,
                 (hash) => { result = false; },      // key not found
-                (hash, kv) => {                     // hash hit one entry and key found
+                (hash, kv) =>
+                {                     // hash hit one entry and key found
                     items.Remove(hash);
                     hashes.Remove(kv.key);
                     OnRemoved(kv.key, kv.value);
                 },
-                (hash, kv, list, i) => {            // hash hit several entries and key found
+                (hash, kv, list, i) =>
+                {            // hash hit several entries and key found
                     list.RemoveAt(i);
                     // only one entry left
-                    if ( list.Count == 1 )
+                    if (list.Count == 1)
                         items[hash] = list.First();
                     hashes.Remove(kv.key);
                     OnRemoved(kv.key, kv.value);
@@ -231,18 +249,24 @@ namespace System.Yaml
         public ICollection<KeyValuePair<K, V>> ItemsFromHash(int key_hash)
         {
             object entry;
-            if ( items.TryGetValue(key_hash, out entry) ) {
-                if ( entry is KeyValue ) {
+            if (items.TryGetValue(key_hash, out entry))
+            {
+                if (entry is KeyValue)
+                {
                     return new ItemsCollection(this, (KeyValue)entry);
-                } else {
+                }
+                else
+                {
                     return new ItemsCollection(this, (List<KeyValue>)entry);
                 }
-            } else {
+            }
+            else
+            {
                 return new ItemsCollection(this);
             }
         }
 
-        class ItemsCollection: KeysValuesBase<KeyValuePair<K, V>>
+        class ItemsCollection : KeysValuesBase<KeyValuePair<K, V>>
         {
             List<KeyValue> list;
             public ItemsCollection(RehashableDictionary<K, V> dictionary, List<KeyValue> list)
@@ -274,13 +298,13 @@ namespace System.Yaml
 
             public override void CopyTo(KeyValuePair<K, V>[] array, int arrayIndex)
             {
-                foreach ( var entry in list )
+                foreach (var entry in list)
                     array[arrayIndex++] = new KeyValuePair<K, V>(entry.key, entry.value);
             }
 
             public override IEnumerator<KeyValuePair<K, V>> GetEnumerator()
             {
-                foreach ( var item in list )
+                foreach (var item in list)
                     yield return new KeyValuePair<K, V>(item.key, item.value);
             }
         }
@@ -328,27 +352,42 @@ namespace System.Yaml
         {
             var hash = key.GetHashCode();
             object item;
-            if ( !items.TryGetValue(hash, out item) ) {
+            if (!items.TryGetValue(hash, out item))
+            {
                 NotFoundHash(hash); // hash not found
-            } else {
+            }
+            else
+            {
                 KeyValue kv;
-                if ( item is KeyValue ) {
+                if (item is KeyValue)
+                {
                     kv = (KeyValue)item;
-                    if ( !kv.key.Equals(key) || ( compareValue && !kv.value.Equals(value) ) ) {
+                    if (!kv.key.Equals(key) || (compareValue && !kv.value.Equals(value)))
+                    {
                         NotFoundKeyOne(hash, kv); // hash hit one entry but key not found
-                    } else {
+                    }
+                    else
+                    {
                         FoundOne(hash, kv); // hash hit one entry and key found
                     }
-                } else {
+                }
+                else
+                {
                     var list = (List<KeyValue>)item;
                     var i = list.FindIndex(i2 => i2.key.Equals(key));
-                    if ( i < 0 ) {
+                    if (i < 0)
+                    {
                         NotFoundKeyList(hash, list); // hash hit several entries but key not found
-                    } else {
+                    }
+                    else
+                    {
                         kv = list[i];
-                        if ( compareValue && !kv.value.Equals(value) ) {
+                        if (compareValue && !kv.value.Equals(value))
+                        {
                             NotFoundKeyList(hash, list); // hash hit several entries but key not found
-                        } else {
+                        }
+                        else
+                        {
                             FoundList(hash, kv, list, i); // hash hit several entries and key found
                         }
                     }
@@ -358,13 +397,16 @@ namespace System.Yaml
 
         IEnumerator<KeyValue> GetEnumeratorCore(IDictionary<int, object> items)
         {
-            foreach ( var item in items )
-                if ( item.Value is KeyValue ) {
+            foreach (var item in items)
+                if (item.Value is KeyValue)
+                {
                     var kv = (KeyValue)item.Value;
                     yield return kv;
-                } else {
+                }
+                else
+                {
                     var list = (List<KeyValue>)item.Value;
-                    foreach ( var kv in list )
+                    foreach (var kv in list)
                         yield return kv;
                 }
         }
@@ -391,7 +433,7 @@ namespace System.Yaml
         /// Collection that is readonly and invalidated when an item is 
         /// added to or removed from the dictionary.
         /// </summary>
-        abstract class KeysValuesBase<T>: ICollection<T>, IDisposable
+        abstract class KeysValuesBase<T> : ICollection<T>, IDisposable
         {
             protected bool Invalid = false;
             protected RehashableDictionary<K, V> Dictionary;
@@ -413,7 +455,7 @@ namespace System.Yaml
 
             protected void CheckValid()
             {
-                if ( Invalid )
+                if (Invalid)
                     throw new InvalidOperationException(
                         "Dictionary was modified after this collection was created.");
             }
@@ -462,7 +504,7 @@ namespace System.Yaml
             #endregion
         }
 
-        class KeyCollection: KeysValuesBase<K>
+        class KeyCollection : KeysValuesBase<K>
         {
             public KeyCollection(RehashableDictionary<K, V> dictionary)
                 : base(dictionary)
@@ -475,7 +517,8 @@ namespace System.Yaml
 
             public override void CopyTo(K[] array, int arrayIndex)
             {
-                foreach ( var item in Dictionary ) {
+                foreach (var item in Dictionary)
+                {
                     CheckValid();
                     array[arrayIndex++] = item.Key;
                 }
@@ -483,7 +526,8 @@ namespace System.Yaml
 
             public override IEnumerator<K> GetEnumerator()
             {
-                foreach ( var item in Dictionary ) {
+                foreach (var item in Dictionary)
+                {
                     CheckValid();
                     yield return item.Key;
                 }
@@ -505,7 +549,7 @@ namespace System.Yaml
             get { return new ValueCollection(this); }
         }
 
-        class ValueCollection: KeysValuesBase<V>
+        class ValueCollection : KeysValuesBase<V>
         {
             public ValueCollection(RehashableDictionary<K, V> dictionary)
                 : base(dictionary)
@@ -513,12 +557,13 @@ namespace System.Yaml
 
             public override bool Contains(V item)
             {
-                return Dictionary.Any(entry=>entry.Value.Equals(item));
+                return Dictionary.Any(entry => entry.Value.Equals(item));
             }
 
             public override void CopyTo(V[] array, int arrayIndex)
             {
-                foreach ( var item in Dictionary ) {
+                foreach (var item in Dictionary)
+                {
                     CheckValid();
                     array[arrayIndex++] = item.Value;
                 }
@@ -526,7 +571,8 @@ namespace System.Yaml
 
             public override IEnumerator<V> GetEnumerator()
             {
-                foreach ( var item in Dictionary ) {
+                foreach (var item in Dictionary)
+                {
                     CheckValid();
                     yield return item.Value;
                 }
@@ -538,7 +584,7 @@ namespace System.Yaml
             get
             {
                 V value;
-                if ( TryGetValueCore(key, out value) )
+                if (TryGetValueCore(key, out value))
                     return value;
                 throw new ArgumentException("Key not exist.");
             }
@@ -562,22 +608,22 @@ namespace System.Yaml
             var oldItems = items;
             items = new SortedDictionary<int, object>();
             hashes.Clear();
-            var iter= GetEnumeratorCore(oldItems);
-            while(iter.MoveNext())
+            var iter = GetEnumeratorCore(oldItems);
+            while (iter.MoveNext())
                 OnRemoved(iter.Current.key, iter.Current.value);
         }
 
         public bool Contains(KeyValuePair<K, V> item)
         {
             V value;
-            if ( !TryGetValueCore(item.Key, out value) )
+            if (!TryGetValueCore(item.Key, out value))
                 return false;
             return value.Equals(item.Value);
         }
 
         public void CopyTo(KeyValuePair<K, V>[] array, int arrayIndex)
         {
-            foreach ( var item in this )
+            foreach (var item in this)
                 array[arrayIndex++] = item;
         }
 
@@ -603,7 +649,7 @@ namespace System.Yaml
         public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
         {
             var iter = GetEnumeratorCore(items);
-            while ( iter.MoveNext() )
+            while (iter.MoveNext())
                 yield return new KeyValuePair<K, V>(iter.Current.key, iter.Current.value);
         }
 

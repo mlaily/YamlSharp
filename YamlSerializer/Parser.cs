@@ -6,13 +6,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 namespace System.Yaml
-{                               
+{
     /// <summary>
     /// <para>When <see cref="Parser&lt;State&gt;"/> reports syntax error by exception, this class is thrown.</para>
     /// 
     /// <para>Sytax errors can also be reported by simply returing false with giving some warnings.</para>
     /// </summary>
-    internal class ParseErrorException: Exception
+    internal class ParseErrorException : Exception
     {
         /// <summary>
         /// Initialize an instance of <see cref="ParseErrorException"/>
@@ -29,7 +29,7 @@ namespace System.Yaml
     /// </summary>
     /// <typeparam name="State">Parser specific state structure.</typeparam>
     internal abstract class Parser<State>
-        where State: struct
+        where State : struct
     {
         /// <summary>
         /// Parse the <paramref name="text"/> using the <paramref name="start_rule"/> 
@@ -101,15 +101,18 @@ namespace System.Yaml
         /// Get current position represented by raw and column.
         /// </summary>
         public Position CurrentPosition
-        {   
+        {
             get
             {
                 Position pos = new Position();
                 pos.Raw = Lines.BinarySearch(p);
-                if ( pos.Raw < 0 ) {
+                if (pos.Raw < 0)
+                {
                     pos.Raw = ~pos.Raw;
                     pos.Column = p - Lines[pos.Raw - 1] + 1;
-                } else {
+                }
+                else
+                {
                     pos.Raw++; // 1 base
                     pos.Column = 1;
                 }
@@ -124,13 +127,16 @@ namespace System.Yaml
         {
             Lines = new List<int>();
             Lines.Add(0);
-            for ( var i = 0; i < text.Length; i++ ) {
-                if ( text[i] == '\r' ) {
-                    if ( i + 1 < text.Length - 1 && text[i + 1] == '\n' )
+            for (var i = 0; i < text.Length; i++)
+            {
+                if (text[i] == '\r')
+                {
+                    if (i + 1 < text.Length - 1 && text[i + 1] == '\n')
                         i++;
                     Lines.Add(i + 1);
-                } else
-                if ( text[i] == '\n' )
+                }
+                else
+                if (text[i] == '\n')
                     Lines.Add(i + 1);
             }
         }
@@ -141,15 +147,16 @@ namespace System.Yaml
         /// <summary>
         /// Represents a position in a multiline text.
         /// </summary>
-        public struct Position { 
+        public struct Position
+        {
             /// <summary>
             /// Raw in a text.
             /// </summary>
-            public int Raw; 
+            public int Raw;
             /// <summary>
             /// Column in a text.
             /// </summary>
-            public int Column; 
+            public int Column;
         }
         #endregion
 
@@ -247,7 +254,7 @@ namespace System.Yaml
         /// <returns>Always true.</returns>
         protected bool WarningIf(bool condition, string message, params object[] args)
         {
-            if ( condition )
+            if (condition)
                 Warning(message, args);
             return true;
         }
@@ -272,7 +279,7 @@ namespace System.Yaml
         /// <returns>Always true.</returns>
         protected bool WarningUnless(bool condition, string message, params object[] args)
         {
-            if ( !condition )
+            if (!condition)
                 Warning(message, args);
             return true;
         }
@@ -294,7 +301,7 @@ namespace System.Yaml
         /// <returns>Always true.</returns>
         protected bool Warning(string message, params object[] args)
         {
-            message = string.Format( 
+            message = string.Format(
                 "Warning: {0} at line {1} column {2}.",
                 string.Format(message, args),
                 CurrentPosition.Raw,
@@ -355,7 +362,7 @@ namespace System.Yaml
         /// This method is called just after <see cref="RewindUnless"/> recovers <see cref="state"/>.
         /// Override it to do any additional operation for rewinding.
         /// </summary>
-        protected virtual void Rewind() {}
+        protected virtual void Rewind() { }
         /// <summary>
         /// Represents EBNF operator of "*".
         /// </summary>
@@ -392,9 +399,10 @@ namespace System.Yaml
             // repeat while condition() returns true and 
             // it reduces any part of text.
             int start;
-            do {
+            do
+            {
                 start = p;
-            } while ( rule() && start != p );
+            } while (rule() && start != p);
             return true;
         }
         /// <summary>
@@ -459,9 +467,10 @@ namespace System.Yaml
         /// <returns>true if the rule matches; otherwise false.</returns>
         protected bool Repeat(int n, Func<bool> rule)
         {
-            return RewindUnless(() => {
-                for ( int i = 0; i < n; i++ )
-                    if ( !rule() )
+            return RewindUnless(() =>
+            {
+                for (int i = 0; i < n; i++)
+                    if (!rule())
                         return false;
                 return true;
             });
@@ -497,12 +506,13 @@ namespace System.Yaml
         /// <returns>true if the rule matches; otherwise false.</returns>
         protected bool Repeat(int min, int max, Func<bool> rule)
         {
-            return RewindUnless(() => {
-                for ( int i = 0; i < min; i++ )
-                    if ( !rule() )
+            return RewindUnless(() =>
+            {
+                for (int i = 0; i < min; i++)
+                    if (!rule())
                         return false;
-                for ( int i = 0; i < max || max < 0; i++ )
-                    if ( !rule() )
+                for (int i = 0; i < max || max < 0; i++)
+                    if (!rule())
                         return true;
                 return true;
             });
@@ -553,8 +563,8 @@ namespace System.Yaml
         /// <returns>Always true.</returns>
         protected bool Optional(Func<bool> rule) // ? 
         {
-            return 
-                RewindUnless(()=> rule()) || true;
+            return
+                RewindUnless(() => rule()) || true;
         }
         #endregion
 
@@ -591,7 +601,8 @@ namespace System.Yaml
         /// </example>
         protected bool Accept(Func<char, bool> charset)
         {
-            if ( p < text.Length && charset(text[p]) ) {
+            if (p < text.Length && charset(text[p]))
+            {
                 p++;
                 return true;
             }
@@ -634,7 +645,8 @@ namespace System.Yaml
         /// </example>
         protected bool Accept(char c)
         {
-            if ( p < text.Length && text[p] == c ) {
+            if (p < text.Length && text[p] == c)
+            {
                 p++;
                 return true;
             }
@@ -657,10 +669,10 @@ namespace System.Yaml
         /// </example>
         protected bool Accept(string s)
         {
-            if ( p + s.Length >= text.Length )
+            if (p + s.Length >= text.Length)
                 return false;
-            for ( int i = 0; i < s.Length; i++ )
-                if ( s[i] != text[p + i] )
+            for (int i = 0; i < s.Length; i++)
+                if (s[i] != text[p + i])
                     return false;
             p += s.Length;
             return true;
@@ -673,7 +685,7 @@ namespace System.Yaml
         protected bool Accept(Regex r)
         {
             var m = r.Match(text, p);
-            if ( !m.Success )
+            if (!m.Success)
                 return false;
             p += m.Length;
             return true;
@@ -685,7 +697,7 @@ namespace System.Yaml
         /// <returns>Always true.</returns>
         protected bool Repeat(Func<char, bool> charset)
         {
-            while ( charset(text[p]) )
+            while (charset(text[p]))
                 p++;
             return true;
         }
@@ -696,9 +708,9 @@ namespace System.Yaml
         /// <returns>true if the rule matches; otherwise false.</returns>
         protected bool OneAndRepeat(Func<char, bool> charset)
         {
-            if ( !charset(text[p]) )
+            if (!charset(text[p]))
                 return false;
-            while ( charset(text[++p]) )
+            while (charset(text[++p]))
                 ;
             return true;
         }
@@ -710,8 +722,8 @@ namespace System.Yaml
         /// <returns>true if the rule matches; otherwise false.</returns>
         protected bool Repeat(Func<char, bool> charset, int n)
         {
-            for ( int i = 0; i < n; i++ )
-                if ( !charset(text[p + i]) )
+            for (int i = 0; i < n; i++)
+                if (!charset(text[p + i]))
                     return false;
             p += n;
             return true;
@@ -726,11 +738,12 @@ namespace System.Yaml
         /// <returns>true if the rule matches; otherwise false.</returns>
         protected bool Repeat(Func<char, bool> charset, int min, int max)
         {
-            for ( int i = 0; i < min; i++ )
-                if ( !charset(text[p + i]) )
+            for (int i = 0; i < min; i++)
+                if (!charset(text[p + i]))
                     return false;
-            for ( int i = 0; i < max; i++ )
-                if ( !charset(text[p + min + i]) ) {
+            for (int i = 0; i < max; i++)
+                if (!charset(text[p + min + i]))
+                {
                     p += min + i;
                     return true;
                 }
@@ -744,7 +757,7 @@ namespace System.Yaml
         /// <returns>Always true.</returns>
         protected bool Optional(Func<char, bool> charset) // ? 
         {
-            if ( !charset(text[p]) )
+            if (!charset(text[p]))
                 return true;
             p++;
             return true;
@@ -848,7 +861,7 @@ namespace System.Yaml
             int table_size, Func<char, bool> definition)
         {
             var table = new bool[table_size];
-            for ( char c = '\0'; c < table_size; c++ )
+            for (char c = '\0'; c < table_size; c++)
                 table[c] = definition(c);
             return c => c < table_size ? table[c] : definition(c);
         }
@@ -868,7 +881,7 @@ namespace System.Yaml
         {
             var value_ = "";
             var result = Save(rule, s => value_ = s);
-            if ( result )
+            if (result)
                 value = value_;
             return result;
         }
@@ -881,7 +894,7 @@ namespace System.Yaml
         /// <returns>true if <paramref name="rule"/> matches; otherwise false.</returns>
         protected bool Save(Func<bool> rule)
         {
-            return 
+            return
                 Save(rule, s => stringValue.Append(s));
         }
         /// <summary>
@@ -905,7 +918,7 @@ namespace System.Yaml
         {
             int start = p;
             var result = rule();
-            if ( result )
+            if (result)
                 save(text.Substring(start, p - start));
             return result;
         }

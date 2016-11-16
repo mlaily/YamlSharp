@@ -26,17 +26,20 @@ namespace System.Yaml
         void AddDefaultRules()
         {
             BeginUpdate();
-            AddRule<int>("!!int", @"([-+]?(0|[1-9][0-9_]*))", 
+            AddRule<int>("!!int", @"([-+]?(0|[1-9][0-9_]*))",
                 m => Convert.ToInt32(m.Value.Replace("_", "")), null);
-            AddRule<int>("!!int", @"([-+]?)0b([01_]+)", m => {
+            AddRule<int>("!!int", @"([-+]?)0b([01_]+)", m =>
+            {
                 var v = Convert.ToInt32(m.Groups[2].Value.Replace("_", ""), 2);
                 return m.Groups[1].Value == "-" ? -v : v;
-                }, null);
-            AddRule<int>("!!int", @"([-+]?)0o?([0-7_]+)", m => {
+            }, null);
+            AddRule<int>("!!int", @"([-+]?)0o?([0-7_]+)", m =>
+            {
                 var v = Convert.ToInt32(m.Groups[2].Value.Replace("_", ""), 8);
                 return m.Groups[1].Value == "-" ? -v : v;
             }, null);
-            AddRule<int>("!!int", @"([-+]?)0x([0-9a-fA-F_]+)", m => {
+            AddRule<int>("!!int", @"([-+]?)0x([0-9a-fA-F_]+)", m =>
+            {
                 var v = Convert.ToInt32(m.Groups[2].Value.Replace("_", ""), 16);
                 return m.Groups[1].Value == "-" ? -v : v;
             }, null);
@@ -63,19 +66,26 @@ namespace System.Yaml
                         @"([ \t]*)" +
                         @"(Z|([-+])([0-9]{1,2})(:([0-9][0-9]))?)" +
                     @")?" +
-                @")?", 
+                @")?",
                 match => DateTime.Parse(match.Value),
-                datetime => {
+                datetime =>
+                {
                     var z = datetime.ToString("%K");
-                    if ( z != "Z" && z != "" )
+                    if (z != "Z" && z != "")
                         z = " " + z;
-                    if ( datetime.Millisecond == 0 ) {
-                        if ( datetime.Hour == 0 && datetime.Minute == 0 && datetime.Second == 0 ) {
+                    if (datetime.Millisecond == 0)
+                    {
+                        if (datetime.Hour == 0 && datetime.Minute == 0 && datetime.Second == 0)
+                        {
                             return datetime.ToString("yyyy-MM-dd" + z);
-                        } else {
+                        }
+                        else
+                        {
                             return datetime.ToString("yyyy-MM-dd HH:mm:ss" + z);
                         }
-                    } else {
+                    }
+                    else
+                    {
                         return datetime.ToString("yyyy-MM-dd HH:mm:ss.fff" + z);
                     }
                 });
@@ -84,8 +94,8 @@ namespace System.Yaml
 
         public Type TypeFromTag(string tag)
         {
-            tag= YamlNode.ExpandTag(tag);
-            if ( types.ContainsKey(tag) )
+            tag = YamlNode.ExpandTag(tag);
+            if (types.ContainsKey(tag))
                 return types[tag][0].GetTypeOfValue();
             return null;
         }
@@ -122,14 +132,14 @@ namespace System.Yaml
         public void AddRule<T>(string tag, string regex, Func<Match, T> decode, Func<T, string> encode)
         {
             Rules.Add(new YamlTagResolutionRule<T>(tag, regex, decode, encode));
-            if ( UpdateCounter == 0 )
+            if (UpdateCounter == 0)
                 Update();
         }
 
         public void AddRule<T>(string regex, Func<Match, T> decode, Func<T, string> encode)
         {
-            Rules.Add(new YamlTagResolutionRule<T>("!"+typeof(T).FullName, regex, decode, encode));
-            if ( UpdateCounter == 0 )
+            Rules.Add(new YamlTagResolutionRule<T>("!" + typeof(T).FullName, regex, decode, encode));
+            if (UpdateCounter == 0)
                 Update();
         }
 
@@ -150,10 +160,10 @@ namespace System.Yaml
         /// </summary>
         public void EndUpdate()
         {
-            if ( UpdateCounter == 0 )
+            if (UpdateCounter == 0)
                 throw new InvalidOperationException();
             UpdateCounter--;
-            if ( UpdateCounter == 0 )
+            if (UpdateCounter == 0)
                 Update();
         }
 
@@ -162,17 +172,22 @@ namespace System.Yaml
         {
             // Tag to joined regexp source
             var sources = new Dictionary<string, string>();
-            foreach ( var rule in Rules ) {
-                if ( !sources.ContainsKey(rule.Tag) ) {
+            foreach (var rule in Rules)
+            {
+                if (!sources.ContainsKey(rule.Tag))
+                {
                     sources.Add(rule.Tag, rule.PatternSource);
-                } else {
+                }
+                else
+                {
                     sources[rule.Tag] += "|" + rule.PatternSource;
                 }
             }
 
             // Tag to joined regexp
             algorithms = new Dictionary<string, Regex>();
-            foreach ( var entry in sources ) {
+            foreach (var entry in sources)
+            {
                 algorithms.Add(
                     entry.Key,
                     new Regex("^(" + entry.Value + ")$")
@@ -181,15 +196,16 @@ namespace System.Yaml
 
             // Tag to decoding methods
             types = new Dictionary<string, List<YamlTagResolutionRule>>();
-            foreach ( var rule in Rules ) {
-                if ( !types.ContainsKey(rule.Tag) ) 
+            foreach (var rule in Rules)
+            {
+                if (!types.ContainsKey(rule.Tag))
                     types[rule.Tag] = new List<YamlTagResolutionRule>();
                 types[rule.Tag].Add(rule);
             }
 
             TypeToRule = new Dictionary<Type, YamlTagResolutionRule>();
-            foreach ( var rule in Rules ) 
-                if(rule.HasEncoder())
+            foreach (var rule in Rules)
+                if (rule.HasEncoder())
                     TypeToRule[rule.GetTypeOfValue()] = rule;
         }
 
@@ -203,8 +219,8 @@ namespace System.Yaml
         /// <returns>Automatically determined tag value .</returns>
         public string Resolve(string text)
         {
-            foreach ( var entry in algorithms )
-                if ( entry.Value.IsMatch(text) )
+            foreach (var entry in algorithms)
+                if (entry.Value.IsMatch(text))
                     return entry.Key;
             return null;
         }
@@ -218,14 +234,16 @@ namespace System.Yaml
         public bool Decode(YamlScalar node, out object obj)
         {
             obj = null;
-            if ( node.Tag == null || node.Value == null )
+            if (node.Tag == null || node.Value == null)
                 return false;
-            var tag= YamlNode.ExpandTag(node.Tag);
-            if ( !types.ContainsKey(tag) )
+            var tag = YamlNode.ExpandTag(node.Tag);
+            if (!types.ContainsKey(tag))
                 return false;
-            foreach ( var rule in types[tag] ) {
+            foreach (var rule in types[tag])
+            {
                 var m = rule.Pattern.Match(node.Value);
-                if ( m.Success ) {
+                if (m.Success)
+                {
                     obj = rule.Decode(m);
                     return true;
                 }
@@ -237,7 +255,7 @@ namespace System.Yaml
         {
             node = null;
             YamlTagResolutionRule rule;
-            if ( !TypeToRule.TryGetValue(obj.GetType(), out rule) )
+            if (!TypeToRule.TryGetValue(obj.GetType(), out rule))
                 return false;
             node = new YamlScalar(rule.Tag, rule.Encode(obj));
             return true;
@@ -256,7 +274,7 @@ namespace System.Yaml
         public bool IsMatch(string value) { return Pattern.IsMatch(value); }
     }
 
-    internal class YamlTagResolutionRule<T>: YamlTagResolutionRule
+    internal class YamlTagResolutionRule<T> : YamlTagResolutionRule
     {
         public YamlTagResolutionRule(string tag, string regex, Func<Match, T> decoder, Func<T, string> encoder)
         {

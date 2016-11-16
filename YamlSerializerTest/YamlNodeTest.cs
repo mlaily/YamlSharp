@@ -12,7 +12,7 @@ using System.Reflection.Emit;
 namespace YamlSerializerTest
 {
     [TestFixture]
-    public class YamlNodeTest: YamlNodeManipulator
+    public class YamlNodeTest : YamlNodeManipulator
     {
         [Test]
         public void TestGenericList()
@@ -86,7 +86,7 @@ namespace YamlSerializerTest
                 return test;
             }
         }
-        class TestChild: TestBase
+        class TestChild : TestBase
         {
             string test = "child";
             public override string Test()
@@ -95,7 +95,7 @@ namespace YamlSerializerTest
             }
         }
 
-        class DummyClass: TestBase
+        class DummyClass : TestBase
         {
             new public string Test()
             {
@@ -114,7 +114,7 @@ namespace YamlSerializerTest
             Assert.AreEqual(typeof(TestBase), m.DeclaringType);
             Assert.AreEqual(typeof(TestBase).GetMethod("Test"), m);
             Assert.AreEqual("child", m.Invoke(c, new object[0]));
-            Assert.AreEqual("child", ( (TestBase)c ).Test());
+            Assert.AreEqual("child", ((TestBase)c).Test());
 
             var dm = new System.Reflection.Emit.DynamicMethod(
                 "", typeof(string), new Type[] { typeof(TestBase) }, typeof(YamlNodeTest));
@@ -147,7 +147,7 @@ namespace YamlSerializerTest
             var dm = new DynamicMethod(
                 "GetHashCodeByRef",     // name of dynamic method
                 typeof(int),            // type of return value
-                new Type[] { 
+                new Type[] {
                     typeof(object)      // type of "this"
                 },
                 typeof(YamlNodeTest));  // owner
@@ -248,7 +248,7 @@ namespace YamlSerializerTest
         public static string MultiLineText(params string[] lines)
         {
             var result = "";
-            foreach ( var line in lines )
+            foreach (var line in lines)
                 result += line + "\r\n";
             return result;
         }
@@ -330,8 +330,8 @@ namespace YamlSerializerTest
             Assert.AreEqual(7, invoice["date"].Column);
             Assert.AreEqual(4, invoice["bill-to"].Raw);
             Assert.AreEqual(10, invoice["bill-to"].Column);
-            Assert.AreEqual(11, ( (YamlMapping)invoice["bill-to"] )["given"].Raw);
-            Assert.AreEqual(10, ( (YamlMapping)invoice["bill-to"] )["given"].Column);
+            Assert.AreEqual(11, ((YamlMapping)invoice["bill-to"])["given"].Raw);
+            Assert.AreEqual(10, ((YamlMapping)invoice["bill-to"])["given"].Column);
             Assert.AreEqual(4, invoice["ship-to"].Raw);
             Assert.AreEqual(10, invoice["ship-to"].Column);
         }
@@ -386,7 +386,7 @@ namespace YamlSerializerTest
                 "  key3: value3\r\n" +
                 "  <<: \r\n" +
                 "    key4: value4\r\n" +
-                "    <<: value5\r\n"+
+                "    <<: value5\r\n" +
                 "key6: <<\r\n")[0];
             Assert.AreEqual(
                 "%YAML 1.2\r\n" +
@@ -432,8 +432,8 @@ namespace YamlSerializerTest
             Assert.IsFalse(dict.Contains(new KeyValuePair<YamlNode, int>(key, 4)));
             var entry = dict.First(e => e.Key == key);
             Assert.IsFalse(dict.Contains(entry));
-            Assert.IsFalse(((ICollection<KeyValuePair<YamlNode,int>>)dict).Remove(entry));
-            Assert.IsTrue(( (ICollection<YamlNode>)dict.Keys ).IsReadOnly);
+            Assert.IsFalse(((ICollection<KeyValuePair<YamlNode, int>>)dict).Remove(entry));
+            Assert.IsTrue(((ICollection<YamlNode>)dict.Keys).IsReadOnly);
         }
 
         [Test]
@@ -498,7 +498,7 @@ namespace YamlSerializerTest
                 "- 0b01\n" +
                 "- 1\n" +
                 "- 01\n" +
-                "- 0o1\n" 
+                "- 0o1\n"
                 )[0];
             Assert.AreEqual(seq[0], seq[1]);
             Assert.AreEqual(seq[0], seq[2]);
@@ -510,7 +510,7 @@ namespace YamlSerializerTest
                 "- +10.0\n" +
                 "- 10.0\n" +
                 "- 1e1\n" +
-                "- 0.1e2\n"+
+                "- 0.1e2\n" +
                 "- 0.11e2\n"
                 )[0];
             Assert.AreEqual(seq[0], seq[1]);
