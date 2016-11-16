@@ -5,7 +5,7 @@ using System.Text;
 
 using System.Text.RegularExpressions;
 
-namespace System.Yaml.Unused
+namespace Yaml.Unused
 {
     /// <summary>
     /// Extend string object to have .DoubleQuoteEscape() / .DoubleQuoteUnescape().

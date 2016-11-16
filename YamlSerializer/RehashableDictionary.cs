@@ -5,7 +5,7 @@ using System.Text;
 
 using System.Diagnostics;
 
-namespace System.Yaml
+namespace Yaml
 {
     interface IRehashableKey
     {

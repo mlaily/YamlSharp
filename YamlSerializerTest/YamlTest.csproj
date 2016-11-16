@@ -88,9 +88,9 @@
     <Compile Include="YamlTagValidatorTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\YamlSerializer\YamlSerializer.csproj">
+    <ProjectReference Include="..\YamlSerializer\Yaml.csproj">
       <Project>{AD9F3A60-C492-4823-8F24-6F4854E7CBF5}</Project>
-      <Name>YamlSerializer</Name>
+      <Name>Yaml</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

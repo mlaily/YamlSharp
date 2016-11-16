@@ -5,7 +5,7 @@ using System.Text;
 
 using System.Text.RegularExpressions;
 
-namespace System.Yaml
+namespace Yaml
 {
     /// <summary>
     /// Represents the way to automatically resolve Tag from the Value of a YamlScalar.

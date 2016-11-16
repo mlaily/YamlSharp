@@ -7,7 +7,7 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.IO;
 
-namespace System.Yaml
+namespace Yaml
 {
     /// <summary>
     /// Converts YamlNode tree into yaml text.

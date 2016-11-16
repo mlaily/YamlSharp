@@ -10,7 +10,7 @@ using System.Diagnostics;
 
 using System.IO;
 
-namespace System.Yaml.Serialization
+namespace Yaml.Serialization
 {
     /// <summary>
     /// <para><see cref="YamlSerializer"/> class has instance methods <see cref="Serialize(object)"/> and <see cref="Deserialize(string,Type[])"/>, 

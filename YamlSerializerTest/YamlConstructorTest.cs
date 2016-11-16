@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 
 using NUnit.Framework;
-using System.Yaml;
-using System.Yaml.Serialization;
+using Yaml;
+using Yaml.Serialization;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 

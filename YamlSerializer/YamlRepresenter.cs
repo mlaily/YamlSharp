@@ -6,7 +6,7 @@ using System.Text;
 using System.Collections;
 using System.Runtime.InteropServices;
 
-namespace System.Yaml.Serialization
+namespace Yaml.Serialization
 {
     /// <summary>
     /// Converts C# object to YamlNode

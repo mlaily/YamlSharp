@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
 
-namespace System.Yaml
+namespace Yaml
 {
     /// <summary>
     /// <para>A text parser for<br/>

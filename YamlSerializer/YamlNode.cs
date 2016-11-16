@@ -8,7 +8,7 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Globalization;
 
-namespace System.Yaml
+namespace Yaml
 {
     /// <summary>
     /// <para>Configuration to customize YAML serialization.</para>
@@ -353,7 +353,7 @@ namespace System.Yaml
         /// </example>
         public string LineBreakForInput = "\n";
         /// <summary>
-        /// If true, tag for the root node is omitted by <see cref="System.Yaml.Serialization.YamlSerializer"/>.
+        /// If true, tag for the root node is omitted by <see cref="Yaml.Serialization.YamlSerializer"/>.
         /// </summary>
         public bool OmitTagForRootNode = false;
         /// <summary>
@@ -418,8 +418,8 @@ namespace System.Yaml
         {
             Activator.Add<T>(activator);
         }
-        internal System.Yaml.Serialization.ObjectActivator Activator =
-            new System.Yaml.Serialization.ObjectActivator();
+        internal Yaml.Serialization.ObjectActivator Activator =
+            new Yaml.Serialization.ObjectActivator();
 
         /// <summary>
         /// Gets or sets CultureInfo with which the .NET native values are converted
@@ -430,8 +430,8 @@ namespace System.Yaml
             get { return TypeConverter.Culture; }
             set { TypeConverter.Culture = value; }
         }
-        internal System.Yaml.Serialization.EasyTypeConverter TypeConverter =
-            new System.Yaml.Serialization.EasyTypeConverter();
+        internal Yaml.Serialization.EasyTypeConverter TypeConverter =
+            new Yaml.Serialization.EasyTypeConverter();
     }
 
     /// <summary>
@@ -1472,7 +1472,7 @@ namespace System.Yaml
         /// <para>When this property is available, equality of the scalar node is evaluated by comparing the <see cref="NativeObject"/>
         /// properties by the language default equality operator.</para>
         /// </remarks>
-        [Yaml.Serialization.YamlSerialize(System.Yaml.Serialization.YamlSerializeMethod.Never)]
+        [Yaml.Serialization.YamlSerialize(Yaml.Serialization.YamlSerializeMethod.Never)]
         public object NativeObject
         {
             get

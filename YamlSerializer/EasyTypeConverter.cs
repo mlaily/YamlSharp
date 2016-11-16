@@ -6,7 +6,7 @@ using System.Text;
 using System.ComponentModel;
 using System.Globalization;
 
-namespace System.Yaml.Serialization
+namespace Yaml.Serialization
 {
     /// <summary>
     /// Converts various types to / from string.<br/>

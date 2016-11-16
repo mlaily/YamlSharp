@@ -5,7 +5,7 @@ using System.Text;
 
 using System.Text.RegularExpressions;
 
-namespace System.Yaml
+namespace Yaml
 {
     /// <summary>
     /// Defines two string extensions: .UriEscape(), .UriUnescape()

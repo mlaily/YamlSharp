@@ -5,7 +5,7 @@ using System.Text;
 
 using System.Text.RegularExpressions;
 
-namespace System.Yaml
+namespace Yaml
 {
     /// <summary>
     /// Validates a text as a global tag in YAML.

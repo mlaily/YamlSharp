@@ -8,7 +8,7 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Runtime.InteropServices;
 
-namespace System.Yaml.Serialization
+namespace Yaml.Serialization
 {
     internal class ObjectActivator
     {

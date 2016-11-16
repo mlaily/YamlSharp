@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 
 using NUnit.Framework;
-using System.Yaml;
-using System.Yaml.Serialization;
+using Yaml;
+using Yaml.Serialization;
 using System.ComponentModel;
 using System.Drawing;
 using System.Collections;
@@ -294,7 +294,7 @@ namespace YamlSerializerTest
                     "  - ghi",
                     "  - \"1\"",
                     "- !System.Drawing.Point 1, 3",
-                    "- !System.Yaml.YamlScalar",
+                    "- !Yaml.YamlScalar",
                     "  Tag: tag:yaml.org,2002:str",
                     "  Value: brabrabra"
                     ),
