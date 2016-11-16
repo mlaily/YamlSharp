@@ -124,20 +124,20 @@ namespace System.Yaml
         {
             Lines = new List<int>();
             Lines.Add(0);
-            for ( var p = 0; p < text.Length; p++ ) {
-                if ( text[p] == '\r' ) {
-                    if ( p + 1 < text.Length - 1 && text[p + 1] == '\n' )
-                        p++;
-                    Lines.Add(p + 1);
+            for ( var i = 0; i < text.Length; i++ ) {
+                if ( text[i] == '\r' ) {
+                    if ( i + 1 < text.Length - 1 && text[i + 1] == '\n' )
+                        i++;
+                    Lines.Add(i + 1);
                 } else
-                if ( text[p] == '\n' )
-                    Lines.Add(p + 1);
+                if ( text[i] == '\n' )
+                    Lines.Add(i + 1);
             }
         }
         /// <summary>
         /// Line number to start position list.
         /// </summary>
-        List<int> Lines = new List<int>();
+        private List<int> Lines = new List<int>();
         /// <summary>
         /// Represents a position in a multiline text.
         /// </summary>
@@ -167,6 +167,66 @@ namespace System.Yaml
                     string.Format(message, args));
         }
         /// <summary>
+        /// Report error by throwing <see cref="ParseErrorException"/> when the <paramref name="rule"/> does not match.
+        /// </summary>
+        /// <param name="rule">Some reduction rule that must match.</param>
+        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
+        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
+        /// <returns>Always true; otherwise an exception thrown.</returns>
+        protected bool ErrorUnless(bool rule, string message, params object[] args)
+        {
+            if (!rule)
+                Error(message, args);
+            return true;
+        }
+        /// <summary>
+        /// Report error by throwing <see cref="ParseErrorException"/> when the <paramref name="rule"/> does not match.
+        /// </summary>
+        /// <param name="rule">Some reduction rule that must match.</param>
+        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
+        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
+        /// <returns>Always true; otherwise an exception is thrown.</returns>
+        protected bool ErrorUnless(Func<bool> rule, string message, params object[] args)
+        {
+            return ErrorUnless(rule(), message);
+        }
+        /// <summary>
+        /// Report error by throwing <see cref="ParseErrorException"/> when the <paramref name="rule"/> does not match
+        /// and an additional condition <paramref name="toBeError"/> is true.
+        /// </summary>
+        /// <param name="rule">Some reduction rule that must match.</param>
+        /// <param name="toBeError">Additional condition: if this parameter is false, 
+        /// rewinding occurs, instead of throwing exception.</param>
+        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
+        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
+        /// <returns>true if the reduction rule matches; otherwise false.</returns>
+        protected bool ErrorUnlessWithAdditionalCondition(Func<bool> rule, bool toBeError, string message, params object[] args)
+        {
+            if (toBeError)
+            {
+                if (!rule())
+                    Error(message, args);
+                return true;
+            }
+            else
+            {
+                return RewindUnless(rule);
+            }
+        }
+        /// <summary>
+        /// Report error by throwing <see cref="ParseErrorException"/> when <paramref name="condition"/> is true.
+        /// </summary>
+        /// <param name="condition">True to throw exception.</param>
+        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
+        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
+        /// <returns>Always true.</returns>
+        protected bool ErrorIf(bool condition, string message, params object[] args)
+        {
+            if (condition)
+                Error(message, args);
+            return true;
+        }
+        /// <summary>
         /// <para>Give warning if <paramref name="condition"/> is true.</para>
         /// 
         /// <para>By default, the warning will not be shown / stored to anywhere.
@@ -181,7 +241,7 @@ namespace System.Yaml
         ///           "Obsolete");
         /// </code>
         /// </example>
-        /// <param name="condition">If true, warning is given; otherwize do nothing.</param>
+        /// <param name="condition">If true, warning is given; otherwise do nothing.</param>
         /// <param name="message"><see cref="string.Format(string,object[])"/> template for the warning message.</param>
         /// <param name="args"><see cref="string.Format(string,object[])"/> parameters if required</param>
         /// <returns>Always true.</returns>
@@ -206,7 +266,7 @@ namespace System.Yaml
         ///           "Obsolete");
         /// </code>
         /// </example>
-        /// <param name="condition">If false, warning is given; otherwize do nothing.</param>
+        /// <param name="condition">If false, warning is given; otherwise do nothing.</param>
         /// <param name="message"><see cref="string.Format(string,object[])"/> template for the warning message.</param>
         /// <param name="args"><see cref="string.Format(string,object[])"/> parameters if required</param>
         /// <returns>Always true.</returns>
@@ -219,7 +279,7 @@ namespace System.Yaml
         /// <summary>
         /// <para>Give warning.</para>
         /// 
-        /// <para>By default, the warning will not be shown / stored to anywhere.
+        /// <para>By default, the warning will not be shown / stored anywhere.
         /// To show or log the warning, override <see cref="StoreWarning"/>.</para>
         /// </summary>
         /// <example>
@@ -254,11 +314,11 @@ namespace System.Yaml
 
         #region EBNF operators
         /// <summary>
-        /// <para>Represents EBNF operator of "join", i.e. serial appearence of several rules.</para>
+        /// <para>Represents EBNF operator of "join", i.e. serial appearance of several rules.</para>
         /// </summary>
         /// <remarks>
-        /// <para>This recoveres <see cref="p"/>, <see cref="stringValue"/>, <see cref="state"/>
-        /// when <paramref name="condition"/> does not return <code>true</code>.</para>
+        /// <para>This recovers <see cref="p"/>, <see cref="stringValue"/>, <see cref="state"/>
+        /// when <paramref name="rule"/> does not return <code>true</code>.</para>
         /// 
         /// <para>If any specific operation is needed for rewinding, in addition to simply
         /// recover the value of <see cref="state"/>, override <see cref="Rewind()"/>.</para>
@@ -283,9 +343,9 @@ namespace System.Yaml
             var savedp = p;
             var stringValueLength = stringValue.Length;
             var savedStatus = state;
-            if ( rule() )
+            if (rule())
                 return true;
-            state = savedStatus; 
+            state = savedStatus;
             stringValue.Length = stringValueLength;
             p = savedp;
             Rewind();
@@ -313,7 +373,7 @@ namespace System.Yaml
         ///
         /// <para>lines-or-empty ::= (text line-break)*</para>
         /// <para>Note: Do not forget <see cref="RewindUnless"/> if several
-        /// rules are sequentially appears in <see cref="Repeat(Func&lt;bool&gt;)"/> operator.</para>
+        /// rules are sequentially applied in <see cref="Repeat(Func{bool})"/> operator.</para>
         /// <code>
         /// bool LinesOrEmpty()
         /// {
@@ -348,19 +408,19 @@ namespace System.Yaml
         /// bool Lines()
         /// {
         ///     return
-        ///         Repeat(Line);
+        ///         OneAndRepeat(Line);
         /// }
         /// </code>
         /// </example>
         /// <example>
         /// lines ::= (text line-break)+
         /// 
-        /// Note: Do not forget RewindUnless in Repeat operator.
+        /// Note: Do not forget RewindUnless in OneAndRepeat operator.
         /// <code>
         /// bool Lines()
         /// {
         ///     return
-        ///         Repeat(()=>
+        ///         OneAndRepeat(()=>
         ///             RewindUnless(()=>
         ///                 Text() &amp;&amp;
         ///                 LineBreak()
@@ -374,13 +434,13 @@ namespace System.Yaml
             return rule() && Repeat(rule);
         }
         /// <summary>
-        /// Represents <code>n</code> times repeatition.
+        /// Represents <code>n</code> times repetition.
         /// </summary>
         /// <example>
         /// <para>four-lines ::= (text line-break){4}</para>
         ///
         /// <para>Note: Do not forget <see cref="RewindUnless"/> if several
-        /// rules are sequentially appears in <see cref="Repeat(int,Func&lt;bool&gt;)"/> operator.</para>
+        /// rules are sequentially applied in <see cref="Repeat(int,Func{bool})"/> operator.</para>
         /// <code>
         /// bool FourLines()
         /// {
@@ -407,12 +467,12 @@ namespace System.Yaml
             });
         }
         /// <summary>
-        /// Represents at least <paramref name="min"/>, at most <paramref name="max"/> times repeatition.
+        /// Represents at least <paramref name="min"/>, at most <paramref name="max"/> times repetition.
         /// </summary>
         /// <example>
         /// <para>google ::= "g" "o"{2,100} "g" "l" "e"</para>
         /// <para>Note: Do not forget <see cref="RewindUnless"/> if several
-        /// rules are sequentially appears in <see cref="Repeat(int,int,Func&lt;bool&gt;)"/> operator.</para>
+        /// rules are sequentially applied in <see cref="Repeat(int,int,Func{bool})"/> operator.</para>
         /// <code>
         /// bool Google()
         /// {
@@ -454,7 +514,7 @@ namespace System.Yaml
         /// <para>file ::= header? body footer?</para>
         /// 
         /// <para>Note: Do not forget <see cref="RewindUnless"/> if several
-        /// rules are sequentially appears in <see cref="Optional(bool)"/> operator.</para>
+        /// rules are sequentially applied in <see cref="Optional(bool)"/> operator.</para>
         /// <code>
         /// bool File()
         /// {
@@ -478,7 +538,7 @@ namespace System.Yaml
         /// file = header? body footer?
         /// 
         /// <para>Note: Do not forget <see cref="RewindUnless"/> if several
-        /// rules are sequentially appears in <see cref="Optional(Func&lt;bool&gt;)"/> operator.</para>
+        /// rules are sequentially applied in <see cref="Optional(Func{bool})"/> operator.</para>
         /// <code>
         /// bool File()
         /// {
@@ -606,7 +666,7 @@ namespace System.Yaml
             return true;
         }
         /// <summary>
-        /// Represents sequence of characters.
+        /// Represents a sequence of characters.
         /// </summary>
         /// <param name="r">Sequence of characters to be accepted.</param>
         /// <returns>true if the rule matches; otherwise false.</returns>
@@ -697,12 +757,12 @@ namespace System.Yaml
         /// but slow comparison-based definition.</para>
         /// 
         /// <para>By default, the character table size is 0x100, namely only the characters of [\0-\xff] are
-        /// judged by using a character table and others are by the as-given slow comparisn-based definitions.</para>
+        /// judged by using a character table and others are by the as-given slow comparison-based definitions.</para>
         /// 
         /// <para>To have maximized performance, locate the comparison for non-table based judgement first
         /// in the definition as the example below.</para>
         /// 
-        /// <para>Use <see cref="Charset(System.Int32, System.Func&lt;char, bool&gt;)"/> form to explicitly 
+        /// <para>Use <see cref="Charset(System.Int32, System.Func{char, bool})"/> form to explicitly 
         /// specify the table size.</para>
         /// </summary>
         /// <example>This sample shows how to build a character set delegate.
@@ -745,7 +805,7 @@ namespace System.Yaml
         /// <para>Builds a performance-optimized table-based character set definition from a simple 
         /// but slow comparison-based definition.</para>
         /// 
-        /// <para>Characters out of the table are judged by the as-given slow comparisn-based 
+        /// <para>Characters out of the table are judged by the as-given slow comparison-based 
         /// definitions.</para>
         /// 
         /// <para>So, to have maximized performance, locate the comparison for non-table based 
@@ -797,7 +857,7 @@ namespace System.Yaml
         #region Actions
         /// <summary>
         /// <para>Saves a part of the source text that is reduced in the <paramref name="rule"/>.</para>
-        /// <para>If the rule does not match, nothing happends.</para>
+        /// <para>If the rule does not match, nothing happens.</para>
         /// </summary>
         /// <param name="rule">Reduction rule to match.</param>
         /// <param name="value">If the <paramref name="rule"/> matches, 
@@ -815,7 +875,7 @@ namespace System.Yaml
         /// <summary>
         /// <para>Saves a part of the source text that is reduced in the <paramref name="rule"/>
         /// and append it to <see cref="stringValue"/>.</para>
-        /// <para>If the rule does not match, nothing happends.</para>
+        /// <para>If the rule does not match, nothing happens.</para>
         /// </summary>
         /// <param name="rule">Reduction rule to match.</param>
         /// <returns>true if <paramref name="rule"/> matches; otherwise false.</returns>
@@ -826,7 +886,7 @@ namespace System.Yaml
         }
         /// <summary>
         /// <para>Saves a part of the source text that is reduced in the <paramref name="rule"/>.</para>
-        /// <para>If the rule does not match, nothing happends.</para>
+        /// <para>If the rule does not match, nothing happens.</para>
         /// </summary>
         /// <param name="rule">Reduction rule to match.</param>
         /// <param name="save">If <paramref name="rule"/> matches, this delegate is invoked
@@ -866,63 +926,6 @@ namespace System.Yaml
         protected bool Action(Action action)
         {
             action();
-            return true;
-        }
-        /// <summary>
-        /// Report error by throwing <see cref="ParseErrorException"/> when the <paramref name="rule"/> does not match.
-        /// </summary>
-        /// <param name="rule">Some reduction rule that must match.</param>
-        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
-        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
-        /// <returns>Always true; otherwise an exception thrown.</returns>
-        protected bool ErrorUnless(bool rule, string message, params object[] args)
-        {
-            if ( !rule )
-                Error(message, args);
-            return true;
-        }
-        /// <summary>
-        /// Report error by throwing <see cref="ParseErrorException"/> when the <paramref name="rule"/> does not match.
-        /// </summary>
-        /// <param name="rule">Some reduction rule that must match.</param>
-        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
-        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
-        /// <returns>Always true; otherwise an exception is thrown.</returns>
-        protected bool ErrorUnless(Func<bool> rule, string message, params object[] args)
-        {
-            return ErrorUnless(rule(), message);
-        }
-        /// <summary>
-        /// Report error by throwing <see cref="ParseErrorException"/> when the <paramref name="rule"/> does not match
-        /// and an additional condition <paramref name="to_be_error"/> is true.
-        /// </summary>
-        /// <param name="rule">Some reduction rule that must match.</param>
-        /// <param name="to_be_error">Additional condition: if this parameter is false, 
-        /// rewinding occurs, instead of throwing exception.</param>
-        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
-        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
-        /// <returns>true if the reduction rule matches; otherwise false.</returns>
-        protected bool ErrorUnlessWithAdditionalCondition(Func<bool> rule, bool to_be_error, string message, params object[] args)
-        {
-            if ( to_be_error ) {
-                if ( !rule() ) 
-                    Error(message, args);
-                return true;
-            } else {
-                return RewindUnless(rule);
-            }
-        }
-        /// <summary>
-        /// Report error by throwing <see cref="ParseErrorException"/> when <paramref name="condition"/> is true.
-        /// </summary>
-        /// <param name="condition">True to throw exception.</param>
-        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
-        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
-        /// <returns>Always true.</returns>
-        protected bool ErrorIf(bool condition, string message, params object[] args)
-        {
-            if ( condition )
-                Error(message, args);
             return true;
         }
         /// <summary>
