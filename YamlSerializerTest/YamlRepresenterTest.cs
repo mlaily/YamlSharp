@@ -501,7 +501,9 @@ namespace YamlSerializerTest
             object nan = double.NaN;
             object doubleNan = (double)nan;
             //            Assert.Throws<InvalidCastException>(() => 0.CompareTo((int)doubleNan)); // !!
+#pragma warning disable CS1718 // Comparison made to same variable
             Assert.IsFalse(double.NaN == double.NaN);
+#pragma warning restore CS1718 // Comparison made to same variable
 
 
 
