@@ -5,12 +5,12 @@ using System.Text;
 
 using System.Text.RegularExpressions;
 
-namespace System.Yaml
+namespace System.Yaml.Unused
 {
     /// <summary>
     /// Extend string object to have .DoubleQuoteEscape() / .DoubleQuoteUnescape().
     /// </summary>
-    internal static class StringYamlDoubleQuoteEscapeExtention
+    internal static class StringYamlDoubleQuoteEscapeExtension
     {
         /// <summary>
         /// Escape control codes with YAML double quoted string format.
