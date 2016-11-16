@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace System.Yaml
 {
     /// <summary>
-    /// Add string class two methods: .UriEscape(), .UriUnescape()
+    /// Defines two string extensions: .UriEscape(), .UriUnescape()
     /// 
     /// Charset that is not escaped is represented NonUriChar member.
     /// 
@@ -135,7 +135,7 @@ namespace System.Yaml
                     result.Append(c);
                     continue;
                 }
-                throw new FormatException("Charcorde over 0xffff is not supported");
+                throw new FormatException("Charcode over 0xffff is not supported");
             }
             return result.Append(s.Substring(p)).ToString();
         }

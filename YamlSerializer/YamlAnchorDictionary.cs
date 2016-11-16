@@ -51,14 +51,14 @@ namespace System.Yaml
                 Items.Add(anchor_name, node);
             }
         }
-        public int RewindDeapth
+        public int RewindDepth
         {
             get { return ItemsToRewind.Count; }
             set
             {
-                if ( RewindDeapth < value )
+                if ( RewindDepth < value )
                     throw new ArgumentOutOfRangeException();
-                while ( value < RewindDeapth ) {
+                while ( value < RewindDepth ) {
                     var rewind_item = ItemsToRewind.Pop();
                     if ( rewind_item.old_value == null ) {
                         Items.Remove(rewind_item.anchor_name);

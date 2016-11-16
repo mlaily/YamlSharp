@@ -195,7 +195,7 @@ namespace System.Yaml
         /// </summary>
         protected override void Rewind()
         {
-            Anchors.RewindDeapth = state.anchor_depth;
+            Anchors.RewindDepth = state.anchor_depth;
         }
 
         bool SetValue(YamlNode v)
@@ -253,7 +253,7 @@ namespace System.Yaml
             if ( state.anchor != null ) {
                 Anchors.Add(state.anchor, value);
                 state.anchor = null;
-                state.anchor_depth = Anchors.RewindDeapth;
+                state.anchor_depth = Anchors.RewindDepth;
             }
         }
 
@@ -1701,7 +1701,7 @@ namespace System.Yaml
                 text[p++] == '|' &&
                 c_bBlockHeader(out m, out t) &&
                 Action(() => { if ( m == 0 ) m = AutoDetectIndentation(n); }) &&
-                ErrorUnless(lLiteralContent(n + m, t), "Irregal literal text found.")
+                ErrorUnless(lLiteralContent(n + m, t), "Illegal literal text found.")
             ) &&
             SetValue(CreateScalar("!!str", pos));
         }
@@ -1743,7 +1743,7 @@ namespace System.Yaml
                 WarningIf(t== ChompingIndicator.Keep,       
                   "Keep line breaks for folded text '>+' is invalid") &&
                 Action(() => { if ( m == 0 ) m = AutoDetectIndentation(n); }) &&
-                ErrorUnless(lFoldedContent(n + m, t), "Irregal folded string found.")
+                ErrorUnless(lFoldedContent(n + m, t), "Illegal folded string found.")
             ) &&
             SetValue(CreateScalar("!!str", pos));
         }
@@ -1881,7 +1881,7 @@ namespace System.Yaml
                 c_lBlockMapExplicitKey(n, ref _key) &&
                 ErrorUnless(
                     ( lBlockMapExplicitValue(n) || eNode() ),
-                    "irregal block mapping explicit entry"
+                    "Illegal block mapping explicit entry"
                 )
             ) &&
             Assign(out key, _key);
@@ -2069,7 +2069,7 @@ namespace System.Yaml
         private bool lYamlStream() // [211] 
         {
             TagPrefixes.Reset();
-            Anchors.RewindDeapth = 0;
+            Anchors.RewindDepth = 0;
             state.anchor_depth = 0;
             WarningAdded.Clear();
             Warnings.Clear();
@@ -2100,7 +2100,7 @@ namespace System.Yaml
             if ( Charsets.nbChar(text[p]) ){
                 Error("Extra content was found. Maybe indentation was incorrect.");
             } else {
-                Error("An irregal character {0} appeared.", 
+                Error("An illegal character {0} appeared.", 
                         (text[p]<0x100) ? 
                             string.Format("'\\x{0:x2}'", (int)text[p]) :
                             string.Format("'\\u{0:x4}'", (int)text[p])

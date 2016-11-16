@@ -26,18 +26,18 @@ namespace System.Yaml.Serialization
         public object Activate(Type type)
         {
             if ( !activators.ContainsKey(type) )
-                return Activator.CreateInstance(type);                              
+                return Activator.CreateInstance(type);
             return activators[type].Invoke();
         }
     }
 
     /// <summary>
-    /// Construct YAML node tree that represents a given C# object.
+    /// Construct a YAML node tree that represents a given C# object.
     /// </summary>
     internal class YamlConstructor
     {
         /// <summary>
-        /// Construct YAML node tree that represents a given C# object.
+        /// Construct a YAML node tree that represents a given C# object.
         /// </summary>
         /// <param name="node"><see cref="YamlNode"/> to be converted to C# object.</param>
         /// <param name="config"><see cref="YamlConfig"/> to customize serialization.</param>
@@ -47,7 +47,7 @@ namespace System.Yaml.Serialization
             return NodeToObject(node, null, config);
         }
         /// <summary>
-        /// Construct YAML node tree that represents a given C# object.
+        /// Construct a YAML node tree that represents a given C# object.
         /// </summary>
         /// <param name="node"><see cref="YamlNode"/> to be converted to C# object.</param>
         /// <param name="expected">Expected type for the root object.</param>
@@ -71,7 +71,7 @@ namespace System.Yaml.Serialization
                 case "str":
                     return typeof(string);
                 case "int":
-                    return typeof(Int32);
+                    return typeof(int);
                 case "null":
                     return typeof(object);
                 case "bool":
@@ -164,11 +164,11 @@ namespace System.Yaml.Serialization
                 } else {
                     var m = regex.Match(s);
                     if ( !m.Success )
-                        throw new FormatException("Irregal binary array");
+                        throw new FormatException("Illegal binary array");
                     // Create array from dimension
                     dimension = m.Groups[1].Value.Split(',').Select(n => Convert.ToInt32(n)).ToArray();
                     if ( type.GetArrayRank() != dimension.Length )
-                        throw new FormatException("Irregal binary array");
+                        throw new FormatException("Illegal binary array");
                     // Fill values
                     s = m.Groups[2].Value;
                     binary = System.Convert.FromBase64CharArray(s.ToCharArray(), 0, s.Length);
@@ -176,7 +176,7 @@ namespace System.Yaml.Serialization
                 var paramType = dimension.Select(n => typeof(int) /* n.GetType() */).ToArray();
                 var array = (Array)type.GetConstructor(paramType).Invoke(dimension.Cast<object>().ToArray());
                 if ( binary.Length != array.Length * elementSize )
-                    throw new FormatException("Irregal binary: data size does not match to array dimension");
+                    throw new FormatException("Illegal binary: data size does not match array dimension");
                 int j = 0;
                 for ( int i = 0; i < array.Length; i++ ) {
                     var p = Marshal.UnsafeAddrOfPinnedArrayElement(array, i);

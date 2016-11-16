@@ -471,7 +471,7 @@ namespace YamlSerializerTest
                         "- Inside a document.\n");
                     Assert.Fail("ParseErrorException expected but not occurred.");
                 } catch ( ParseErrorException e ) {
-                    Assert.AreEqual("An irregal character '\\x00' appeared.", e.Message.Split('\n')[1]);
+                    Assert.AreEqual("An illegal character '\\x00' appeared.", e.Message.Split('\n')[1]);
                 }
 
             }
@@ -595,7 +595,7 @@ namespace YamlSerializerTest
                 // warning." seems invalid.
                 AssertParseError(() =>
                     parser.Parse("\x0c"),
-                    "An irregal character '\\x0c' appeared."
+                    "An illegal character '\\x0c' appeared."
                 );
 
                 // warnings for YAML 1.1 break chars
