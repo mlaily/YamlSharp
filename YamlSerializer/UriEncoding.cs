@@ -14,7 +14,7 @@ namespace System.Yaml
     /// 
     /// NonUriChar = new Regex(@"[^0-9A-Za-z\-_.!~*'()\\;/?:@&amp;=$,\[\]]");
     /// </summary>
-    internal static class StringUriEncodingExtention
+    internal static class StringUriEncodingExtension
     {
         /// <summary>
         /// Escape the string in URI encoding format.

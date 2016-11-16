@@ -775,7 +775,7 @@ namespace System.Yaml.Serialization
     /// <summary>
     /// Add .DoFunction method to string
     /// </summary>
-    internal static class StringExtention
+    internal static class StringExtension
     {
         /// <summary>
         /// Short expression of string.Format(XXX, arg1, arg2, ...)
