@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Yaml.Model;
 
 namespace ConsoleApplication1
 {
@@ -53,14 +54,14 @@ namespace ConsoleApplication1
             var z = char.ConvertFromUtf32(0x41);
             var a = char.ConvertFromUtf32(0x2665);
             string bla = x + y + z + a;
-            var contentNodes = Yaml.YamlNode.FromYaml(content);
+            var contentNodes = YamlNode.FromYaml(content);
 
             var back = contentNodes.First().ToYaml();
 
             using (var reader = new StreamReader(@"D:\Mes Documents\Dev\yaml\yamlreference\.stack-work\install\7282fce5\bin\test.txt",
                 Encoding.UTF8))
             {
-                var nodes = Yaml.YamlNode.FromYaml(reader);
+                var nodes = YamlNode.FromYaml(reader);
             }
 
         }

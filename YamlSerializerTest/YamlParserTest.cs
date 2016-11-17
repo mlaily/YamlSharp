@@ -8,6 +8,8 @@ using System.Resources;
 using Yaml;
 using Yaml.Serialization;
 using YamlSerializerTest.Properties;
+using Yaml.Parsing;
+using Yaml.Model;
 
 namespace YamlSerializerTest
 {

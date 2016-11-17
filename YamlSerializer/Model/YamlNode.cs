@@ -7,8 +7,9 @@ using System.IO;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using Yaml.Parsing;
 
-namespace Yaml
+namespace Yaml.Model
 {
     /// <summary>
     /// <para>Configuration to customize YAML serialization.</para>

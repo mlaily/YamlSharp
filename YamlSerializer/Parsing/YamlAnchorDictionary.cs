@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Yaml.Model;
 
-namespace Yaml
+namespace Yaml.Parsing
 {
     internal class AnchorDictionary
     {

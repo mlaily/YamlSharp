@@ -8,46 +8,6 @@ using System.Text.RegularExpressions;
 namespace Yaml
 {
     /// <summary>
-    /// Defines two string extensions: .UriEscape(), .UriUnescape()
-    /// 
-    /// Charset that is not escaped is represented NonUriChar member.
-    /// 
-    /// NonUriChar = new Regex(@"[^0-9A-Za-z\-_.!~*'()\\;/?:@&amp;=$,\[\]]");
-    /// </summary>
-    internal static class StringUriEncodingExtension
-    {
-        /// <summary>
-        /// Escape the string in URI encoding format.
-        /// </summary>
-        /// <param name="s">String to be escaped.</param>
-        /// <returns>Escaped string.</returns>
-        public static string UriEscape(this string s)
-        {
-            return UriEncoding.Escape(s);
-        }
-
-        /// <summary>
-        /// Escape the string in URI encoding format.
-        /// </summary>
-        /// <param name="s">String to be escaped.</param>
-        /// <returns>Escaped string.</returns>
-        public static string UriEscapeForTag(this string s)
-        {
-            return UriEncoding.EscapeForTag(s);
-        }
-
-        /// <summary>
-        /// Unescape the string escaped in URI encoding format.
-        /// </summary>
-        /// <param name="s">String to be unescape.</param>
-        /// <returns>Unescaped string.</returns>
-        public static string UriUnescape(this string s)
-        {
-            return UriEncoding.Unescape(s);
-        }
-    }
-
-    /// <summary>
     /// Escape / Unescape string in URI encoding format
     /// 
     /// Charset that is not escaped is represented NonUriChar member.
@@ -56,6 +16,11 @@ namespace Yaml
     /// </summary>
     internal class UriEncoding
     {
+        /// <summary>
+        /// Escape the string in URI encoding format.
+        /// </summary>
+        /// <param name="s">String to be escaped.</param>
+        /// <returns>Escaped string.</returns>
         public static string Escape(string s)
         {
             return NonUriChar.Replace(s, m =>
@@ -70,6 +35,11 @@ namespace Yaml
         }
         static Regex NonUriChar = new Regex(@"[^0-9A-Za-z\-_.!~*'()\\;/?:@&=$,\[\]]");
 
+        /// <summary>
+        /// Escape the string in URI encoding format.
+        /// </summary>
+        /// <param name="s">String to be escaped.</param>
+        /// <returns>Escaped string.</returns>
         public static string EscapeForTag(string s)
         {
             return NonTagChar.Replace(s, m =>
@@ -107,6 +77,11 @@ namespace Yaml
             });
         }
 
+        /// <summary>
+        /// Unescape the string escaped in URI encoding format.
+        /// </summary>
+        /// <param name="s">String to be unescape.</param>
+        /// <returns>Unescaped string.</returns>
         public static string Unescape(string s)
         {
             s = s.Replace('+', ' ');

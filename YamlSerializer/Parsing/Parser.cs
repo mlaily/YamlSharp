@@ -5,7 +5,7 @@ using System.Text;
 
 using System.Text.RegularExpressions;
 
-namespace Yaml
+namespace Yaml.Parsing
 {
     /// <summary>
     /// <para>When <see cref="Parser&lt;State&gt;"/> reports syntax error by exception, this class is thrown.</para>

@@ -5,6 +5,7 @@ using System.Text;
 
 using NUnit.Framework;
 using Yaml;
+using Yaml.Parsing;
 
 namespace YamlSerializerTest
 {

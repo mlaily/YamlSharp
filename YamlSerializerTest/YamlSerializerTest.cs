@@ -9,6 +9,7 @@ using Yaml.Serialization;
 using System.ComponentModel;
 using System.Drawing;
 using System.Collections;
+using Yaml.Model;
 
 namespace YamlSerializerTest
 {

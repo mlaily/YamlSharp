@@ -8,6 +8,8 @@ using Yaml;
 using Yaml.Serialization;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
+using Yaml.Parsing;
+using Yaml.Model;
 
 namespace YamlSerializerTest
 {

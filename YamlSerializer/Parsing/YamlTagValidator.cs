@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 
 using System.Text.RegularExpressions;
+using Yaml.Parsing;
 
-namespace Yaml
+namespace Yaml.Parsing
 {
     /// <summary>
     /// Validates a text as a global tag in YAML.

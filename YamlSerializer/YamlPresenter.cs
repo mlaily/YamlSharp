@@ -6,6 +6,8 @@ using System.Text;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.IO;
+using Yaml.Parsing;
+using Yaml.Model;
 
 namespace Yaml
 {
@@ -564,16 +566,16 @@ namespace Yaml
             {
                 if (tag.StartsWith("!"))
                 {
-                    tag = tag.UriEscapeForTag();
+                    tag = UriEncoding.EscapeForTag(tag);
                 }
                 else
                 {
-                    tag = "!<" + tag.UriEscape() + ">";
+                    tag = "!<" + UriEncoding.Escape(tag) + ">";
                 }
             }
             else
             {
-                tag = tag.UriEscape();
+                tag = UriEncoding.Escape(tag);
                 if (!CanBeShorthand.IsMatch(tag))
                     tag = "!<" + tag + ">";
             }

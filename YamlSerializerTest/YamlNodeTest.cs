@@ -8,6 +8,7 @@ using Yaml;
 using System.ComponentModel;
 
 using System.Reflection.Emit;
+using Yaml.Model;
 
 namespace YamlSerializerTest
 {
