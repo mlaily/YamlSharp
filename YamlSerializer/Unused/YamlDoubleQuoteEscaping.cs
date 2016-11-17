@@ -98,7 +98,7 @@ namespace Yaml.Unused
             return escapeNonprintable.Replace(s, m =>
             {
                 var c = m.Value[0];
-                return c < 0x100 ? string.Format(@"\x{0:x2}", (int)c) : string.Format(@"\u{0:x4}", (int)c);
+                return c < 0x100 ? $@"\x{(int)c:x2}" : $@"\u{(int)c:x4}";
             });
         }
         static string escapeChar(Match m)

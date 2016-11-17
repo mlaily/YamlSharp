@@ -74,7 +74,7 @@ namespace YamlSerializerTest
                 "Number of warnings was different\r\n{0}", s);
             for (int i = 0; i < warnings.Length; i++)
                 Assert.AreEqual(warnings[i], parser.Warnings[i],
-                    string.Format("Warning message #{0} was different", i));
+                    $"Warning message #{i} was different");
         }
         public void AssertResultsWithoutCheckWarning(List<YamlNode> result, params YamlNode[] expected)
         {

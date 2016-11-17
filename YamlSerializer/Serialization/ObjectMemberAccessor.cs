@@ -44,7 +44,7 @@ namespace Yaml.Serialization
             /*
             if ( !TypeUtils.IsPublic(type) )
                 throw new ArgumentException(
-                    "Can not serialize non-public type {0}.".DoFormat(type.FullName));
+                    string.Format("Can not serialize non-public type {0}.", type.FullName));
             */
 
             // public properties
@@ -148,8 +148,7 @@ namespace Yaml.Serialization
                 { // read only member
                     if (attr1.SerializeMethod == YamlSerializeMethod.Assign ||
                          (mType.IsValueType && accessor.SerializeMethod == YamlSerializeMethod.Content))
-                        throw new ArgumentException("{0} {1} is not writeable by {2}."
-                            .DoFormat(mType.FullName, m.Name, attr1.SerializeMethod.ToString()));
+                        throw new ArgumentException($"{mType.FullName} {m.Name} is not writeable by {attr1.SerializeMethod}.");
                 }
                 accessor.SerializeMethod = attr1.SerializeMethod;
             }
@@ -158,12 +157,9 @@ namespace Yaml.Serialization
             if (accessor.SerializeMethod == YamlSerializeMethod.Binary)
             {
                 if (!mType.IsArray)
-                    throw new InvalidOperationException("{0} {1} of {2} is not an array. Can not be serialized as binary."
-                        .DoFormat(mType.FullName, m.Name, type.FullName));
+                    throw new InvalidOperationException($"{mType.FullName} {m.Name} of {type.FullName} is not an array. Can not be serialized as binary.");
                 if (!TypeUtils.IsPureValueType(mType.GetElementType()))
-                    throw new InvalidOperationException(
-                        "{0} is not a pure ValueType. {1} {2} of {3} can not serialize as binary."
-                        .DoFormat(mType.GetElementType(), mType.FullName, m.Name, type.FullName));
+                    throw new InvalidOperationException($"{mType.GetElementType()} is not a pure ValueType. {mType.FullName} {m.Name} of {type.FullName} can not serialize as binary.");
             }
 
             // ShouldSerialize

@@ -170,8 +170,7 @@ namespace Yaml.Parsing
         public bool Error(string message, params object[] args)
         {
             throw new ParseErrorException(
-                string.Format("Syntax error at line {0} column {1}\r\n", CurrentPosition.Raw, CurrentPosition.Column) +
-                    string.Format(message, args));
+                $"Syntax error at line {CurrentPosition.Raw} column {CurrentPosition.Column}\r\n" + string.Format(message, args));
         }
         /// <summary>
         /// Report error by throwing <see cref="ParseErrorException"/> when the <paramref name="rule"/> does not match.
@@ -301,12 +300,7 @@ namespace Yaml.Parsing
         /// <returns>Always true.</returns>
         protected bool Warning(string message, params object[] args)
         {
-            message = string.Format(
-                "Warning: {0} at line {1} column {2}.",
-                string.Format(message, args),
-                CurrentPosition.Raw,
-                CurrentPosition.Column
-            );
+            message = $"Warning: {string.Format(message, args)} at line {CurrentPosition.Raw} column {CurrentPosition.Column}.";
             StoreWarning(message);
             return true;
         }

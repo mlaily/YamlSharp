@@ -148,7 +148,7 @@ namespace Yaml.Serialization
         object ScalarToObject(YamlScalar node, Type type)
         {
             if (type == null)
-                throw new FormatException("Could not find a type '{0}'.".DoFormat(node.Tag));
+                throw new FormatException($"Could not find a type '{node.Tag}'.");
 
             // To accommodate the !!int and !!float encoding, all "_"s in integer and floating point values
             // are simply neglected.
@@ -278,7 +278,7 @@ namespace Yaml.Serialization
             else
             {
                 if (appeared.ContainsKey(map))
-                    throw new InvalidOperationException("This member is not writeable: {0}".DoFormat(obj.ToString()));
+                    throw new InvalidOperationException($"This member is not writeable: {obj.ToString()}");
             }
 
             var access = ObjectMemberAccessor.FindFor(type);
@@ -291,14 +291,14 @@ namespace Yaml.Serialization
                 {
                     case "ICollection.Items":
                         if (access.CollectionAdd == null)
-                            throw new FormatException("{0} is not a collection type.".DoFormat(type.FullName));
+                            throw new FormatException($"{type.FullName} is not a collection type.");
                         access.CollectionClear(obj);
                         foreach (var item in (YamlSequence)entry.Value)
                             access.CollectionAdd(obj, NodeToObjectInternal(item, access.ValueType, appeared));
                         break;
                     case "IDictionary.Entries":
                         if (!access.IsDictionary)
-                            throw new FormatException("{0} is not a dictionary type.".DoFormat(type.FullName));
+                            throw new FormatException($"{type.FullName} is not a dictionary type.");
                         var dict = obj as IDictionary;
                         dict.Clear();
                         foreach (var child in (YamlMapping)entry.Value)
@@ -306,7 +306,7 @@ namespace Yaml.Serialization
                         break;
                     default:
                         if (!access.ContainsKey(name))
-                            throw new FormatException("{0} does not have a member {1}.".DoFormat(type.FullName, name));
+                            throw new FormatException($"{type.FullName} does not have a member {name}.");
                         switch (access[name].SerializeMethod)
                         {
                             case YamlSerializeMethod.Assign:
@@ -319,8 +319,7 @@ namespace Yaml.Serialization
                                 access[obj, name] = ScalarToObject((YamlScalar)entry.Value, access[name].Type);
                                 break;
                             default:
-                                throw new InvalidOperationException(
-                                    "Member {0} of {1} is not serializable.".DoFormat(name, type.FullName));
+                                throw new InvalidOperationException($"Member {name} of {type.FullName} is not serializable.");
                         }
                         break;
                 }

@@ -792,10 +792,10 @@ namespace Yaml.Model
                 /* strict tag check
                 if ( value.StartsWith("!!") )
                     throw new ArgumentException(
-                        "Tag vallue {0} must be resolved to a local or global tag before assignment".DoFormat(value));
+                        string.Format("Tag vallue {0} must be resolved to a local or global tag before assignment", value));
                 if ( !value.StartsWith("!") && !DefaultTagValidator.IsValid(value) )
                     throw new ArgumentException(
-                        "{0} is not a valid global tag.".DoFormat(value));
+                        string.Format("{0} is not a valid global tag.", value));
                 */
                 tag = value;
                 OnChanged();

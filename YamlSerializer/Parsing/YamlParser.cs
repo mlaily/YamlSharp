@@ -140,9 +140,7 @@ namespace Yaml.Parsing
             if (Charsets.nbCharWithWarning(text[p]) && !AlreadyWarnedChars.ContainsKey(text[p]))
             {
                 Warning("{0} is treated as non-break character unlike YAML 1.1",
-                    text[p] < 0x100 ? string.Format("\\x{0:x2}", (int)text[p]) :
-                                      string.Format("\\u{0:x4}", (int)text[p])
-                    );
+                    text[p] < 0x100 ? $"\\x{(int)text[p]:x2}" : $"\\u{(int)text[p]:x4}");
                 AlreadyWarnedChars.Add(text[p], true);
             }
         }
@@ -1056,8 +1054,7 @@ namespace Yaml.Parsing
                 ErrorUnlessWithAdditionalCondition(() =>
                     OneAndRepeat(nsTagChar),
                     tag_handle != "!",
-                    string.Format("The {0} handle has no suffix.", tag_handle)
-                ) &&
+                    $"The {tag_handle} handle has no suffix.") &&
                 SetTag(tag_handle, GetStringValue())
             );
         }
@@ -2166,10 +2163,7 @@ namespace Yaml.Parsing
             else
             {
                 Error("An illegal character {0} appeared.",
-                        (text[p] < 0x100) ?
-                            string.Format("'\\x{0:x2}'", (int)text[p]) :
-                            string.Format("'\\u{0:x4}'", (int)text[p])
-                    );
+                        (text[p] < 0x100) ? $"'\\x{(int)text[p]:x2}'" : $"'\\u{(int)text[p]:x4}'");
             }
             return false;
         }

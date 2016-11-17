@@ -372,11 +372,11 @@ namespace Yaml
                 {
                     if (c < 0x100)
                     {
-                        stringValue.Append(string.Format(@"\x{0:x2}", (int)c));
+                        stringValue.Append($@"\x{(int)c:x2}");
                     }
                     else
                     {
-                        stringValue.Append(string.Format(@"\u{0:x4}", (int)c));
+                        stringValue.Append($@"\u{(int)c:x4}");
                     }
                 }
                 p++;

@@ -25,7 +25,7 @@ namespace Yaml.Serialization
             /*
             if ( TypeUtils.GetType(type.FullName) == null ) {
                 throw new ArgumentException(
-                    "Can not serialize (non public?) type '{0}'.".DoFormat(type.FullName));
+                    string.Format("Can not serialize (non public?) type '{0}'.", type.FullName));
             }
             */
             if (type == typeof(int))
@@ -99,7 +99,7 @@ namespace Yaml.Serialization
             var type = obj.GetType();
 
             if (obj is IntPtr || type.IsPointer)
-                throw new ArgumentException("Pointer object '{0}' can not be serialized.".DoFormat(obj.ToString()));
+                throw new ArgumentException($"Pointer object '{obj.ToString()}' can not be serialized.");
 
             if (obj is char)
             {
@@ -130,9 +130,7 @@ namespace Yaml.Serialization
             if (type.IsClass || type.IsValueType)
                 return CreateMapping(TypeNameToYamlTag(type), obj);
 
-            throw new NotImplementedException(
-                "Type '{0}' could not be written".DoFormat(type.FullName)
-            );
+            throw new NotImplementedException($"Type '{type.FullName}' could not be written");
         }
 
         private YamlNode CreateArrayNode(Array array)
@@ -179,8 +177,7 @@ namespace Yaml.Serialization
             var type = array.GetType();
             var element = type.GetElementType();
             if (!TypeUtils.IsPureValueType(element))
-                throw new InvalidOperationException(
-                    "Can not serialize {0} as binary because it contains non-value-type(s).".DoFormat(type.FullName));
+                throw new InvalidOperationException($"Can not serialize {type.FullName} as binary because it contains non-value-type(s).");
             var elementSize = Marshal.SizeOf(element);
             var binary = new byte[array.LongLength * elementSize];
             int j = 0;
@@ -238,7 +235,7 @@ namespace Yaml.Serialization
 
             /*
             if ( type.IsClass && !by_content && type.GetConstructor(Type.EmptyTypes) == null )
-                throw new ArgumentException("Type {0} has no default constructor.".DoFormat(type.FullName));
+                throw new ArgumentException(string.Format("Type {0} has no default constructor.", type.FullName));
             */
 
             var mapping = map();
