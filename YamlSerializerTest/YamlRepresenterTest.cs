@@ -712,7 +712,7 @@ namespace YamlSerializerTest
         public void CultureTest()
         {
             var config = new YamlConfig();
-            config.Culture = new System.Globalization.CultureInfo("da-DK");
+            config.Culture = new CultureInfo("da-DK");
             var serializer = new YamlSerializer(config);
             object obj = new System.Drawing.PointF(1.2f, 3.1f);
             var yaml = serializer.Serialize(obj);
@@ -738,7 +738,7 @@ namespace YamlSerializerTest
             restore = serializer.Deserialize(yaml)[0];
             Assert.AreEqual(obj, restore);
 
-            YamlNode.DefaultConfig.Culture = System.Globalization.CultureInfo.CurrentCulture;
+            YamlNode.DefaultConfig.Culture = CultureInfo.CurrentCulture;
         }
     }
 

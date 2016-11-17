@@ -180,23 +180,23 @@ namespace Yaml
             var result = double.NaN;
             var type = obj != null ? obj.GetType() : null;
             if (type == typeof(sbyte))
-                result = (double)(sbyte)obj;
+                result = (sbyte)obj;
             if (type == typeof(byte))
-                result = (double)(byte)obj;
+                result = (byte)obj;
             if (type == typeof(short))
-                result = (double)(short)obj;
+                result = (short)obj;
             if (type == typeof(ushort))
-                result = (double)(ushort)obj;
+                result = (ushort)obj;
             if (type == typeof(int))
-                result = (double)(int)obj;
+                result = (int)obj;
             if (type == typeof(uint))
-                result = (double)(uint)obj;
+                result = (uint)obj;
             if (type == typeof(long))
-                result = (double)(long)obj;
+                result = (long)obj;
             if (type == typeof(ulong))
-                result = (double)(ulong)obj;
+                result = (ulong)obj;
             if (type == typeof(float))
-                result = (double)(float)obj;
+                result = (float)obj;
             if (type == typeof(double))
                 result = (double)obj;
             if (type == typeof(decimal))

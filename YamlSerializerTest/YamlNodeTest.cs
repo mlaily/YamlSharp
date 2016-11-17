@@ -117,13 +117,13 @@ namespace YamlSerializerTest
             Assert.AreEqual("child", m.Invoke(c, new object[0]));
             Assert.AreEqual("child", ((TestBase)c).Test());
 
-            var dm = new System.Reflection.Emit.DynamicMethod(
+            var dm = new DynamicMethod(
                 "", typeof(string), new Type[] { typeof(TestBase) }, typeof(YamlNodeTest));
-            System.Reflection.Emit.ILGenerator ilgen = dm.GetILGenerator();
+            ILGenerator ilgen = dm.GetILGenerator();
 
-            ilgen.Emit(System.Reflection.Emit.OpCodes.Ldarg_0);
-            ilgen.Emit(System.Reflection.Emit.OpCodes.Call, typeof(TestBase).GetMethod("Test"));
-            ilgen.Emit(System.Reflection.Emit.OpCodes.Ret);
+            ilgen.Emit(OpCodes.Ldarg_0);
+            ilgen.Emit(OpCodes.Call, typeof(TestBase).GetMethod("Test"));
+            ilgen.Emit(OpCodes.Ret);
             var callTest = (Call)dm.CreateDelegate(typeof(Call));
 
             Assert.AreEqual("base", callTest.Invoke(c));

@@ -318,14 +318,14 @@ namespace YamlSerializerTest
         {
             Assert.AreEqual((float)100000, serializer.Deserialize("!System.Single 100_000")[0]);
             Assert.AreEqual((float)100000, serializer.Deserialize("!System.Decimal 100_000")[0]);
-            Assert.AreEqual((Byte)10, serializer.Deserialize("!System.Byte 1_0")[0]);
-            Assert.AreEqual((Byte)10, serializer.Deserialize("!System.SByte 1_0")[0]);
-            Assert.AreEqual((Byte)10, serializer.Deserialize("!System.Int16 1_0")[0]);
-            Assert.AreEqual((Byte)10, serializer.Deserialize("!System.UInt16 1_0")[0]);
-            Assert.AreEqual((Byte)10, serializer.Deserialize("!System.Int32 1_0")[0]);
-            Assert.AreEqual((Byte)10, serializer.Deserialize("!System.UInt32 1_0")[0]);
-            Assert.AreEqual((Byte)10, serializer.Deserialize("!System.Int64 1_0")[0]);
-            Assert.AreEqual((Byte)10, serializer.Deserialize("!System.UInt64 1_0")[0]);
+            Assert.AreEqual((byte)10, serializer.Deserialize("!System.Byte 1_0")[0]);
+            Assert.AreEqual((byte)10, serializer.Deserialize("!System.SByte 1_0")[0]);
+            Assert.AreEqual((byte)10, serializer.Deserialize("!System.Int16 1_0")[0]);
+            Assert.AreEqual((byte)10, serializer.Deserialize("!System.UInt16 1_0")[0]);
+            Assert.AreEqual((byte)10, serializer.Deserialize("!System.Int32 1_0")[0]);
+            Assert.AreEqual((byte)10, serializer.Deserialize("!System.UInt32 1_0")[0]);
+            Assert.AreEqual((byte)10, serializer.Deserialize("!System.Int64 1_0")[0]);
+            Assert.AreEqual((byte)10, serializer.Deserialize("!System.UInt64 1_0")[0]);
         }
     }
 }
