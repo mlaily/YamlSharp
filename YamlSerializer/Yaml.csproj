@@ -8,7 +8,7 @@
     <ProjectGuid>{AD9F3A60-C492-4823-8F24-6F4854E7CBF5}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>YamlSerializer</RootNamespace>
+    <RootNamespace>Yaml</RootNamespace>
     <AssemblyName>YamlSerializer</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -67,7 +67,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\YamlComplexNode.cs" />
+    <Compile Include="Model\YamlConfig.cs" />
+    <Compile Include="Model\YamlMapping.cs" />
+    <Compile Include="Model\YamlNode.cs" />
+    <Compile Include="Model\YamlScalar.cs" />
+    <Compile Include="Model\YamlSequence.cs" />
     <Compile Include="RehashableDictionary.cs" />
+    <Compile Include="Serialization\YamlSerializeAttribute.cs" />
     <Compile Include="Unused\YamlDoubleQuoteEscaping.cs" />
     <Compile Include="Serialization\EasyTypeConverter.cs" />
     <Compile Include="Serialization\ObjectMemberAccessor.cs" />
@@ -78,7 +85,7 @@
     <Compile Include="Parsing\YamlAnchorDictionary.cs" />
     <Compile Include="Serialization\YamlConstructor.cs" />
     <Compile Include="Parsing\YamlParser.cs" />
-    <Compile Include="Model\YamlNode.cs" />
+    <Compile Include="Model\YamlNodeManipulator.cs" />
     <Compile Include="YamlPresenter.cs" />
     <Compile Include="Serialization\YamlRepresenter.cs" />
     <Compile Include="Serialization\YamlSerializer.cs" />
