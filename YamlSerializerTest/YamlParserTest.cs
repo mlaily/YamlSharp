@@ -1209,7 +1209,7 @@ namespace YamlSerializerTest
             {
                 AssertResults(
                     parser.Parse(Resources.Example7_6),
-                    str(" 1st non-empty,\n2nd non-empty, 3rd non-empty ")
+                    str(" 1st non-empty\n2nd non-empty 3rd non-empty ")
                 );
             }
 
@@ -1241,7 +1241,7 @@ namespace YamlSerializerTest
             {
                 AssertResults(
                     parser.Parse(Resources.Example7_9),
-                    str(" 1st non-empty,\n2nd non-empty, 3rd non-empty ")
+                    str(" 1st non-empty\n2nd non-empty 3rd non-empty ")
                 );
             }
 
@@ -1286,7 +1286,7 @@ namespace YamlSerializerTest
             {
                 AssertResults(
                     parser.Parse(Resources.Example7_12),
-                    str("1st non-empty,\n2nd non-empty, 3rd non-empty")
+                    str("1st non-empty\n2nd non-empty 3rd non-empty")
                 );
             }
 

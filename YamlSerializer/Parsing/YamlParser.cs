@@ -12,7 +12,7 @@ namespace Yaml.Parsing
     /// <summary>
     /// <para>A text parser for<br/>
     /// YAML Ain’t Markup Language (YAML™) Version 1.2<br/>
-    /// 3rd Edition (2009-07-21)<br/>
+    /// 3rd Edition (2009-10-01)<br/>
     /// http://yaml.org/spec/1.2/spec.html </para>
     /// 
     /// <para>This class parse a YAML document and compose representing <see cref="YamlNode"/> graph.</para>
@@ -429,7 +429,7 @@ namespace Yaml.Parsing
                     );
                 nsPlainSafeOut = c => nsChar(c);
                 nsPlainSafeIn = Charset(c =>
-                    nsPlainSafeOut(c) && !cFlowIndicator(c)
+                    nsChar(c) && !cFlowIndicator(c)
                     );
                 nsPlainFirstSub = Charset(c =>
                     nsChar(c) && !cIndicator(c)
@@ -632,7 +632,7 @@ namespace Yaml.Parsing
                     c = '\b';
                     break;
                 case 't':
-                case '\x09':
+                case '\t':
                     c = '\t';
                     break;
                 case 'n':
@@ -1312,7 +1312,7 @@ namespace Yaml.Parsing
                     p != 0 &&
                     Charsets.nsChar(text[p - 1]) &&
                     text[p] == '#') ||
-                ( /* ':' Followed by an ns-char */
+                ( /* ':' Followed by an ns-plain-safe */
                     text[p] == ':' && nsPlainSafe(c, text[p + 1]))
                 )
             {
@@ -1510,7 +1510,7 @@ namespace Yaml.Parsing
         private bool c_nsFlowMapSeparateValue(int n, Context c) // [147] 
         {
             return RewindUnless(() =>
-                text[p++] == ':' && !nsPlainSafe(c, text[p]) && (
+                text[p++] == ':' /* Not followed by an ns-plain-safe(c) */ && !nsPlainSafe(c, text[p]) && (
                     RewindUnless(() => sSeparate(n, c) && nsFlowNode(n, c)) ||
                     eNode() /* Value */
                 )
@@ -1685,7 +1685,7 @@ namespace Yaml.Parsing
         private bool bChompedLast(ChompingIndicator t) // [165] 
         {
             return EndOfFile() || (
-                (t == ChompingIndicator.Strip) ? bBreak() : bAsLineFeed()
+                (t == ChompingIndicator.Strip) ? bNonContent() : bAsLineFeed()
             );
         }
         private bool lChompedEmpty(int n, ChompingIndicator t) // [166] 
@@ -1821,7 +1821,7 @@ namespace Yaml.Parsing
             return
                 bAsLineFeed() &&
                 !cForbidden() &&
-                Repeat(() => lEmpty(n, Context.Folded));
+                Repeat(() => lEmpty(n, Context.BlockIn));
         }
         private bool l_nbSpacedLines(int n) // [179] 
         {
