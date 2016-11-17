@@ -295,7 +295,7 @@ namespace YamlSerializerTest
                     "  - ghi",
                     "  - \"1\"",
                     "- !System.Drawing.Point 1, 3",
-                    "- !Yaml.YamlScalar",
+                    "- !Yaml.Model.YamlScalar",
                     "  Tag: tag:yaml.org,2002:str",
                     "  Value: brabrabra"
                     ),

@@ -10,6 +10,8 @@ using System.ComponentModel;
 using System.Text.RegularExpressions;
 using Yaml.Parsing;
 using Yaml.Model;
+using System.Threading;
+using System.Globalization;
 
 namespace YamlSerializerTest
 {
@@ -275,19 +277,29 @@ namespace YamlSerializerTest
             Assert.AreEqual(new DateTime(1999, 12, 30, 23, 00, 00, 010, DateTimeKind.Utc).ToLocalTime(), serializer.Deserialize("1999-12-31 1:00:00.010 +2")[0]);
             Assert.AreEqual(new DateTime(2000, 1, 1, 1, 00, 00, 000, DateTimeKind.Utc).ToLocalTime(), serializer.Deserialize("1999-12-31 23:00:00 -2")[0]);
 
-            Assert.AreEqual("1999/12/30 23:00:00", (new DateTime(1999, 12, 30, 23, 00, 00, 010)).ToString());
-            YamlScalar node;
-            YamlNode.DefaultConfig.TagResolver.Encode(time, out node);
-            var recovered = DateTime.Parse(node.Value);
-            Assert.IsTrue(time - recovered < new TimeSpan(0, 0, 0, 0, 1));
-            recovered = DateTime.Parse("1999-12-31T00:00:01Z");
-            recovered = DateTime.Parse("1999-12-31T00:00:01+9");
-            recovered = DateTime.Parse("1999-12-31T00:00:01+9:00");
-            recovered = DateTime.Parse("1999-12-31T00:00:01+09");
-            recovered = DateTime.Parse("1999-12-31T00:00:01 +09");
-            recovered = DateTime.Parse("1999-12-31T00:00:01.123 +09");
-            recovered = DateTime.Parse("1999-12-31T00:00:01.123 +3");
-            Assert.IsTrue(time - (DateTime)serializer.Deserialize(serializer.Serialize(time))[0] < new TimeSpan(0, 0, 0, 0, 1));
+            var currentCulture = Thread.CurrentThread.CurrentCulture;
+            try
+            {
+                Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("ja-JP");
+
+                Assert.AreEqual("1999/12/30 23:00:00", (new DateTime(1999, 12, 30, 23, 00, 00, 010)).ToString());
+                YamlScalar node;
+                YamlNode.DefaultConfig.TagResolver.Encode(time, out node);
+                var recovered = DateTime.Parse(node.Value);
+                Assert.IsTrue(time - recovered < new TimeSpan(0, 0, 0, 0, 1));
+                recovered = DateTime.Parse("1999-12-31T00:00:01Z");
+                recovered = DateTime.Parse("1999-12-31T00:00:01+9");
+                recovered = DateTime.Parse("1999-12-31T00:00:01+9:00");
+                recovered = DateTime.Parse("1999-12-31T00:00:01+09");
+                recovered = DateTime.Parse("1999-12-31T00:00:01 +09");
+                recovered = DateTime.Parse("1999-12-31T00:00:01.123 +09");
+                recovered = DateTime.Parse("1999-12-31T00:00:01.123 +3");
+                Assert.IsTrue(time - (DateTime)serializer.Deserialize(serializer.Serialize(time))[0] < new TimeSpan(0, 0, 0, 0, 1));
+            }
+            finally
+            {
+                Thread.CurrentThread.CurrentCulture = currentCulture;
+            }
         }
 
         [Test]
