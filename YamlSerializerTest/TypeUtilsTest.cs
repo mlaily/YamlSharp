@@ -6,6 +6,7 @@ using System.Text;
 using NUnit.Framework;
 using Yaml;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace YamlSerializerTest
 {
@@ -138,7 +139,69 @@ namespace YamlSerializerTest
             Assert.IsFalse(dictionary.ContainsKey(b));
 
             Assert.AreEqual(b.ObjectGetHashCode(), ComparerByRef.GetHashCode(b));
+
+            //var watch = new System.Diagnostics.Stopwatch();
+            //watch.Start();
+            //for (int i = 0; i < 7000000; i++)
+            //{
+            //    Assert.AreNotEqual(ComparerByRef.GetHashCode(a), ComparerByRef.GetHashCode(b));
+            //}
+            //watch.Stop();
+            //TestContext.WriteLine(watch.Elapsed);
+
+            //watch.Reset();
+            //watch.Start();
+            //for (int i = 0; i < 7000000; i++)
+            //{
+            //    Assert.AreNotEqual(RuntimeHelpers.GetHashCode(a), RuntimeHelpers.GetHashCode(b));
+            //}
+            //watch.Stop();
+            //TestContext.WriteLine(watch.Elapsed);
         }
 
+        [Test]
+        public void TestStringEqualityComparerByRef()
+        {
+            // Hash codes of two identical non-interned strings.
+            var a = "This string";
+            var b = string.Format("{0} {1}", "This", "string");
+
+            var list = new List<string>();
+
+            var DefaultComparer = EqualityComparer<string>.Default;
+            var ComparerByRef = TypeUtils.EqualityComparerByRef<string>.Default;
+
+            list.Add(a);
+            Assert.IsTrue(list.Contains(b));
+            Assert.IsFalse(list.Contains(b, ComparerByRef));
+
+            Assert.IsTrue(DefaultComparer.Equals(a, a));    // same object
+            Assert.IsTrue(ComparerByRef.Equals(a, a));      // same object
+
+            Assert.IsTrue(DefaultComparer.Equals(a, b));    // different object with same value
+            Assert.IsFalse(ComparerByRef.Equals(a, b));     // different object with same value
+
+            var dictionary = new Dictionary<string, bool>(ComparerByRef);
+            dictionary[a] = true;
+            Assert.IsFalse(dictionary.ContainsKey(b));
+
+            //var watch = new System.Diagnostics.Stopwatch();
+            //watch.Start();
+            //for (int i = 0; i < 7000000; i++)
+            //{
+            //    Assert.AreNotEqual(ComparerByRef.GetHashCode(a), ComparerByRef.GetHashCode(b));
+            //}
+            //watch.Stop();
+            //TestContext.WriteLine(watch.Elapsed);
+
+            //watch.Reset();
+            //watch.Start();
+            //for (int i = 0; i < 7000000; i++)
+            //{
+            //    Assert.AreNotEqual(RuntimeHelpers.GetHashCode(a), RuntimeHelpers.GetHashCode(b));
+            //}
+            //watch.Stop();
+            //TestContext.WriteLine(watch.Elapsed);
+        }
     }
 }

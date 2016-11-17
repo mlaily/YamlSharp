@@ -255,7 +255,7 @@ namespace Yaml.Model
                 }
                 else
                 {
-                    return TypeUtils.HashCodeByRef<YamlScalar>.GetHashCode(this);
+                    return TypeUtils.GetReferenceHashCode(this);
                 }
             }
         }

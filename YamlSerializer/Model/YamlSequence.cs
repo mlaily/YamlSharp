@@ -49,7 +49,7 @@ namespace Yaml.Model
 
             // Unless !!seq, the hash code is based on the node's identity.
             if (ShorthandTag() != "!!seq")
-                return TypeUtils.HashCodeByRef<YamlSequence>.GetHashCode(this);
+                return TypeUtils.GetReferenceHashCode(this);
 
             var result = Tag.GetHashCode();
             for (int i = 0; i < Count; i++)

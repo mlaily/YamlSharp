@@ -5,6 +5,7 @@ using System.Text;
 
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 
 namespace Yaml
 {
@@ -215,6 +216,11 @@ namespace Yaml
                 (type.IsNestedPublic && type.IsNested && IsPublic(type.DeclaringType));
         }
 
+        public static int GetReferenceHashCode(object obj)
+        {
+            return RuntimeHelpers.GetHashCode(obj);
+        }
+
         /// <summary>
         /// Equality comparer that uses Object.ReferenceEquals(x, y) to compare class values.
         /// </summary>
@@ -242,7 +248,7 @@ namespace Yaml
             /// <exception cref="System.ArgumentNullException"><paramref name="obj"/> is null.</exception>
             public override int GetHashCode(T obj)
             {
-                return HashCodeByRef<T>.GetHashCode(obj);
+                return RuntimeHelpers.GetHashCode(obj);
             }
 
             /// <summary>
@@ -252,173 +258,6 @@ namespace Yaml
             ///  class for type T.</value>
             new public static EqualityComparerByRef<T> Default { get { return _default; } }
             static EqualityComparerByRef<T> _default = new EqualityComparerByRef<T>();
-        }
-
-        /// <summary>
-        /// Calculate hash code by reference.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public class HashCodeByRef<T> where T : class
-        {
-            /// <summary>
-            /// Calculate hash code by reference.
-            /// </summary>
-            new static public Func<T, int> GetHashCode { get; private set; }
-            /// <summary>
-            /// Initializes a new instance of the HashCodeByRef&lt;T&gt; class.
-            /// </summary>
-            static HashCodeByRef()
-            {
-                var dm = new DynamicMethod(
-                    "GetHashCodeByRef",                 // name of the dynamic method
-                    typeof(int),                        // type of return value
-                    new Type[] {
-                        typeof(T)                       // type of "this"
-                    },
-                    typeof(EqualityComparerByRef<T>));  // owner
-
-                var ilg = dm.GetILGenerator();
-
-                ilg.Emit(OpCodes.Ldarg_0);                          // push "this" on the stack
-                ilg.Emit(OpCodes.Call,
-                        typeof(object).GetMethod("GetHashCode"));   // returned value is on the stack
-                ilg.Emit(OpCodes.Ret);                              // return
-                GetHashCode = (Func<T, int>)dm.CreateDelegate(typeof(Func<T, int>));
-            }
-        }
-
-        class RehashableDictionary<K, V> : IDictionary<K, V> where K : class
-        {
-            Dictionary<int, object> items = new Dictionary<int, object>();
-
-            Dictionary<K, int> hashes =
-                new Dictionary<K, int>(EqualityComparerByRef<K>.Default);
-
-            class KeyValue
-            {
-                public int hash;
-                public K key;
-                public V value;
-                public KeyValue(K key, V value)
-                {
-                    this.key = key;
-                    this.value = value;
-                    this.hash = key.GetHashCode();
-                }
-            }
-
-            #region IDictionary<K,V> メンバ
-
-            public void Add(K key, V value)
-            {
-                if (hashes.ContainsKey(key))
-                    throw new ArgumentException("Same key already exists.");
-                var entry = new KeyValue(key, value);
-                object item;
-                if (items.TryGetValue(entry.hash, out item))
-                {
-
-                }
-                else
-                {
-                }
-            }
-
-            public bool ContainsKey(K key)
-            {
-                throw new NotImplementedException();
-            }
-
-            public ICollection<K> Keys
-            {
-                get { throw new NotImplementedException(); }
-            }
-
-            public bool Remove(K key)
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool TryGetValue(K key, out V value)
-            {
-                throw new NotImplementedException();
-            }
-
-            public ICollection<V> Values
-            {
-                get { throw new NotImplementedException(); }
-            }
-
-            public V this[K key]
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-                set
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
-            #endregion
-
-            #region ICollection<KeyValuePair<K,V>> メンバ
-
-            public void Add(KeyValuePair<K, V> item)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void Clear()
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool Contains(KeyValuePair<K, V> item)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void CopyTo(KeyValuePair<K, V>[] array, int arrayIndex)
-            {
-                throw new NotImplementedException();
-            }
-
-            public int Count
-            {
-                get { throw new NotImplementedException(); }
-            }
-
-            public bool IsReadOnly
-            {
-                get { throw new NotImplementedException(); }
-            }
-
-            public bool Remove(KeyValuePair<K, V> item)
-            {
-                throw new NotImplementedException();
-            }
-
-            #endregion
-
-            #region IEnumerable<KeyValuePair<K,V>> メンバ
-
-            public IEnumerator<KeyValuePair<K, V>> GetEnumerator()
-            {
-                throw new NotImplementedException();
-            }
-
-            #endregion
-
-            #region IEnumerable メンバ
-
-            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-            {
-                throw new NotImplementedException();
-            }
-
-            #endregion
         }
     }
 }
