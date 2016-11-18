@@ -339,7 +339,7 @@ namespace Yaml.Parsing
             static Charsets()
             {
                 // [1]
-                cPrintable = Charset(c =>
+                cPrintable = c =>
                     /*  ( 0x10000 < c && c < 0x110000 ) || */
                     (0xe000 <= c && c <= 0xfffd) ||
                     (0xa0 <= c && c <= 0xd7ff) ||
@@ -347,30 +347,25 @@ namespace Yaml.Parsing
                     (0x20 <= c && c <= 0x7e) ||
                     c == 0x0d ||
                     c == 0x0a ||
-                    c == 0x09
-                );
+                    c == 0x09;
                 // [22]
-                cIndicator = Charset(c =>
+                cIndicator = c =>
                     c < 0x100 &&
-                    "-?:,[]{}#&*!|>'\"%@`".Contains(c)
-                    );
+                    "-?:,[]{}#&*!|>'\"%@`".Contains(c);
                 // [23]
-                cFlowIndicator = Charset(c =>
+                cFlowIndicator = c =>
                     c < 0x100 &&
-                    ",[]{}".Contains(c)
-                    );
-                nsDecDigit = Charset(c =>
+                    ",[]{}".Contains(c);
+                nsDecDigit = c =>
                     c < 0x100 &&
-                    ('0' <= c && c <= '9')
-                    );
-                nsHexDigit = Charset(c =>
+                    ('0' <= c && c <= '9');
+                nsHexDigit = c =>
                     c < 0x100 && (
                         nsDecDigit(c) ||
                         ('A' <= c && c <= 'F') ||
                         ('a' <= c && c <= 'f')
-                        )
-                    );
-                nbChar = Charset(c =>
+                        );
+                nbChar = c =>
                     //  ( 0x10000 < c && c < 0x110000 ) || 
                     (0xe000 <= c && c <= 0xfffd && c != 0xFEFF) ||
                     (0xa0 <= c && c <= 0xd7ff) ||
@@ -378,60 +373,50 @@ namespace Yaml.Parsing
                     (0x20 <= c && c <= 0x7e) ||
                     //  c == 0x0d ||
                     //  c == 0x0a ||
-                    c == 0x09
-                );
-                nbCharWithWarning = Charset(c =>
+                    c == 0x09;
+                nbCharWithWarning = c =>
                     c == 0x2029 ||  // paragraph separator
                     c == 0x2028 ||  // line separator
                     c == 0x85 ||    // next line
-                    c == 0x0c       // form feed
-                    );
+                    c == 0x0c;      // form feed
                 sSpace = c => c == ' ';
                 sWhite = c => c == ' ' || c == '\t';
-                nsChar = Charset(c =>
+                nsChar = c =>
                     // nbChar(c) && !sWhite(c)
                     //  ( 0x10000 < c && c < 0x110000 ) || 
                     (0xe000 <= c && c <= 0xfffd && c != 0xFEFF) ||
                     (0xa0 <= c && c <= 0xd7ff) ||
                     c == 0x85 ||
-                    (0x21 <= c && c <= 0x7e)
+                    (0x21 <= c && c <= 0x7e);
                     //  c == 0x0d ||
                     //  c == 0x0a ||
                     //  c == 0x09
-                    );
-                nsAsciiLetter = Charset(c =>
+                nsAsciiLetter = c =>
                     c < 0x100 && (
                         ('A' <= c && c <= 'Z') ||
                         ('a' <= c && c <= 'z')
-                        )
-                    );
-                nsWordChar = Charset(c =>
+                        );
+                nsWordChar = c =>
                     c < 0x100 && (
                         nsDecDigit(c) ||
                         nsAsciiLetter(c) ||
                         c == '-'
-                        )
-                    );
-                nsUriCharSub = Charset(c =>
+                        );
+                nsUriCharSub = c =>
                     c < 0x100 && (
                         nsWordChar(c) ||
                         @"#;/?:@&=$,_.!~*'()[]".Contains(c)
-                        )
-                    );
-                nsTagCharSub = Charset(c =>
+                        );
+                nsTagCharSub = c =>
                     c < 0x100 &&
-                    nsUriCharSub(c) && !(c == '!' || cFlowIndicator(c))
-                    );
-                nsAnchorChar = Charset(c =>
-                    nsChar(c) && !cFlowIndicator(c)
-                    );
+                    nsUriCharSub(c) && !(c == '!' || cFlowIndicator(c));
+                nsAnchorChar = c =>
+                    nsChar(c) && !cFlowIndicator(c);
                 nsPlainSafeOut = c => nsChar(c);
-                nsPlainSafeIn = Charset(c =>
-                    nsChar(c) && !cFlowIndicator(c)
-                    );
-                nsPlainFirstSub = Charset(c =>
-                    nsChar(c) && !cIndicator(c)
-                    );
+                nsPlainSafeIn = c =>
+                    nsChar(c) && !cFlowIndicator(c);
+                nsPlainFirstSub = c =>
+                    nsChar(c) && !cIndicator(c);
             }
 
             public static Func<char, bool> cPrintable; // [1] 
