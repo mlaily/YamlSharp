@@ -336,10 +336,9 @@ namespace Yaml.Parsing
         #region Chapter 5. Character Set
         class Charsets
         {
-            static Charsets()
+            public static bool cPrintable(char c) // [1] 
             {
-                // [1]
-                cPrintable = c =>
+                return
                     /*  ( 0x10000 < c && c < 0x110000 ) || */
                     (0xe000 <= c && c <= 0xfffd) ||
                     (0xa0 <= c && c <= 0xd7ff) ||
@@ -348,78 +347,7 @@ namespace Yaml.Parsing
                     c == 0x0d ||
                     c == 0x0a ||
                     c == 0x09;
-                // [22]
-                cIndicator = c =>
-                    c < 0x100 &&
-                    "-?:,[]{}#&*!|>'\"%@`".Contains(c);
-                // [23]
-                cFlowIndicator = c =>
-                    c < 0x100 &&
-                    ",[]{}".Contains(c);
-                nsDecDigit = c =>
-                    c < 0x100 &&
-                    ('0' <= c && c <= '9');
-                nsHexDigit = c =>
-                    c < 0x100 && (
-                        nsDecDigit(c) ||
-                        ('A' <= c && c <= 'F') ||
-                        ('a' <= c && c <= 'f')
-                        );
-                nbChar = c =>
-                    //  ( 0x10000 < c && c < 0x110000 ) || 
-                    (0xe000 <= c && c <= 0xfffd && c != 0xFEFF) ||
-                    (0xa0 <= c && c <= 0xd7ff) ||
-                    c == 0x85 ||
-                    (0x20 <= c && c <= 0x7e) ||
-                    //  c == 0x0d ||
-                    //  c == 0x0a ||
-                    c == 0x09;
-                nbCharWithWarning = c =>
-                    c == 0x2029 ||  // paragraph separator
-                    c == 0x2028 ||  // line separator
-                    c == 0x85 ||    // next line
-                    c == 0x0c;      // form feed
-                sSpace = c => c == ' ';
-                sWhite = c => c == ' ' || c == '\t';
-                nsChar = c =>
-                    // nbChar(c) && !sWhite(c)
-                    //  ( 0x10000 < c && c < 0x110000 ) || 
-                    (0xe000 <= c && c <= 0xfffd && c != 0xFEFF) ||
-                    (0xa0 <= c && c <= 0xd7ff) ||
-                    c == 0x85 ||
-                    (0x21 <= c && c <= 0x7e);
-                    //  c == 0x0d ||
-                    //  c == 0x0a ||
-                    //  c == 0x09
-                nsAsciiLetter = c =>
-                    c < 0x100 && (
-                        ('A' <= c && c <= 'Z') ||
-                        ('a' <= c && c <= 'z')
-                        );
-                nsWordChar = c =>
-                    c < 0x100 && (
-                        nsDecDigit(c) ||
-                        nsAsciiLetter(c) ||
-                        c == '-'
-                        );
-                nsUriCharSub = c =>
-                    c < 0x100 && (
-                        nsWordChar(c) ||
-                        @"#;/?:@&=$,_.!~*'()[]".Contains(c)
-                        );
-                nsTagCharSub = c =>
-                    c < 0x100 &&
-                    nsUriCharSub(c) && !(c == '!' || cFlowIndicator(c));
-                nsAnchorChar = c =>
-                    nsChar(c) && !cFlowIndicator(c);
-                nsPlainSafeOut = c => nsChar(c);
-                nsPlainSafeIn = c =>
-                    nsChar(c) && !cFlowIndicator(c);
-                nsPlainFirstSub = c =>
-                    nsChar(c) && !cIndicator(c);
             }
-
-            public static Func<char, bool> cPrintable; // [1] 
             public static bool nbJson(char c) // [2] 
             {
                 return c == 0x09 || (0x20 <= c /* && c<=0x10ffff */ );
@@ -428,29 +356,110 @@ namespace Yaml.Parsing
             {
                 return c == '\uFEFF';
             }
-            /// <summary>
-            /// [22]
-            /// </summary>
-            public static Func<char, bool> cIndicator;
-            /// <summary>
-            /// [23]
-            /// </summary>
-            public static Func<char, bool> cFlowIndicator;
-            public static Func<char, bool> nsDecDigit;
-            public static Func<char, bool> nsHexDigit;
-            public static Func<char, bool> nsAsciiLetter;
-            public static Func<char, bool> nsWordChar;
-            public static Func<char, bool> sSpace;
-            public static Func<char, bool> sWhite;
-            public static Func<char, bool> nbChar;
-            public static Func<char, bool> nbCharWithWarning;
-            public static Func<char, bool> nsChar;
-            public static Func<char, bool> nsUriCharSub;
-            public static Func<char, bool> nsTagCharSub;
-            public static Func<char, bool> nsAnchorChar;
-            public static Func<char, bool> nsPlainSafeIn;
-            public static Func<char, bool> nsPlainSafeOut;
-            public static Func<char, bool> nsPlainFirstSub;
+            public static bool cIndicator(char c) // [22]
+            {
+                return c < 0x100 &&
+                      "-?:,[]{}#&*!|>'\"%@`".Contains(c);
+            }
+            public static bool cFlowIndicator(char c) // [23]
+            {
+                return c < 0x100 &&
+                        ",[]{}".Contains(c);
+            }
+            public static bool nsDecDigit(char c)
+            {
+                return c < 0x100 &&
+                        ('0' <= c && c <= '9');
+            }
+            public static bool nsHexDigit(char c)
+            {
+                return c < 0x100 && (
+                            nsDecDigit(c) ||
+                            ('A' <= c && c <= 'F') ||
+                            ('a' <= c && c <= 'f')
+                            );
+            }
+            public static bool nsAsciiLetter(char c)
+            {
+                return c < 0x100 && (
+                            ('A' <= c && c <= 'Z') ||
+                            ('a' <= c && c <= 'z')
+                            );
+            }
+            public static bool nsWordChar(char c)
+            {
+                return c < 0x100 && (
+                            nsDecDigit(c) ||
+                            nsAsciiLetter(c) ||
+                            c == '-'
+                            );
+            }
+            public static bool sSpace(char c)
+            {
+                return c == ' ';
+            }
+            public static bool sWhite(char c)
+            {
+                return c == ' ' || c == '\t';
+            }
+            public static bool nbChar(char c)
+            {
+                return //  ( 0x10000 < c && c < 0x110000 ) || 
+                        (0xe000 <= c && c <= 0xfffd && c != 0xFEFF) ||
+                        (0xa0 <= c && c <= 0xd7ff) ||
+                        c == 0x85 ||
+                        (0x20 <= c && c <= 0x7e) ||
+                        //  c == 0x0d ||
+                        //  c == 0x0a ||
+                        c == 0x09;
+            }
+            public static bool nbCharWithWarning(char c)
+            {
+                return c == 0x2029 ||  // paragraph separator
+                        c == 0x2028 ||  // line separator
+                        c == 0x85 ||    // next line
+                        c == 0x0c;      // form feed
+            }
+            public static bool nsChar(char c)
+            {
+                return  // nbChar(c) && !sWhite(c)
+                        //  ( 0x10000 < c && c < 0x110000 ) || 
+                        (0xe000 <= c && c <= 0xfffd && c != 0xFEFF) ||
+                        (0xa0 <= c && c <= 0xd7ff) ||
+                        c == 0x85 ||
+                        (0x21 <= c && c <= 0x7e);
+                //  c == 0x0d ||
+                //  c == 0x0a ||
+                //  c == 0x09
+            }
+            public static bool nsUriCharSub(char c)
+            {
+                return c < 0x100 && (
+                           nsWordChar(c) ||
+                           @"#;/?:@&=$,_.!~*'()[]".Contains(c)
+                           );
+            }
+            public static bool nsTagCharSub(char c)
+            {
+                return c < 0x100 &&
+                        nsUriCharSub(c) && !(c == '!' || cFlowIndicator(c));
+            }
+            public static bool nsAnchorChar(char c)
+            {
+                return nsChar(c) && !cFlowIndicator(c);
+            }
+            public static bool nsPlainSafeIn(char c)
+            {
+                return nsChar(c) && !cFlowIndicator(c);
+            }
+            public static bool nsPlainSafeOut(char c)
+            {
+                return nsChar(c);
+            }
+            public static bool nsPlainFirstSub(char c)
+            {
+                return nsChar(c) && !cIndicator(c);
+            }
             public static bool bChar(char c) { return c == '\n' || c == '\r'; }
         }
 
