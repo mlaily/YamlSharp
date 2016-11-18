@@ -167,10 +167,10 @@ namespace Yaml.Parsing
         /// <param name="message"><see cref="string.Format(string,object[])"/> template for the error message.</param>
         /// <param name="args"><see cref="string.Format(string,object[])"/> parameters if required</param>
         /// <returns>Because it throw exception, nothing will be returned in reality.</returns>
-        public bool Error(string message, params object[] args)
+        public bool Error(string message)
         {
             throw new ParseErrorException(
-                $"Syntax error at line {CurrentPosition.Raw} column {CurrentPosition.Column}\r\n" + string.Format(message, args));
+                $"Syntax error at line {CurrentPosition.Raw} column {CurrentPosition.Column}\r\n" + message);
         }
         /// <summary>
         /// Report error by throwing <see cref="ParseErrorException"/> when the <paramref name="rule"/> does not match.
@@ -179,10 +179,10 @@ namespace Yaml.Parsing
         /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
         /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
         /// <returns>Always true; otherwise an exception thrown.</returns>
-        protected bool ErrorUnless(bool rule, string message, params object[] args)
+        protected bool ErrorUnless(bool rule, string message)
         {
             if (!rule)
-                Error(message, args);
+                Error(message);
             return true;
         }
         /// <summary>
@@ -192,7 +192,7 @@ namespace Yaml.Parsing
         /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
         /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
         /// <returns>Always true; otherwise an exception is thrown.</returns>
-        protected bool ErrorUnless(Func<bool> rule, string message, params object[] args)
+        protected bool ErrorUnless(Func<bool> rule, string message)
         {
             return ErrorUnless(rule(), message);
         }
@@ -206,12 +206,12 @@ namespace Yaml.Parsing
         /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
         /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
         /// <returns>true if the reduction rule matches; otherwise false.</returns>
-        protected bool ErrorUnlessWithAdditionalCondition(Func<bool> rule, bool toBeError, string message, params object[] args)
+        protected bool ErrorUnlessWithAdditionalCondition(Func<bool> rule, bool toBeError, string message)
         {
             if (toBeError)
             {
                 if (!rule())
-                    Error(message, args);
+                    Error(message);
                 return true;
             }
             else
@@ -226,10 +226,10 @@ namespace Yaml.Parsing
         /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
         /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
         /// <returns>Always true.</returns>
-        protected bool ErrorIf(bool condition, string message, params object[] args)
+        protected bool ErrorIf(bool condition, string message)
         {
             if (condition)
-                Error(message, args);
+                Error(message);
             return true;
         }
         /// <summary>
@@ -251,10 +251,10 @@ namespace Yaml.Parsing
         /// <param name="message"><see cref="string.Format(string,object[])"/> template for the warning message.</param>
         /// <param name="args"><see cref="string.Format(string,object[])"/> parameters if required</param>
         /// <returns>Always true.</returns>
-        protected bool WarningIf(bool condition, string message, params object[] args)
+        protected bool WarningIf(bool condition, string message)
         {
             if (condition)
-                Warning(message, args);
+                Warning(message);
             return true;
         }
         /// <summary>
@@ -276,10 +276,10 @@ namespace Yaml.Parsing
         /// <param name="message"><see cref="string.Format(string,object[])"/> template for the warning message.</param>
         /// <param name="args"><see cref="string.Format(string,object[])"/> parameters if required</param>
         /// <returns>Always true.</returns>
-        protected bool WarningUnless(bool condition, string message, params object[] args)
+        protected bool WarningUnless(bool condition, string message)
         {
             if (!condition)
-                Warning(message, args);
+                Warning(message);
             return true;
         }
         /// <summary>
@@ -298,9 +298,9 @@ namespace Yaml.Parsing
         /// <param name="message"><see cref="string.Format(string,object[])"/> template for the warning message.</param>
         /// <param name="args"><see cref="string.Format(string,object[])"/> parameters if required</param>
         /// <returns>Always true.</returns>
-        protected bool Warning(string message, params object[] args)
+        protected bool Warning(string message)
         {
-            message = $"Warning: {string.Format(message, args)} at line {CurrentPosition.Raw} column {CurrentPosition.Column}.";
+            message = $"Warning: {message} at line {CurrentPosition.Raw} column {CurrentPosition.Column}.";
             StoreWarning(message);
             return true;
         }

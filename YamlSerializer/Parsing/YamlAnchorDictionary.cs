@@ -22,22 +22,22 @@ namespace Yaml.Parsing
         }
         Stack<RewindInfo> ItemsToRewind = new Stack<RewindInfo>();
 
-        Func<string, object[], bool> error;
+        Func<string, bool> error;
 
-        public AnchorDictionary(Func<string, object[], bool> error)
+        public AnchorDictionary(Func<string, bool> error)
         {
             this.error = error;
         }
-        bool Error(string format, params object[] args)
+        bool Error(string message)
         {
-            return error(format, args);
+            return error(message);
         }
         public YamlNode this[string anchor_name]
         {
             get
             {
                 if (!Items.ContainsKey(anchor_name))
-                    Error("Anchor {0} has not been registered.", anchor_name);
+                    Error($"Anchor {anchor_name} has not been registered.");
                 return Items[anchor_name];
             }
         }

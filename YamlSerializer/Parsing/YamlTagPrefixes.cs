@@ -15,7 +15,7 @@ namespace Yaml.Parsing
     internal class YamlTagPrefixes
     {
         Dictionary<string, string> TagPrefixes = new Dictionary<string, string>();
-        Func<string, object[], bool> error;
+        Func<string, bool> error;
 
         #region Debug.Assert
 #if DEBUG
@@ -38,13 +38,13 @@ namespace Yaml.Parsing
 #endif
         #endregion
 
-        public YamlTagPrefixes(Func<string, object[], bool> error)
+        public YamlTagPrefixes(Func<string, bool> error)
         {
             this.error = error;
         }
-        void Error(string format, params object[] args)
+        void Error(string message)
         {
-            error(format, args);
+            error(message);
         }
         public bool Reset()
         {
@@ -65,13 +65,13 @@ namespace Yaml.Parsing
                 switch (tag_handle)
                 {
                     case "!":
-                        Error("Primary tag prefix is already defined as '{0}'.", TagPrefixes["!"]);
+                        Error($"Primary tag prefix is already defined as '{TagPrefixes["!"]}'.");
                         break;
                     case "!!":
-                        Error("Secondary tag prefix is already defined as '{0}'.", TagPrefixes["!!"]);
+                        Error($"Secondary tag prefix is already defined as '{TagPrefixes["!!"]}'.");
                         break;
                     default:
-                        Error("Tag prefix for the handle {0} is already defined as '{1}'.", tag_handle, TagPrefixes[tag_handle]);
+                        Error($"Tag prefix for the handle {tag_handle} is already defined as '{TagPrefixes[tag_handle]}'.");
                         break;
                 }
             }
@@ -80,7 +80,7 @@ namespace Yaml.Parsing
         public string Resolve(string tag_handle, string tag_name)
         {
             if (!TagPrefixes.ContainsKey(tag_handle))
-                Error("Tag handle {0} is not registered.", tag_handle);
+                Error($"Tag handle {tag_handle} is not registered.");
             var tag = TagPrefixes[tag_handle] + tag_name;
             return tag;
         }

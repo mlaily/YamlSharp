@@ -51,9 +51,7 @@ namespace Yaml.Parsing
         public YamlParser()
         {
             Anchors = new AnchorDictionary(Error);
-
             TagPrefixes = new YamlTagPrefixes(Error);
-
             Warnings = new List<string>();
         }
 
@@ -123,7 +121,7 @@ namespace Yaml.Parsing
         /// <param name="args">Parameters for the directive</param>
         protected virtual void ReservedDirective(string name, params string[] args)
         {
-            Warning("Custom directive %{0} was ignored", name);
+            Warning($"Custom directive %{name} was ignored");
         }
         /// <summary>
         /// Invoked when YAML directive is found in YAML document.
@@ -132,15 +130,15 @@ namespace Yaml.Parsing
         protected virtual void YamlDirective(string version)
         {
             if (version != "1.2")
-                Warning("YAML version %{0} was specified but ignored", version);
+                Warning($"YAML version %{version} was specified but ignored");
         }
         Dictionary<char, bool> AlreadyWarnedChars = new Dictionary<char, bool>();
         void WarnIfCharWasBreakInYAML1_1()
         {
             if (Charsets.nbCharWithWarning(text[p]) && !AlreadyWarnedChars.ContainsKey(text[p]))
             {
-                Warning("{0} is treated as non-break character unlike YAML 1.1",
-                    text[p] < 0x100 ? $"\\x{(int)text[p]:x2}" : $"\\u{(int)text[p]:x4}");
+                var charValue = text[p] < 0x100 ? $"\\x{(int)text[p]:x2}" : $"\\u{(int)text[p]:x4}";
+                Warning($"{charValue} is treated as non-break character unlike YAML 1.1");
                 AlreadyWarnedChars.Add(text[p], true);
             }
         }
@@ -176,19 +174,19 @@ namespace Yaml.Parsing
             /// <summary>
             /// tag for the next value (will be cleared when the next value is created)
             /// </summary>
-            public string tag;
+            public string Tag;
             /// <summary>
             /// anchor for the next value (will be cleared when the next value is created)
             /// </summary>
-            public string anchor;
+            public string Anchor;
             /// <summary>
             /// current value
             /// </summary>
-            public YamlNode value;
+            public YamlNode Value;
             /// <summary>
             /// anchor rewinding position
             /// </summary>
-            public int anchor_depth;
+            public int AnchorDepth;
         }
 
         /// <summary>
@@ -196,21 +194,21 @@ namespace Yaml.Parsing
         /// </summary>
         protected override void Rewind()
         {
-            Anchors.RewindDepth = state.anchor_depth;
+            Anchors.RewindDepth = state.AnchorDepth;
         }
 
         bool SetValue(YamlNode v)
         {
-            if (state.value != null && v != null)
+            if (state.Value != null && v != null)
                 throw new Exception();
-            state.value = v;
+            state.Value = v;
             v.OnLoaded();
             return true;
         }
         YamlNode GetValue()
         {
-            var v = state.value;
-            state.value = null;
+            var v = state.Value;
+            state.Value = null;
             return v;
         }
         #endregion
@@ -244,9 +242,9 @@ namespace Yaml.Parsing
             else
             {
                 if (!TagValidator.IsValid(verbatim_tag))
-                    Warning("Invalid global tag name '{0}' (c.f. RFC 4151) found", verbatim_tag);
+                    Warning($"Invalid global tag name '{verbatim_tag}' (c.f. RFC 4151) found");
             }
-            state.tag = verbatim_tag;
+            state.Tag = verbatim_tag;
             return true;
         }
         YamlTagValidator TagValidator = new YamlTagValidator();
@@ -254,11 +252,11 @@ namespace Yaml.Parsing
         AnchorDictionary Anchors;
         private void RegisterAnchorFor(YamlNode value)
         {
-            if (state.anchor != null)
+            if (state.Anchor != null)
             {
-                Anchors.Add(state.anchor, value);
-                state.anchor = null;
-                state.anchor_depth = Anchors.RewindDepth;
+                Anchors.Add(state.Anchor, value);
+                state.Anchor = null;
+                state.AnchorDepth = Anchors.RewindDepth;
             }
         }
 
@@ -272,51 +270,51 @@ namespace Yaml.Parsing
             if (from_style != null)
                 from_style = YamlNode.ExpandTag(from_style);
 
-            if (state.tag != null)
+            if (state.Tag != null)
                 return;
 
             if (from_style == null)
                 from_style = config.TagResolver.Resolve(stringValue.ToString());
 
             if (from_style != null)
-                state.tag = from_style;
+                state.Tag = from_style;
             return;
         }
         private YamlScalar CreateScalar(string auto_detected_tag, Position pos)
         {
             AutoDetectTag(auto_detected_tag);
-            if (state.tag == null || state.tag == "" /* ! was specified */ )
-                state.tag = YamlNode.DefaultTagPrefix + "str";
-            var value = new YamlScalar(state.tag, stringValue.ToString());
+            if (state.Tag == null || state.Tag == "" /* ! was specified */ )
+                state.Tag = YamlNode.DefaultTagPrefix + "str";
+            var value = new YamlScalar(state.Tag, stringValue.ToString());
             value.Raw = pos.Raw;
             value.Column = pos.Column;
             stringValue.Length = 0;
             RegisterAnchorFor(value);
-            state.tag = null;
+            state.Tag = null;
             return value;
         }
         private YamlSequence CreateSequence(Position pos)
         {
-            if (state.tag == null || state.tag == "" /* ! was specified */ )
-                state.tag = YamlNode.DefaultTagPrefix + "seq";
+            if (state.Tag == null || state.Tag == "" /* ! was specified */ )
+                state.Tag = YamlNode.DefaultTagPrefix + "seq";
             var seq = new YamlSequence();
-            seq.Tag = state.tag;
+            seq.Tag = state.Tag;
             seq.Raw = pos.Raw;
             seq.Column = pos.Column;
             RegisterAnchorFor(seq);
-            state.tag = null;
+            state.Tag = null;
             return seq;
         }
         private YamlMapping CreateMapping(Position pos)
         {
-            if (state.tag == null || state.tag == "" /* ! was specified */ )
-                state.tag = YamlNode.DefaultTagPrefix + "map";
+            if (state.Tag == null || state.Tag == "" /* ! was specified */ )
+                state.Tag = YamlNode.DefaultTagPrefix + "map";
             var map = new YamlMapping();
-            map.Tag = state.tag;
+            map.Tag = state.Tag;
             map.Raw = pos.Raw;
             map.Column = pos.Column;
             RegisterAnchorFor(map);
-            state.tag = null;
+            state.Tag = null;
             return map;
         }
 
@@ -712,7 +710,7 @@ namespace Yaml.Parsing
                 }
                 else
                     break;
-            Error("{0} is not a valid escape sequence.", s);
+            Error($"{s} is not a valid escape sequence.");
         }
         bool HexValue(int p, out int v)
         {
@@ -1015,8 +1013,8 @@ namespace Yaml.Parsing
         #region 6.9 Node Properties
         bool c_nsProperties(int n, Context c) // [96] 
         {
-            state.anchor = null;
-            state.tag = null;
+            state.Anchor = null;
+            state.Tag = null;
             return
                 (c_nsTagProperty() && Optional(RewindUnless(() => sSeparate(n, c) && c_nsAnchorProperty()))) ||
                 (c_nsAnchorProperty() && Optional(RewindUnless(() => sSeparate(n, c) && c_nsTagProperty())));
@@ -1067,7 +1065,7 @@ namespace Yaml.Parsing
         private bool cNonSpecificTag() // [100]' 
         {
             // disable tag resolution to restrict tag to be ( map | seq | str )
-            state.tag = "";
+            state.Tag = "";
             return true; /* empty */
         }
         bool c_nsAnchorProperty() // [101] 
@@ -1075,7 +1073,7 @@ namespace Yaml.Parsing
             if (text[p] != '&')
                 return false;
             p++;
-            return Save(nsAnchorName, s => state.anchor = s);
+            return Save(nsAnchorName, s => state.Anchor = s);
         }
         private bool nsAnchorName() // [103] 
         {
@@ -2088,8 +2086,8 @@ namespace Yaml.Parsing
             var length = stringValue.Length;
             var s = stringValue.ToString();
             stringValue.Length = 0;
-            Debug.Assert(length == 0, "stringValue should be empty but '" + s + "' was found");
-            state.value = null;
+            Debug.Assert(length == 0, $"stringValue should be empty but '{s}' was found");
+            state.Value = null;
 
             TagPrefixes.SetupDefaultTagPrefixes();
             return
@@ -2123,7 +2121,7 @@ namespace Yaml.Parsing
         {
             TagPrefixes.Reset();
             Anchors.RewindDepth = 0;
-            state.anchor_depth = 0;
+            state.AnchorDepth = 0;
             WarningAdded.Clear();
             Warnings.Clear();
             stringValue.Length = 0;
@@ -2162,8 +2160,8 @@ namespace Yaml.Parsing
             }
             else
             {
-                Error("An illegal character {0} appeared.",
-                        (text[p] < 0x100) ? $"'\\x{(int)text[p]:x2}'" : $"'\\u{(int)text[p]:x4}'");
+                var charValue = (text[p] < 0x100) ? $"'\\x{(int)text[p]:x2}'" : $"'\\u{(int)text[p]:x4}'";
+                Error($"An illegal character {charValue} appeared.");
             }
             return false;
         }
