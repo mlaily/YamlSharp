@@ -21,6 +21,9 @@ namespace Yaml.Parsing
         public ParseErrorException(string message) : base(message) { }
     }
 
+    public delegate bool CharsetValidator(string text, int p);
+    public delegate bool UnicodeCharsetValidator(string text, int p, out int length);
+
     /// <summary>
     /// <para>Base class to implement a parser class.</para>
     /// 
@@ -689,9 +692,9 @@ namespace Yaml.Parsing
         /// </summary>
         /// <param name="charset">Character set to be accepted.</param>
         /// <returns>Always true.</returns>
-        protected bool Repeat(Func<char, bool> charset)
+        protected bool Repeat(CharsetValidator charset)
         {
-            while (charset(Text[P]))
+            while (charset(Text, P))
                 P++;
             return true;
         }
@@ -700,12 +703,23 @@ namespace Yaml.Parsing
         /// </summary>
         /// <param name="charset">Character set to be accepted.</param>
         /// <returns>true if the rule matches; otherwise false.</returns>
-        protected bool OneAndRepeat(Func<char, bool> charset)
+        protected bool OneAndRepeat(CharsetValidator charset)
         {
-            if (!charset(Text[P]))
+            if (!charset(Text, P))
                 return false;
-            while (charset(Text[++P]))
+            while (charset(Text, ++P))
                 ;
+            return true;
+        }
+        protected bool OneAndRepeat(UnicodeCharsetValidator charset)
+        {
+            int length;
+            if (!charset(Text, P, out length))
+                return false;
+            do
+            {
+                P += length;
+            } while (charset(Text, P, out length));
             return true;
         }
         /// <summary>
@@ -714,10 +728,10 @@ namespace Yaml.Parsing
         /// <param name="charset">Character set to be accepted.</param>
         /// <param name="n">Repetition count.</param>
         /// <returns>true if the rule matches; otherwise false.</returns>
-        protected bool Repeat(Func<char, bool> charset, int n)
+        protected bool Repeat(CharsetValidator charset, int n)
         {
             for (int i = 0; i < n; i++)
-                if (!charset(Text[P + i]))
+                if (!charset(Text, P + i))
                     return false;
             P += n;
             return true;
@@ -730,13 +744,13 @@ namespace Yaml.Parsing
         /// <param name="min">Minimum repetition count. Negative value is treated as 0.</param>
         /// <param name="max">Maximum repetition count. Negative value is treated as positive infinity.</param>
         /// <returns>true if the rule matches; otherwise false.</returns>
-        protected bool Repeat(Func<char, bool> charset, int min, int max)
+        protected bool Repeat(CharsetValidator charset, int min, int max)
         {
             for (int i = 0; i < min; i++)
-                if (!charset(Text[P + i]))
+                if (!charset(Text, P + i))
                     return false;
             for (int i = 0; i < max; i++)
-                if (!charset(Text[P + min + i]))
+                if (!charset(Text, P + min + i))
                 {
                     P += min + i;
                     return true;
@@ -749,9 +763,9 @@ namespace Yaml.Parsing
         /// </summary>
         /// <param name="charset">Character set to be accepted.</param>
         /// <returns>Always true.</returns>
-        protected bool Optional(Func<char, bool> charset) // ? 
+        protected bool Optional(CharsetValidator charset) // ? 
         {
-            if (!charset(Text[P]))
+            if (!charset(Text, P))
                 return true;
             P++;
             return true;
@@ -851,7 +865,7 @@ namespace Yaml.Parsing
         /// <param name="tableSize">Character table size.</param>
         /// <param name="definition">A simple but slow comparison-based definition of the charsert.</param>
         /// <returns>A performance-optimized table-based delegate built from the given <paramref name="definition"/>.</returns>
-        protected static Func<char, bool> Charset(int tableSize, Func<char, bool> definition)
+        private static Func<char, bool> Charset(int tableSize, Func<char, bool> definition)
         {
             var table = new bool[tableSize];
             for (char c = '\0'; c < tableSize; c++)

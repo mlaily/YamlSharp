@@ -135,7 +135,7 @@ namespace Yaml.Parsing
         Dictionary<char, bool> AlreadyWarnedChars = new Dictionary<char, bool>();
         void WarnIfCharWasBreakInYAML1_1()
         {
-            if (Charsets.nbCharWithWarning(Text[P]) && !AlreadyWarnedChars.ContainsKey(Text[P]))
+            if (Charsets.nbCharWithWarning(Text, P) && !AlreadyWarnedChars.ContainsKey(Text[P]))
             {
                 var charValue = Text[P] < 0x100 ? $"\\x{(int)Text[P]:x2}" : $"\\u{(int)Text[P]:x4}";
                 Warning($"{charValue} is treated as non-break character unlike YAML 1.1");
@@ -334,141 +334,213 @@ namespace Yaml.Parsing
         #endregion
 
         #region Chapter 5. Character Set
-        class Charsets
+        /// <summary>
+        /// Character matching rules.
+        /// The methods in this class are static and will never consume any character (increment P)
+        /// </summary>
+        private static class Charsets
         {
-            public static bool cPrintable(char c) // [1] 
+            public static bool cByteOrdermark(string text, int p) // [3] 
             {
-                return
-                    /*  ( 0x10000 < c && c < 0x110000 ) || */
-                    (0xe000 <= c && c <= 0xfffd) ||
-                    (0xa0 <= c && c <= 0xd7ff) ||
-                    c == 0x85 ||
-                    (0x20 <= c && c <= 0x7e) ||
-                    c == 0x0d ||
-                    c == 0x0a ||
-                    c == 0x09;
-            }
-            public static bool nbJson(char c) // [2] 
-            {
-                return c == 0x09 || (0x20 <= c /* && c<=0x10ffff */ );
-            }
-            public static bool cByteOrdermark(char c) // [3] 
-            {
+                char c = text[p];
                 return c == '\uFEFF';
             }
-            public static bool cIndicator(char c) // [22]
+            public static bool cIndicator(string text, int p) // [22]
             {
+                char c = text[p];
                 return c < 0x100 &&
                       "-?:,[]{}#&*!|>'\"%@`".Contains(c);
             }
-            public static bool cFlowIndicator(char c) // [23]
+            public static bool cFlowIndicator(string text, int p) // [23]
             {
+                char c = text[p];
                 return c < 0x100 &&
                         ",[]{}".Contains(c);
             }
-            public static bool nsDecDigit(char c)
+            public static bool nsDecDigit(string text, int p)
             {
+                char c = text[p];
                 return c < 0x100 &&
                         ('0' <= c && c <= '9');
             }
-            public static bool nsHexDigit(char c)
+            public static bool nsHexDigit(string text, int p)
             {
+                char c = text[p];
                 return c < 0x100 && (
-                            nsDecDigit(c) ||
+                            nsDecDigit(text, p) ||
                             ('A' <= c && c <= 'F') ||
                             ('a' <= c && c <= 'f')
                             );
             }
-            public static bool nsAsciiLetter(char c)
+            public static bool nsAsciiLetter(string text, int p)
             {
+                char c = text[p];
                 return c < 0x100 && (
                             ('A' <= c && c <= 'Z') ||
                             ('a' <= c && c <= 'z')
                             );
             }
-            public static bool nsWordChar(char c)
+            public static bool nsWordChar(string text, int p)
             {
+                char c = text[p];
                 return c < 0x100 && (
-                            nsDecDigit(c) ||
-                            nsAsciiLetter(c) ||
+                            nsDecDigit(text, p) ||
+                            nsAsciiLetter(text, p) ||
                             c == '-'
                             );
             }
-            public static bool sSpace(char c)
+            public static bool sSpace(string text, int p)
             {
+                char c = text[p];
                 return c == ' ';
             }
-            public static bool sWhite(char c)
+            public static bool sWhite(string text, int p)
             {
+                char c = text[p];
                 return c == ' ' || c == '\t';
             }
-            public static bool nbChar(char c)
+            public static bool nsUriCharSub(string text, int p)
             {
-                return //  ( 0x10000 < c && c < 0x110000 ) || 
+                char c = text[p];
+                return c < 0x100 && (
+                           nsWordChar(text, p) ||
+                           @"#;/?:@&=$,_.!~*'()[]".Contains(c)
+                           );
+            }
+            public static bool nsTagCharSub(string text, int p)
+            {
+                char c = text[p];
+                return c < 0x100 &&
+                        nsUriCharSub(text, p) && !(c == '!' || cFlowIndicator(text, p));
+            }
+            public static bool bChar(string text, int p)
+            {
+                char c = text[p];
+                return c == '\n' || c == '\r';
+            }
+            public static bool nbCharWithWarning(string text, int p)
+            {
+                char c = text[p];
+                return c == 0x2029 ||  // paragraph separator
+                        c == 0x2028 ||  // line separator
+                        c == 0x85 ||    // next line
+                        c == 0x0c;      // form feed
+            }
+
+            #region Requires unicode support
+            //public static bool cPrintable(char c) // [1] 
+            //{
+            //    return
+            //        /*  ( 0x10000 < c && c < 0x110000 ) || */
+            //        (0xe000 <= c && c <= 0xfffd) ||
+            //        (0xa0 <= c && c <= 0xd7ff) ||
+            //        c == 0x85 ||
+            //        (0x20 <= c && c <= 0x7e) ||
+            //        c == 0x0d ||
+            //        c == 0x0a ||
+            //        c == 0x09;
+            //}
+            public static bool nbJson(string text, int p, out int length) // [2] 
+            {
+                length = 0;
+                char c = text[p];
+                if (c == 0x09 || (0x20 <= c /* && c<=0x10ffff */ ))
+                {
+                    length++;
+                    return true;
+                }
+                return false;
+            }
+            public static bool nbChar(string text, int p, out int length)
+            {
+                length = 0;
+                char c = text[p];
+                if ( //  ( 0x10000 < c && c < 0x110000 ) || 
                         (0xe000 <= c && c <= 0xfffd && c != 0xFEFF) ||
                         (0xa0 <= c && c <= 0xd7ff) ||
                         c == 0x85 ||
                         (0x20 <= c && c <= 0x7e) ||
                         //  c == 0x0d ||
                         //  c == 0x0a ||
-                        c == 0x09;
+                        c == 0x09)
+                {
+                    length++;
+                    return true;
+                }
+                return false;
             }
-            public static bool nbCharWithWarning(char c)
+            public static bool nsChar(string text, int p, out int length)
             {
-                return c == 0x2029 ||  // paragraph separator
-                        c == 0x2028 ||  // line separator
-                        c == 0x85 ||    // next line
-                        c == 0x0c;      // form feed
-            }
-            public static bool nsChar(char c)
-            {
-                return  // nbChar(c) && !sWhite(c)
-                        //  ( 0x10000 < c && c < 0x110000 ) || 
+                length = 0;
+                char c = text[p];
+                if (  // nbChar(c) && !sWhite(c)
+                      //  ( 0x10000 < c && c < 0x110000 ) || 
                         (0xe000 <= c && c <= 0xfffd && c != 0xFEFF) ||
                         (0xa0 <= c && c <= 0xd7ff) ||
                         c == 0x85 ||
-                        (0x21 <= c && c <= 0x7e);
+                        (0x21 <= c && c <= 0x7e))
                 //  c == 0x0d ||
                 //  c == 0x0a ||
                 //  c == 0x09
+                {
+                    length++;
+                    return true;
+                }
+                return false;
             }
-            public static bool nsUriCharSub(char c)
+            public static bool nsAnchorChar(string text, int p, out int length)
             {
-                return c < 0x100 && (
-                           nsWordChar(c) ||
-                           @"#;/?:@&=$,_.!~*'()[]".Contains(c)
-                           );
+                length = 0;
+                char c = text[p];
+                return !cFlowIndicator(text, p) && nsChar(text, p, out length);
             }
-            public static bool nsTagCharSub(char c)
+            public static bool nsPlainSafeIn(string text, int p, out int length)
             {
-                return c < 0x100 &&
-                        nsUriCharSub(c) && !(c == '!' || cFlowIndicator(c));
+                length = 0;
+                char c = text[p];
+                return !cFlowIndicator(text, p) && nsChar(text, p, out length);
             }
-            public static bool nsAnchorChar(char c)
+            public static bool nsPlainSafeOut(string text, int p, out int length)
             {
-                return nsChar(c) && !cFlowIndicator(c);
+                char c = text[p];
+                return nsChar(text, p, out length);
             }
-            public static bool nsPlainSafeIn(char c)
+            public static bool nsPlainFirstSub(string text, int p, out int length)
             {
-                return nsChar(c) && !cFlowIndicator(c);
+                length = 0;
+                char c = text[p];
+                return !cIndicator(text, p) && nsChar(text, p, out length);
             }
-            public static bool nsPlainSafeOut(char c)
+            public static bool nsPlainSafe(string text, int p, out int length, Context c) // [127] 
             {
-                return nsChar(c);
+                switch (c)
+                {
+                    case Context.FlowOut:
+                    case Context.BlockKey:
+                        return Charsets.nsPlainSafeOut(text, p, out length);
+                    case Context.FlowIn:
+                    case Context.FlowKey:
+                        return Charsets.nsPlainSafeIn(text, p, out length);
+                    default:
+                        throw new NotImplementedException();
+                }
             }
-            public static bool nsPlainFirstSub(char c)
+            public static bool PrecedingIsNsChar(string text, int p)
             {
-                return nsChar(c) && !cIndicator(c);
+                int dontCare;
+                return p != 0 &&
+                    Charsets.nsChar(text, p - 1, out dontCare);
             }
-            public static bool bChar(char c) { return c == '\n' || c == '\r'; }
+            #endregion
         }
 
         bool nbChar() // [27] 
         {
             WarnIfCharWasBreakInYAML1_1();
-            if (Charsets.nbChar(Text[P]))
+            int length = 0;
+            if (Charsets.nbChar(Text, P, out length))
             {
-                P++;
+                P += length;
                 return true;
             }
             return false;
@@ -521,23 +593,24 @@ namespace Yaml.Parsing
         bool Repeat_sWhiteAsString()
         {
             var start = P;
-            while (Charsets.sWhite(Text[P]))
+            while (Charsets.sWhite(Text, P))
                 StringValue.Append(Text[P++]);
             return true;
         }
         bool nsChar() // [34] 
         {
             WarnIfCharWasBreakInYAML1_1();
-            if (Charsets.nsChar(Text[P]))
+            int length = 0;
+            if (Charsets.nsChar(Text, P, out length))
             {
-                P++;
+                P += length;
                 return true;
             }
             return false;
         }
         bool nsUriChar() // [39] 
         {
-            if (Charsets.nsUriCharSub(Text[P]))
+            if (Charsets.nsUriCharSub(Text, P))
             {
                 StringValue.Append(Text[P++]);
                 return true;
@@ -595,7 +668,7 @@ namespace Yaml.Parsing
         }
         bool nsTagChar() // [40] 
         {
-            if (Charsets.nsTagCharSub(Text[P]))
+            if (Charsets.nsTagCharSub(Text, P))
             {
                 StringValue.Append(Text[P++]);
                 return true;
@@ -606,6 +679,8 @@ namespace Yaml.Parsing
         {
             if (Text[P] != '\\')
                 return false;
+
+            const int escapeIndicatorLength = 2;
 
             char c = '\0';
             int v1 = 0;
@@ -668,26 +743,26 @@ namespace Yaml.Parsing
                     break;
                 case 'x':
                     if (!HexValue(P + 2, out v1))
-                        InvalidEscapeSequence(4);
+                        InvalidEscapeSequence(escapeIndicatorLength + 2);
                     c = (char)v1;
                     P += 2;
                     break;
                 case 'u':
                     if (!(HexValue(P + 2, out v1) && HexValue(P + 4, out v2)))
-                        InvalidEscapeSequence(6);
+                        InvalidEscapeSequence(escapeIndicatorLength + 4);
                     c = (char)((v1 << 8) + v2);
                     P += 4;
                     break;
                 case 'U':
                     if (!(HexValue(P + 2, out v1) && HexValue(P + 4, out v2) && HexValue(P + 6, out v3) && HexValue(P + 8, out v4)))
-                        InvalidEscapeSequence(10);
+                        InvalidEscapeSequence(escapeIndicatorLength + 8);
                     c = (char)((v1 << 24) + (v2 << 16) + (v3 << 8) + v4);
                     P += 8;
                     break;
                 default:
                     // escaped line break or error
                     if (Text[P + 1] != '\n' && Text[P + 1] != '\r')
-                        InvalidEscapeSequence(2);
+                        InvalidEscapeSequence(escapeIndicatorLength);
                     return false;
             }
             P += 2;
@@ -695,12 +770,16 @@ namespace Yaml.Parsing
             return true;
         }
         void InvalidEscapeSequence(int n)
-        {   // n chars from the current point should be reported by not acrossing " nor EOF
+        {
+            // n chars from the current point should be reported by not acrossing " nor EOF
+            // P is on the beginning of the escape sequence ('\')
+            // TODO: check it still works as expected with unicode support
             var s = "";
-            for (int i = 0; i < n; i++)
-                if (Text[P + i] != '"' && Charsets.nbJson(Text[P + i]))
+            int length;
+            for (int i = 0; i < n; i += length)
+                if (Text[P + i] != '"' && Charsets.nbJson(Text, P + i, out length))
                 {
-                    s += Text[P + i];
+                    s += Text.Substring(P + i, length);
                 }
                 else
                     break;
@@ -709,7 +788,7 @@ namespace Yaml.Parsing
         bool HexValue(int p, out int v)
         {
             v = 0;
-            if (Text.Length <= p + 1 || !Charsets.nsHexDigit(Text[p]) || !Charsets.nsHexDigit(Text[p + 1]))
+            if (Text.Length <= p + 1 || !Charsets.nsHexDigit(Text, p) || !Charsets.nsHexDigit(Text, p + 1))
                 return false;
             v = (HexNibble(Text[p]) << 4) + HexNibble(Text[p + 1]);
             return true;
@@ -745,7 +824,7 @@ namespace Yaml.Parsing
         {
             Debug.Assert(StartOfLine() || EndOfFile());
             int i = 0;
-            while (Charsets.sSpace(Text[P + i]))
+            while (Charsets.sSpace(Text, P + i))
                 i++;
             if (i < n)
             {
@@ -1110,16 +1189,18 @@ namespace Yaml.Parsing
         #region 7.3.1 Double-Quoted Style
         private bool nbDoubleChar() // [107] 
         {
-            if (Text[P] != '\\' && Text[P] != '"' && Charsets.nbJson(Text[P]))
+            int length;
+            if (Text[P] != '\\' && Text[P] != '"' && Charsets.nbJson(Text, P, out length))
             {
-                StringValue.Append(Text[P++]);
+                StringValue.Append(Text.Substring(P, length));
+                P += length;
                 return true;
             }
             return c_nsEscChar();
         }
         bool nsDoubleChar() // [108] 
         {
-            return !Charsets.sWhite(Text[P]) && nbDoubleChar();
+            return !Charsets.sWhite(Text, P) && nbDoubleChar();
         }
         private bool cDoubleQuoted(int n, Context c) // [109] 
         {
@@ -1191,9 +1272,11 @@ namespace Yaml.Parsing
         #region 7.3.2 Single-Quoted Style
         bool nbSingleChar() // [118] 
         {
-            if (Text[P] != '\'' && Charsets.nbJson(Text[P]))
+            int length;
+            if (Text[P] != '\'' && Charsets.nbJson(Text, P, out length))
             {
-                StringValue.Append(Text[P++]);
+                StringValue.Append(Text.Substring(P, length));
+                P += length;
                 return true;
             }
             // [117] cQuotedQuote
@@ -1207,7 +1290,7 @@ namespace Yaml.Parsing
         }
         bool nsSingleChar() // [119] 
         {
-            return !Charsets.sWhite(Text[P]) && nbSingleChar();
+            return !Charsets.sWhite(Text, P) && nbSingleChar();
         }
         private bool cSingleQuoted(int n, Context c) // [120] 
         {
@@ -1265,50 +1348,58 @@ namespace Yaml.Parsing
         #region 7.3.3 Plain Style
         private bool nsPlainFirst(Context c) // [126] 
         {
-            if (Charsets.nsPlainFirstSub(Text[P]) ||
-                   ((Text[P] == '?' || Text[P] == ':' || Text[P] == '-') && nsPlainSafe(c, Text[P + 1])))
+            int length;
+            int dontCare;
+            bool matchedNsPlainFirstSub;
+            if ((matchedNsPlainFirstSub = Charsets.nsPlainFirstSub(Text, P, out length)) ||
+                   ((Text[P] == '?' || Text[P] == ':' || Text[P] == '-') && Charsets.nsPlainSafe(Text, P + 1, out dontCare, c)))
             {
                 WarnIfCharWasBreakInYAML1_1();
-                StringValue.Append(Text[P++]);
+                if (matchedNsPlainFirstSub)
+                {
+                    StringValue.Append(Text.Substring(P, length));
+                    P += length;
+                }
+                else
+                {
+                    StringValue.Append(Text[P++]);
+                }
                 return true;
             }
             return false;
         }
         private bool nsPlainSafe(Context c) // [127] 
         {
-            if (!nsPlainSafe(c, Text[P]))
+            int length;
+            if (!Charsets.nsPlainSafe(Text, P, out length, c))
                 return false;
             WarnIfCharWasBreakInYAML1_1();
-            StringValue.Append(Text[P++]);
+            StringValue.Append(Text.Substring(P, length));
+            P += length;
             return true;
-        }
-        private bool nsPlainSafe(Context c, char cc) // [127] 
-        {
-            switch (c)
-            {
-                case Context.FlowOut:
-                case Context.BlockKey:
-                    return Charsets.nsPlainSafeOut(cc);
-                case Context.FlowIn:
-                case Context.FlowKey:
-                    return Charsets.nsPlainSafeIn(cc);
-                default:
-                    throw new NotImplementedException();
-            }
         }
         private bool nsPlainChar(Context c) // [130] 
         {
             if (Text[P] != ':' && Text[P] != '#' && nsPlainSafe(c))
                 return true;
+            int lenght = 0;
+            bool matchedNsPlainSafe = false;
             if (( /* An ns-char preceding '#' */
-                    P != 0 &&
-                    Charsets.nsChar(Text[P - 1]) &&
-                    Text[P] == '#') ||
-                ( /* ':' Followed by an ns-plain-safe */
-                    Text[P] == ':' && nsPlainSafe(c, Text[P + 1]))
+                    Charsets.PrecedingIsNsChar(Text, P) &&
+                    Text[P] == '#')
+                || ( /* ':' Followed by an ns-plain-safe */
+                    Text[P] == ':' && (matchedNsPlainSafe = Charsets.nsPlainSafe(Text, P + 1, out lenght, c)))
                 )
             {
-                StringValue.Append(Text[P++]);
+                if (matchedNsPlainSafe)
+                {
+                    StringValue.Append(Text.Substring(P, lenght));
+                    P += lenght;
+                }
+                else
+                {
+                    StringValue.Append(Text[P++]);
+                }
                 return true;
             }
             return false;
@@ -1501,8 +1592,10 @@ namespace Yaml.Parsing
         }
         private bool c_nsFlowMapSeparateValue(int n, Context c) // [147] 
         {
+            int dontCare;
             return RewindUnless(() =>
-                Text[P++] == ':' /* Not followed by an ns-plain-safe(c) */ && !nsPlainSafe(c, Text[P]) && (
+                Text[P++] == ':'
+                /* Not followed by an ns-plain-safe(c) */ && !Charsets.nsPlainSafe(Text, P, out dontCare, c) && (
                     RewindUnless(() => sSeparate(n, c) && nsFlowNode(n, c)) ||
                     eNode() /* Value */
                 )
@@ -1651,7 +1744,7 @@ namespace Yaml.Parsing
         }
         bool cIndentationIndicator(ref int m) // [163] 
         {
-            if (Charsets.nsDecDigit(Text[P]))
+            if (Charsets.nsDecDigit(Text, P))
             {
                 m = Text[P] - '0';
                 P++;
@@ -1849,12 +1942,13 @@ namespace Yaml.Parsing
         private bool lBlockSequence(int n) // [183] 
         {
             int m = AutoDetectIndentation(n);
+            int dontCare;
             YamlSequence sequence = null;
             Position pos = new Position();
             return OneAndRepeat(() => RewindUnless(() =>
                 sIndent(n + m) &&
                 Action(() => { if (sequence == null) pos = CurrentPosition; }) &&
-                Text[P] == '-' && !Charsets.nsChar(Text[P + 1]) &&
+                Text[P] == '-' && !Charsets.nsChar(Text, P + 1, out dontCare) &&
                 Action(() => { if (sequence == null) sequence = CreateSequence(pos); }) &&
                 c_lBlockSeqEntry(n + m, sequence)
             )) &&
@@ -1862,7 +1956,8 @@ namespace Yaml.Parsing
         }
         private bool c_lBlockSeqEntry(int n, YamlSequence sequence) // [184] 
         {
-            Debug.Assert(Text[P] == '-' && !Charsets.nsChar(Text[P + 1]));
+            int dontCare;
+            Debug.Assert(Text[P] == '-' && !Charsets.nsChar(Text, P + 1, out dontCare));
             P++;
             return
                 s_lBlockIndented(n, Context.BlockIn) &&
@@ -1881,13 +1976,14 @@ namespace Yaml.Parsing
         {
             YamlSequence sequence = null;
             Position pos = CurrentPosition;
+            int dontCare;
             return
-                Text[P] == '-' && !Charsets.nsChar(Text[P + 1]) &&
+                Text[P] == '-' && !Charsets.nsChar(Text, P + 1, out dontCare) &&
                 Action(() => sequence = CreateSequence(pos)) &&
                 c_lBlockSeqEntry(n, sequence) &&
                 Repeat(() => RewindUnless(() =>
                     sIndent(n) &&
-                    Text[P] == '-' && !Charsets.nsChar(Text[P + 1]) &&
+                    Text[P] == '-' && !Charsets.nsChar(Text, P + 1, out dontCare) &&
                     c_lBlockSeqEntry(n, sequence))) &&
                 SetValue(sequence);
         }
@@ -2072,8 +2168,8 @@ namespace Yaml.Parsing
                 return false;
             return
                 Text.Length - P == 3 + 1 ||
-                Charsets.sWhite(Text[P + 3]) ||
-                Charsets.bChar(Text[P + 3]);
+                Charsets.sWhite(Text, P + 3) ||
+                Charsets.bChar(Text, P + 3);
         }
         bool lBareDocument() // [207] 
         {
@@ -2128,17 +2224,20 @@ namespace Yaml.Parsing
                         OneAndRepeat(() => lDocumentSuffix() && Action(() => BomReduced = false)) &&
                         Repeat(lDocumentPrefix) && Optional(lAnyDocument)) ||
                     RewindUnless(() =>
-                        Repeat(() => Action(() => BomReduced |= Charsets.cByteOrdermark(Text[P])) && lDocumentPrefix()) &&
+                        Repeat(() => Action(() => BomReduced |= Charsets.cByteOrdermark(Text, P)) && lDocumentPrefix()) &&
                         Optional(lExplicitDocument() && Action(() => BomReduced = false)))
                     ) &&
                 EndOfFile())
                 return true;
+
+            int dontCare;
+
             if (BomReduced)
             {
                 Error("A BOM (\\ufeff) must not appear inside a document.");
             }
             else
-            if (Charsets.cIndicator(Text[P]))
+            if (Charsets.cIndicator(Text, P))
             {
                 Error("Plain text can not start with indicator characters -?:,[]{{}}#&*!|>'\"%@`");
             }
@@ -2148,7 +2247,7 @@ namespace Yaml.Parsing
                 Error("Extra line was found. Maybe indentation was incorrect.");
             }
             else
-            if (Charsets.nbChar(Text[P]))
+            if (Charsets.nbChar(Text, P, out dontCare))
             {
                 Error("Extra content was found. Maybe indentation was incorrect.");
             }
