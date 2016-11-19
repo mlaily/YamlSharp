@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Yaml.Model;
+using YamlSharp.Model;
 
 namespace ConsoleApplication1
 {
@@ -58,10 +58,12 @@ namespace ConsoleApplication1
 
             var back = contentNodes.First().ToYaml();
 
-            using (var reader = new StreamReader(@"D:\Mes Documents\Dev\yaml\yamlreference\.stack-work\install\7282fce5\bin\test.txt",
+            using (var reader = new StreamReader(@"D:\Mes Documents\Dev\yaml\yamlreference\.stack-work\install\7282fce5\bin\gros.txt",
                 Encoding.UTF8))
             {
                 var nodes = YamlNode.FromYaml(reader);
+                YamlSharp.Serialization.YamlSerializer serializer = new YamlSharp.Serialization.YamlSerializer();
+                var roundTrip = serializer.Serialize(nodes);
             }
 
         }

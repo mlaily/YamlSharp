@@ -1,4 +1,6 @@
-# A Yaml 1.2 library for .Net
+# YamlSharp
+
+_A Yaml 1.2 library for .Net_
 
 This is a fork of [YamlSerializer](https://yamlserializer.codeplex.com/).
 

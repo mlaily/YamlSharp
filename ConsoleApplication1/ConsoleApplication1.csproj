@@ -50,9 +50,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\YamlSerializer\Yaml.csproj">
+    <ProjectReference Include="..\YamlSharp\YamlSharp.csproj">
       <Project>{ad9f3a60-c492-4823-8f24-6f4854e7cbf5}</Project>
-      <Name>Yaml</Name>
+      <Name>YamlSharp</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
