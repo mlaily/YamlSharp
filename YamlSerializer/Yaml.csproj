@@ -94,10 +94,6 @@
     <Compile Include="Parsing\YamlTagValidator.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="ChangeLog.txt" />
-    <Content Include="Readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
       <Visible>False</Visible>
       <ProductName>.NET Framework 3.5 SP1</ProductName>

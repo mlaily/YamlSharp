@@ -1,4 +1,10 @@
-﻿--- 2009-10-04 Osamu TAKEUCHI <osamu@big.jp>
+﻿--- 2016-11-19 Melvyn Laïly <melvyn.laily@gmail.com>
+No proper release yet...
+
+* Implemented full Unicode support (code points values > 16 bits)
+* Updated to the latest spec version (Yaml 1.2 3rd Edition, Patched at 2009-10-01) (Most of the work was already done)
+
+--- 2009-10-04 Osamu TAKEUCHI <osamu@big.jp>
 Alpha release of YamlSerializer as 0.9.0.2
 
 * All "_"s in integer and floating point values are neglected

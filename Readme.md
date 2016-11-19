@@ -1,25 +1,33 @@
-﻿YamlSerializer 0.9.0.2 (2009-10-04)        Osamu TAKEUCHI <osamu@big.jp>
+# A Yaml 1.2 library for .Net
 
-Description:
-	A library that serialize / deserialize C# native objects into YAML1.2 text.
+This is a fork of [YamlSerializer](https://yamlserializer.codeplex.com/).
 
-Development environment: 
-	Visual C# 2008 Express Edition
-	Sandcastle (2008-05-29)
-	SandcastleBuilder 1.8.0.2
-	HTML Help workshop 4.74.8702
-	NUnit 2.5.0.9122
-	TestDriven.NET 2.0
+Original code by Osamu TAKEUCHI <osamu@big.jp>
 
-Support web page: 
-	http://yamlserializer.codeplex.com/
+Forked by Melvyn Laïly <melvyn.laily@gmail.com>
 
-License:
-	YamlSerializer is distributed under the MIT license as following:
+## Main changes from the original implementation
 
----
+* Implemented full Unicode support (code points values > 16 bits)
+* Updated to the latest spec version (Yaml 1.2 3rd Edition, Patched at 2009-10-01) (Most of the work was already done)
+
+## Notes
+
+##### Straight from the original doc
+
+Currently, this parser violates the YAML 1.2 specification in the following points.
+- line breaks are not normalized.
+- omission of the final line break is allowed in plain / literal / folded text.
+- ':' followed by ns-indicator is excluded from ns-plain-char.
+
+## License
+
+This project is distributed under the MIT license as follows:
+
 The MIT License (MIT)
-Copyright (c) 2009 Osamu TAKEUCHI <osamu@big.jp>
+Original code (before 2016) Copyright (c) 2009 Osamu TAKEUCHI <osamu@big.jp>
+Modifications are Copyright (c) Melvyn Laïly 2016 <melvyn.laily@gmail.com>
+
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of 
 this software and associated documentation files (the "Software"), to deal in the 
