@@ -1,6 +1,0 @@
-syntax: glob
-packages/
-obj/
-bin/
-.vs/
-*.user
