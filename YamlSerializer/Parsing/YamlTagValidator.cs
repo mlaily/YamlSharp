@@ -33,8 +33,8 @@ namespace Yaml.Parsing
         /// <returns>True if <paramref name="tag"/> is  a valid global tag.</returns>
         public bool IsValid(string tag)
         {
-            text = tag;
-            p = 0;
+            Text = tag;
+            P = 0;
             return TagUri();
         }
 
@@ -143,7 +143,7 @@ namespace Yaml.Parsing
 
         private bool EndOfString()
         {
-            return text.Length == p;
+            return Text.Length == P;
         }
 
         bool pchar()

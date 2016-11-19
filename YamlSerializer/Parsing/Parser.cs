@@ -27,47 +27,47 @@ namespace Yaml.Parsing
     /// <para>It allows not very efficient but easy implementation of a text parser along 
     /// with a parameterized BNF productions.</para>
     /// </summary>
-    /// <typeparam name="State">Parser specific state structure.</typeparam>
-    internal abstract class Parser<State>
-        where State : struct
+    /// <typeparam name="TState">Parser specific state structure.</typeparam>
+    internal abstract class Parser<TState>
+        where TState : struct
     {
         /// <summary>
-        /// Parse the <paramref name="text"/> using the <paramref name="start_rule"/> 
+        /// Parse the <paramref name="text"/> using the <paramref name="startRule"/> 
         /// as the starting rule.
         /// </summary>
-        /// <param name="start_rule">Starting rule.</param>
+        /// <param name="startRule">Starting rule.</param>
         /// <param name="text">Text to be parsed.</param>
         /// <returns></returns>
-        protected bool Parse(Func<bool> start_rule, string text)
+        protected bool Parse(Func<bool> startRule, string text)
         {
-            this.text = text;
+            this.Text = text;
             InitializeParser();
-            return start_rule();
+            return startRule();
         }
         void InitializeParser()
         {
             InitializeLines();
-            p = 0;
-            stringValue.Length = 0;
-            state = new State();
+            P = 0;
+            StringValue.Length = 0;
+            State = new TState();
         }
 
         #region Fields and Properties
         /// <summary>
         /// <para>Gets / sets source text to be parsed.</para>
         /// <para>While parsing, this variable will not be changed.</para>
-        /// <para>The current position to be read by parser is represented by the field <see cref="p"/>.</para>
+        /// <para>The current position to be read by parser is represented by the field <see cref="P"/>.</para>
         /// <para>Namely, the next character to be read is <c>text[p]</c>.</para>
         /// </summary>
-        protected string text;
+        protected string Text { get; set; }
         /// <summary>
         /// <para>The current reading position.</para>
         /// 
         /// <para>The next character to be read by the parser is <c>text[p]</c>.</para>
         /// 
-        /// <para>Increase <see cref="p"/> to reduce some part of source text <see cref="text"/>.</para>
+        /// <para>Increase <see cref="P"/> to reduce some part of source text <see cref="Text"/>.</para>
         /// 
-        /// <para>The current position <see cref="p"/> is automatically reverted at rewinding.</para>
+        /// <para>The current position <see cref="P"/> is automatically reverted at rewinding.</para>
         /// </summary>
         /// <example>
         /// Example to show how to reduce BNF reduction rule of ( "t" "e" "x" "t" ).
@@ -80,13 +80,13 @@ namespace Yaml.Parsing
         ///   );
         /// </code>
         /// </example>
-        protected int p;
+        protected int P { get; set; }
         /// <summary>
         /// <para>Use this variable to build some string data from source text.</para>
         /// 
         /// <para>It will be automatically reverted at rewinding.</para>
         /// </summary>
-        protected StringBuilder stringValue = new StringBuilder();
+        protected StringBuilder StringValue { get; } = new StringBuilder();
         /// <summary>
         /// <para>Individual-parser-specific state object.</para>
         /// 
@@ -96,7 +96,7 @@ namespace Yaml.Parsing
         /// is needed to recover the previous state, override <see cref="Rewind"/>
         /// method.</para>
         /// </summary>
-        protected State state;
+        protected TState State;
         /// <summary>
         /// Get current position represented by raw and column.
         /// </summary>
@@ -105,11 +105,11 @@ namespace Yaml.Parsing
             get
             {
                 Position pos = new Position();
-                pos.Raw = Lines.BinarySearch(p);
+                pos.Raw = Lines.BinarySearch(P);
                 if (pos.Raw < 0)
                 {
                     pos.Raw = ~pos.Raw;
-                    pos.Column = p - Lines[pos.Raw - 1] + 1;
+                    pos.Column = P - Lines[pos.Raw - 1] + 1;
                 }
                 else
                 {
@@ -127,16 +127,16 @@ namespace Yaml.Parsing
         {
             Lines = new List<int>();
             Lines.Add(0);
-            for (var i = 0; i < text.Length; i++)
+            for (var i = 0; i < Text.Length; i++)
             {
-                if (text[i] == '\r')
+                if (Text[i] == '\r')
                 {
-                    if (i + 1 < text.Length - 1 && text[i + 1] == '\n')
+                    if (i + 1 < Text.Length - 1 && Text[i + 1] == '\n')
                         i++;
                     Lines.Add(i + 1);
                 }
                 else
-                if (text[i] == '\n')
+                if (Text[i] == '\n')
                     Lines.Add(i + 1);
             }
         }
@@ -318,11 +318,11 @@ namespace Yaml.Parsing
         /// <para>Represents EBNF operator of "join", i.e. serial appearance of several rules.</para>
         /// </summary>
         /// <remarks>
-        /// <para>This recovers <see cref="p"/>, <see cref="stringValue"/>, <see cref="state"/>
+        /// <para>This recovers <see cref="P"/>, <see cref="StringValue"/>, <see cref="State"/>
         /// when <paramref name="rule"/> does not return <code>true</code>.</para>
         /// 
         /// <para>If any specific operation is needed for rewinding, in addition to simply
-        /// recover the value of <see cref="state"/>, override <see cref="Rewind()"/>.</para>
+        /// recover the value of <see cref="State"/>, override <see cref="Rewind()"/>.</para>
         /// </remarks>
         /// <param name="rule">If false is returned, the parser status is rewound.</param>
         /// <returns>true if <paramref name="rule"/> returned true; otherwise false.</returns>
@@ -341,19 +341,19 @@ namespace Yaml.Parsing
         /// </example>
         protected bool RewindUnless(Func<bool> rule) // (join) 
         {
-            var savedp = p;
-            var stringValueLength = stringValue.Length;
-            var savedStatus = state;
+            var savedp = P;
+            var stringValueLength = StringValue.Length;
+            var savedStatus = State;
             if (rule())
                 return true;
-            state = savedStatus;
-            stringValue.Length = stringValueLength;
-            p = savedp;
+            State = savedStatus;
+            StringValue.Length = stringValueLength;
+            P = savedp;
             Rewind();
             return false;
         }
         /// <summary>
-        /// This method is called just after <see cref="RewindUnless"/> recovers <see cref="state"/>.
+        /// This method is called just after <see cref="RewindUnless"/> recovers <see cref="State"/>.
         /// Override it to do any additional operation for rewinding.
         /// </summary>
         protected virtual void Rewind() { }
@@ -395,8 +395,8 @@ namespace Yaml.Parsing
             int start;
             do
             {
-                start = p;
-            } while (rule() && start != p);
+                start = P;
+            } while (rule() && start != P);
             return true;
         }
         /// <summary>
@@ -595,9 +595,9 @@ namespace Yaml.Parsing
         /// </example>
         protected bool Accept(Func<char, bool> charset)
         {
-            if (p < text.Length && charset(text[p]))
+            if (P < Text.Length && charset(Text[P]))
             {
-                p++;
+                P++;
                 return true;
             }
             return false;
@@ -639,9 +639,9 @@ namespace Yaml.Parsing
         /// </example>
         protected bool Accept(char c)
         {
-            if (p < text.Length && text[p] == c)
+            if (P < Text.Length && Text[P] == c)
             {
-                p++;
+                P++;
                 return true;
             }
             return false;
@@ -663,12 +663,12 @@ namespace Yaml.Parsing
         /// </example>
         protected bool Accept(string s)
         {
-            if (p + s.Length >= text.Length)
+            if (P + s.Length >= Text.Length)
                 return false;
             for (int i = 0; i < s.Length; i++)
-                if (s[i] != text[p + i])
+                if (s[i] != Text[P + i])
                     return false;
-            p += s.Length;
+            P += s.Length;
             return true;
         }
         /// <summary>
@@ -678,10 +678,10 @@ namespace Yaml.Parsing
         /// <returns>true if the rule matches; otherwise false.</returns>
         protected bool Accept(Regex r)
         {
-            var m = r.Match(text, p);
+            var m = r.Match(Text, P);
             if (!m.Success)
                 return false;
-            p += m.Length;
+            P += m.Length;
             return true;
         }
         /// <summary>
@@ -691,8 +691,8 @@ namespace Yaml.Parsing
         /// <returns>Always true.</returns>
         protected bool Repeat(Func<char, bool> charset)
         {
-            while (charset(text[p]))
-                p++;
+            while (charset(Text[P]))
+                P++;
             return true;
         }
         /// <summary>
@@ -702,9 +702,9 @@ namespace Yaml.Parsing
         /// <returns>true if the rule matches; otherwise false.</returns>
         protected bool OneAndRepeat(Func<char, bool> charset)
         {
-            if (!charset(text[p]))
+            if (!charset(Text[P]))
                 return false;
-            while (charset(text[++p]))
+            while (charset(Text[++P]))
                 ;
             return true;
         }
@@ -717,9 +717,9 @@ namespace Yaml.Parsing
         protected bool Repeat(Func<char, bool> charset, int n)
         {
             for (int i = 0; i < n; i++)
-                if (!charset(text[p + i]))
+                if (!charset(Text[P + i]))
                     return false;
-            p += n;
+            P += n;
             return true;
         }
         /// <summary>
@@ -733,15 +733,15 @@ namespace Yaml.Parsing
         protected bool Repeat(Func<char, bool> charset, int min, int max)
         {
             for (int i = 0; i < min; i++)
-                if (!charset(text[p + i]))
+                if (!charset(Text[P + i]))
                     return false;
             for (int i = 0; i < max; i++)
-                if (!charset(text[p + min + i]))
+                if (!charset(Text[P + min + i]))
                 {
-                    p += min + i;
+                    P += min + i;
                     return true;
                 }
-            p += min + max;
+            P += min + max;
             return true;
         }
         /// <summary>
@@ -751,9 +751,9 @@ namespace Yaml.Parsing
         /// <returns>Always true.</returns>
         protected bool Optional(Func<char, bool> charset) // ? 
         {
-            if (!charset(text[p]))
+            if (!charset(Text[P]))
                 return true;
-            p++;
+            P++;
             return true;
         }
         #endregion
@@ -848,16 +848,15 @@ namespace Yaml.Parsing
         ///     }
         /// }
         /// </code></example>
-        /// <param name="table_size">Character table size.</param>
+        /// <param name="tableSize">Character table size.</param>
         /// <param name="definition">A simple but slow comparison-based definition of the charsert.</param>
         /// <returns>A performance-optimized table-based delegate built from the given <paramref name="definition"/>.</returns>
-        protected static Func<char, bool> Charset(
-            int table_size, Func<char, bool> definition)
+        protected static Func<char, bool> Charset(int tableSize, Func<char, bool> definition)
         {
-            var table = new bool[table_size];
-            for (char c = '\0'; c < table_size; c++)
+            var table = new bool[tableSize];
+            for (char c = '\0'; c < tableSize; c++)
                 table[c] = definition(c);
-            return c => c < table_size ? table[c] : definition(c);
+            return c => c < tableSize ? table[c] : definition(c);
         }
         #endregion
 
@@ -881,7 +880,7 @@ namespace Yaml.Parsing
         }
         /// <summary>
         /// <para>Saves a part of the source text that is reduced in the <paramref name="rule"/>
-        /// and append it to <see cref="stringValue"/>.</para>
+        /// and append it to <see cref="StringValue"/>.</para>
         /// <para>If the rule does not match, nothing happens.</para>
         /// </summary>
         /// <param name="rule">Reduction rule to match.</param>
@@ -889,7 +888,7 @@ namespace Yaml.Parsing
         protected bool Save(Func<bool> rule)
         {
             return
-                Save(rule, s => stringValue.Append(s));
+                Save(rule, s => StringValue.Append(s));
         }
         /// <summary>
         /// <para>Saves a part of the source text that is reduced in the <paramref name="rule"/>.</para>
@@ -910,10 +909,10 @@ namespace Yaml.Parsing
         /// </code></example>
         protected bool Save(Func<bool> rule, Action<string> save)
         {
-            int start = p;
+            int start = P;
             var result = rule();
             if (result)
-                save(text.Substring(start, p - start));
+                save(Text.Substring(start, P - start));
             return result;
         }
         /// <summary>

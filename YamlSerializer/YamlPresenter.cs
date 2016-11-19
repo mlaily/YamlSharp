@@ -330,9 +330,9 @@ namespace Yaml
 
             bool nbDoubleSafeChar()
             {
-                if (nbDoubleSafeCharset(text[p]))
+                if (nbDoubleSafeCharset(Text[P]))
                 {
-                    stringValue.Append(text[p++]);
+                    StringValue.Append(Text[P++]);
                     return true;
                 }
                 return false;
@@ -341,7 +341,7 @@ namespace Yaml
             public string Quote(string s, string pres, Context c)
             {
                 base.Parse(() => DoubleQuoteString(pres, c), s);
-                return "\"" + stringValue.ToString() + "\"";
+                return "\"" + StringValue.ToString() + "\"";
             }
 
             bool DoubleQuoteString(string pres, Context c)
@@ -362,44 +362,44 @@ namespace Yaml
             Dictionary<char, string> CharEscaping = new Dictionary<char, string>();
             private bool nsEscapedChar()
             {
-                var c = text[p];
+                var c = Text[P];
                 string escaped;
                 if (CharEscaping.TryGetValue(c, out escaped))
                 {
-                    stringValue.Append(escaped);
+                    StringValue.Append(escaped);
                 }
                 else
                 {
                     if (c < 0x100)
                     {
-                        stringValue.Append($@"\x{(int)c:x2}");
+                        StringValue.Append($@"\x{(int)c:x2}");
                     }
                     else
                     {
-                        stringValue.Append($@"\u{(int)c:x4}");
+                        StringValue.Append($@"\u{(int)c:x4}");
                     }
                 }
-                p++;
+                P++;
                 return true;
             }
 
             private bool bBreak(string pres, Context c)
             {
-                if (text[p] == '\r')
+                if (Text[P] == '\r')
                 {
-                    stringValue.Append(@"\r");
-                    p++;
-                    if (!EndOfString() && text[p] == '\n')
+                    StringValue.Append(@"\r");
+                    P++;
+                    if (!EndOfString() && Text[P] == '\n')
                     {
-                        stringValue.Append(@"\n");
-                        p++;
+                        StringValue.Append(@"\n");
+                        P++;
                     }
                 }
                 else
-                if (text[p] == '\n')
+                if (Text[P] == '\n')
                 {
-                    stringValue.Append(@"\n");
-                    p++;
+                    StringValue.Append(@"\n");
+                    P++;
                 }
                 else
                 {
@@ -409,18 +409,18 @@ namespace Yaml
                     return true;
 
                 // fold the string with escaping line break
-                stringValue.AppendLine(@"\");
-                stringValue.Append(pres);
+                StringValue.AppendLine(@"\");
+                StringValue.Append(pres);
 
                 // if the following line starts from space char, escape it.
-                if (text[p] == ' ')
-                    stringValue.Append(@"\");
+                if (Text[P] == ' ')
+                    StringValue.Append(@"\");
                 return true;
             }
 
             private bool EndOfString()
             {
-                return p == text.Length;
+                return P == Text.Length;
             }
         }
 

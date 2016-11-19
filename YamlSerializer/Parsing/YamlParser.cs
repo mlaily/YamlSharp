@@ -43,7 +43,7 @@ namespace Yaml.Parsing
     /// <para>- omission of the final line break is allowed in plain / literal / folded text.</para>
     /// <para>- ':' followed by ns-indicator is excluded from ns-plain-char.</para>
     /// </remarks>
-    internal class YamlParser : Parser<YamlParser.State>
+    internal class YamlParser : Parser<YamlParser.ParserState>
     {
         /// <summary>
         /// Initialize a YAML parser.
@@ -135,11 +135,11 @@ namespace Yaml.Parsing
         Dictionary<char, bool> AlreadyWarnedChars = new Dictionary<char, bool>();
         void WarnIfCharWasBreakInYAML1_1()
         {
-            if (Charsets.nbCharWithWarning(text[p]) && !AlreadyWarnedChars.ContainsKey(text[p]))
+            if (Charsets.nbCharWithWarning(Text[P]) && !AlreadyWarnedChars.ContainsKey(Text[P]))
             {
-                var charValue = text[p] < 0x100 ? $"\\x{(int)text[p]:x2}" : $"\\u{(int)text[p]:x4}";
+                var charValue = Text[P] < 0x100 ? $"\\x{(int)Text[P]:x2}" : $"\\u{(int)Text[P]:x4}";
                 Warning($"{charValue} is treated as non-break character unlike YAML 1.1");
-                AlreadyWarnedChars.Add(text[p], true);
+                AlreadyWarnedChars.Add(Text[P], true);
             }
         }
         #endregion
@@ -169,7 +169,7 @@ namespace Yaml.Parsing
         /// <summary>
         /// additional fields to be rewound
         /// </summary>
-        public struct State
+        public struct ParserState
         {
             /// <summary>
             /// tag for the next value (will be cleared when the next value is created)
@@ -194,21 +194,21 @@ namespace Yaml.Parsing
         /// </summary>
         protected override void Rewind()
         {
-            Anchors.RewindDepth = state.AnchorDepth;
+            Anchors.RewindDepth = base.State.AnchorDepth;
         }
 
         bool SetValue(YamlNode v)
         {
-            if (state.Value != null && v != null)
+            if (base.State.Value != null && v != null)
                 throw new Exception();
-            state.Value = v;
+            base.State.Value = v;
             v.OnLoaded();
             return true;
         }
         YamlNode GetValue()
         {
-            var v = state.Value;
-            state.Value = null;
+            var v = base.State.Value;
+            base.State.Value = null;
             return v;
         }
         #endregion
@@ -218,33 +218,33 @@ namespace Yaml.Parsing
         /// <summary>
         /// set status.tag with tag resolution
         /// </summary>
-        /// <param name="tag_handle"></param>
-        /// <param name="tag_suffix"></param>
+        /// <param name="tagHandle"></param>
+        /// <param name="tagSuffix"></param>
         /// <returns></returns>
-        private bool SetTag(string tag_handle, string tag_suffix)
+        private bool SetTag(string tagHandle, string tagSuffix)
         {
-            return SetTag(TagPrefixes.Resolve(tag_handle, tag_suffix));
+            return SetTag(TagPrefixes.Resolve(tagHandle, tagSuffix));
         }
         /// <summary>
         /// set status.tag with verbatim tag value
         /// </summary>
-        /// <param name="verbatim_tag">verbatim tag</param>
+        /// <param name="verbatimTag">verbatim tag</param>
         /// <returns></returns>
-        private bool SetTag(string verbatim_tag)
+        private bool SetTag(string verbatimTag)
         {
-            Debug.Assert(verbatim_tag != "");
+            Debug.Assert(verbatimTag != "");
             // validate tag
-            if (verbatim_tag.StartsWith("!"))
+            if (verbatimTag.StartsWith("!"))
             {
-                if (verbatim_tag == "!")
+                if (verbatimTag == "!")
                     Error("Empty local tag was found.");
             }
             else
             {
-                if (!TagValidator.IsValid(verbatim_tag))
-                    Warning($"Invalid global tag name '{verbatim_tag}' (c.f. RFC 4151) found");
+                if (!TagValidator.IsValid(verbatimTag))
+                    Warning($"Invalid global tag name '{verbatimTag}' (c.f. RFC 4151) found");
             }
-            state.Tag = verbatim_tag;
+            base.State.Tag = verbatimTag;
             return true;
         }
         YamlTagValidator TagValidator = new YamlTagValidator();
@@ -252,11 +252,11 @@ namespace Yaml.Parsing
         AnchorDictionary Anchors;
         private void RegisterAnchorFor(YamlNode value)
         {
-            if (state.Anchor != null)
+            if (base.State.Anchor != null)
             {
-                Anchors.Add(state.Anchor, value);
-                state.Anchor = null;
-                state.AnchorDepth = Anchors.RewindDepth;
+                Anchors.Add(base.State.Anchor, value);
+                base.State.Anchor = null;
+                base.State.AnchorDepth = Anchors.RewindDepth;
             }
         }
 
@@ -265,56 +265,56 @@ namespace Yaml.Parsing
         /// 
         /// New resolution rules can be add before calling <see cref="Parse(string)"/> method.
         /// </summary>
-        private void AutoDetectTag(string from_style)
+        private void AutoDetectTag(string fromStyle)
         {
-            if (from_style != null)
-                from_style = YamlNode.ExpandTag(from_style);
+            if (fromStyle != null)
+                fromStyle = YamlNode.ExpandTag(fromStyle);
 
-            if (state.Tag != null)
+            if (base.State.Tag != null)
                 return;
 
-            if (from_style == null)
-                from_style = config.TagResolver.Resolve(stringValue.ToString());
+            if (fromStyle == null)
+                fromStyle = config.TagResolver.Resolve(StringValue.ToString());
 
-            if (from_style != null)
-                state.Tag = from_style;
+            if (fromStyle != null)
+                base.State.Tag = fromStyle;
             return;
         }
-        private YamlScalar CreateScalar(string auto_detected_tag, Position pos)
+        private YamlScalar CreateScalar(string autoDetectedTag, Position pos)
         {
-            AutoDetectTag(auto_detected_tag);
-            if (state.Tag == null || state.Tag == "" /* ! was specified */ )
-                state.Tag = YamlNode.DefaultTagPrefix + "str";
-            var value = new YamlScalar(state.Tag, stringValue.ToString());
+            AutoDetectTag(autoDetectedTag);
+            if (base.State.Tag == null || base.State.Tag == "" /* ! was specified */ )
+                base.State.Tag = YamlNode.DefaultTagPrefix + "str";
+            var value = new YamlScalar(base.State.Tag, StringValue.ToString());
             value.Raw = pos.Raw;
             value.Column = pos.Column;
-            stringValue.Length = 0;
+            StringValue.Length = 0;
             RegisterAnchorFor(value);
-            state.Tag = null;
+            base.State.Tag = null;
             return value;
         }
         private YamlSequence CreateSequence(Position pos)
         {
-            if (state.Tag == null || state.Tag == "" /* ! was specified */ )
-                state.Tag = YamlNode.DefaultTagPrefix + "seq";
+            if (base.State.Tag == null || base.State.Tag == "" /* ! was specified */ )
+                base.State.Tag = YamlNode.DefaultTagPrefix + "seq";
             var seq = new YamlSequence();
-            seq.Tag = state.Tag;
+            seq.Tag = base.State.Tag;
             seq.Raw = pos.Raw;
             seq.Column = pos.Column;
             RegisterAnchorFor(seq);
-            state.Tag = null;
+            base.State.Tag = null;
             return seq;
         }
         private YamlMapping CreateMapping(Position pos)
         {
-            if (state.Tag == null || state.Tag == "" /* ! was specified */ )
-                state.Tag = YamlNode.DefaultTagPrefix + "map";
+            if (base.State.Tag == null || base.State.Tag == "" /* ! was specified */ )
+                base.State.Tag = YamlNode.DefaultTagPrefix + "map";
             var map = new YamlMapping();
-            map.Tag = state.Tag;
+            map.Tag = base.State.Tag;
             map.Raw = pos.Raw;
             map.Column = pos.Column;
             RegisterAnchorFor(map);
-            state.Tag = null;
+            base.State.Tag = null;
             return map;
         }
 
@@ -466,25 +466,25 @@ namespace Yaml.Parsing
         bool nbChar() // [27] 
         {
             WarnIfCharWasBreakInYAML1_1();
-            if (Charsets.nbChar(text[p]))
+            if (Charsets.nbChar(Text[P]))
             {
-                p++;
+                P++;
                 return true;
             }
             return false;
         }
         bool bBreak() // [28] 
         {   // \r\n? | \n 
-            if (text[p] == '\r')
+            if (Text[P] == '\r')
             {
-                p++;
-                if (text[p] == '\n')
-                    p++;
+                P++;
+                if (Text[P] == '\n')
+                    P++;
                 return true;
             }
-            if (text[p] == '\n')
+            if (Text[P] == '\n')
             {
-                p++;
+                P++;
                 return true;
             }
             return false;
@@ -495,14 +495,14 @@ namespace Yaml.Parsing
             {
                 if (bBreak())
                 {
-                    stringValue.Append(config.LineBreakForInput);
+                    StringValue.Append(config.LineBreakForInput);
                     return true;
                 }
                 return false;
             }
             else
             {
-                return Save(() => bBreak(), s => stringValue.Append(s));
+                return Save(() => bBreak(), s => StringValue.Append(s));
             }
         }
         bool bNonContent() // [30] 
@@ -511,100 +511,100 @@ namespace Yaml.Parsing
         }
         bool sWhite() // [33] 
         {
-            if (text[p] == ' ' || text[p] == '\t')
+            if (Text[P] == ' ' || Text[P] == '\t')
             {
-                p++;
+                P++;
                 return true;
             }
             return false;
         }
         bool Repeat_sWhiteAsString()
         {
-            var start = p;
-            while (Charsets.sWhite(text[p]))
-                stringValue.Append(text[p++]);
+            var start = P;
+            while (Charsets.sWhite(Text[P]))
+                StringValue.Append(Text[P++]);
             return true;
         }
         bool nsChar() // [34] 
         {
             WarnIfCharWasBreakInYAML1_1();
-            if (Charsets.nsChar(text[p]))
+            if (Charsets.nsChar(Text[P]))
             {
-                p++;
+                P++;
                 return true;
             }
             return false;
         }
         bool nsUriChar() // [39] 
         {
-            if (Charsets.nsUriCharSub(text[p]))
+            if (Charsets.nsUriCharSub(Text[P]))
             {
-                stringValue.Append(text[p++]);
+                StringValue.Append(Text[P++]);
                 return true;
             }
             return nsUriEscapedChar();
         }
         bool nsUriEscapedChar()
         {
-            if (text[p] == '+')
+            if (Text[P] == '+')
             {
-                stringValue.Append(' ');
-                p++;
+                StringValue.Append(' ');
+                P++;
                 return true;
             }
-            if (text[p] != '%')
+            if (Text[P] != '%')
                 return false;
             // http://www.cresc.co.jp/tech/java/URLencoding/JavaScript_URLEncoding.htm
             int v1 = -1, v2 = -1, v3 = -1, v4 = -1;
             ErrorUnless(
-                text[p] == '%' && HexValue(p + 1, out v1) &&
-                (v1 < 0x80 || (text[p + 3] == '%' && HexValue(p + 4, out v2))) &&
-                (v1 < 0xe0 || (text[p + 6] == '%' && HexValue(p + 7, out v3))) &&
-                (v1 < 0xf1 || (text[p + 9] == '%' && HexValue(p + 10, out v4))),
+                Text[P] == '%' && HexValue(P + 1, out v1) &&
+                (v1 < 0x80 || (Text[P + 3] == '%' && HexValue(P + 4, out v2))) &&
+                (v1 < 0xe0 || (Text[P + 6] == '%' && HexValue(P + 7, out v3))) &&
+                (v1 < 0xf1 || (Text[P + 9] == '%' && HexValue(P + 10, out v4))),
                 "Invalid URI escape."
                 );
             if (v2 == -1)
             { // 1 byte code
-                stringValue.Append(
+                StringValue.Append(
                     (char)v1
                     );
-                p += 3;
+                P += 3;
                 return true;
             }
             if (v3 == -1)
             {
-                stringValue.Append(
+                StringValue.Append(
                     (char)(((v1 & 0x1f) << 6) + (v2 & 0x7f))
                     );
-                p += 6;
+                P += 6;
                 return true;
             }
             if (v4 == -1)
             {
-                stringValue.Append(
+                StringValue.Append(
                     (char)(((v1 & 0x0f) << 12) + ((v2 & 0x7f) << 6) + (v3 & 0x7f))
                     );
-                p += 9;
+                P += 9;
                 return true;
             }
-            stringValue.Append(
+            StringValue.Append(
                 (char)(((v1 & 0x07) << 18) + ((v2 & 0x7f) << 12) + ((v3 & 0x7f) << 6) + (v4 & 0x7f))
                 );
-            p += 12;
+            P += 12;
             return true;
         }
         bool nsTagChar() // [40] 
         {
-            if (Charsets.nsTagCharSub(text[p]))
+            if (Charsets.nsTagCharSub(Text[P]))
             {
-                stringValue.Append(text[p++]);
+                StringValue.Append(Text[P++]);
                 return true;
             }
             return nsUriEscapedChar();
         }
         bool c_nsEscChar() // [62] 
         {
-            if (text[p] != '\\')
+            if (Text[P] != '\\')
                 return false;
 
             char c = '\0';
@@ -612,7 +612,7 @@ namespace Yaml.Parsing
             int v2 = 0;
             int v3 = 0;
             int v4 = 0;
-            switch (text[p + 1])
+            switch (Text[P + 1])
             {
                 case '0':
                     c = '\0';
@@ -667,40 +667,40 @@ namespace Yaml.Parsing
                     c = '\u2029';
                     break;
                 case 'x':
-                    if (!HexValue(p + 2, out v1))
+                    if (!HexValue(P + 2, out v1))
                         InvalidEscapeSequence(4);
                     c = (char)v1;
-                    p += 2;
+                    P += 2;
                     break;
                 case 'u':
-                    if (!(HexValue(p + 2, out v1) && HexValue(p + 4, out v2)))
+                    if (!(HexValue(P + 2, out v1) && HexValue(P + 4, out v2)))
                         InvalidEscapeSequence(6);
                     c = (char)((v1 << 8) + v2);
-                    p += 4;
+                    P += 4;
                     break;
                 case 'U':
-                    if (!(HexValue(p + 2, out v1) && HexValue(p + 4, out v2) && HexValue(p + 6, out v3) && HexValue(p + 8, out v4)))
+                    if (!(HexValue(P + 2, out v1) && HexValue(P + 4, out v2) && HexValue(P + 6, out v3) && HexValue(P + 8, out v4)))
                         InvalidEscapeSequence(10);
                     c = (char)((v1 << 24) + (v2 << 16) + (v3 << 8) + v4);
-                    p += 8;
+                    P += 8;
                     break;
                 default:
                     // escaped line break or error
-                    if (text[p + 1] != '\n' && text[p + 1] != '\r')
+                    if (Text[P + 1] != '\n' && Text[P + 1] != '\r')
                         InvalidEscapeSequence(2);
                     return false;
             }
-            p += 2;
-            stringValue.Append(c);
+            P += 2;
+            StringValue.Append(c);
             return true;
         }
         void InvalidEscapeSequence(int n)
         {   // n chars from the current point should be reported by not acrossing " nor EOF
             var s = "";
             for (int i = 0; i < n; i++)
-                if (text[p + i] != '"' && Charsets.nbJson(text[p + i]))
+                if (Text[P + i] != '"' && Charsets.nbJson(Text[P + i]))
                 {
-                    s += text[p + i];
+                    s += Text[P + i];
                 }
                 else
                     break;
@@ -709,9 +709,9 @@ namespace Yaml.Parsing
         bool HexValue(int p, out int v)
         {
             v = 0;
-            if (text.Length <= p + 1 || !Charsets.nsHexDigit(text[p]) || !Charsets.nsHexDigit(text[p + 1]))
+            if (Text.Length <= p + 1 || !Charsets.nsHexDigit(Text[p]) || !Charsets.nsHexDigit(Text[p + 1]))
                 return false;
-            v = (HexNibble(text[p]) << 4) + HexNibble(text[p + 1]);
+            v = (HexNibble(Text[p]) << 4) + HexNibble(Text[p + 1]);
             return true;
         }
         int HexNibble(char c)
@@ -732,24 +732,24 @@ namespace Yaml.Parsing
             TabCharFoundForIndentation = false;
             Debug.Assert(StartOfLine() || EndOfFile());
             for (int i = 0; i < n; i++)
-                if (text[p + i] != ' ')
+                if (Text[P + i] != ' ')
                 {
-                    if (text[p + i] == '\t')
+                    if (Text[P + i] == '\t')
                         TabCharFoundForIndentation = true;
                     return false;
                 }
-            p += n;
+            P += n;
             return true;
         }
         bool sIndentLT(int n) // [64] 
         {
             Debug.Assert(StartOfLine() || EndOfFile());
             int i = 0;
-            while (Charsets.sSpace(text[p + i]))
+            while (Charsets.sSpace(Text[P + i]))
                 i++;
             if (i < n)
             {
-                p += i;
+                P += i;
                 return true;
             }
             return false;
@@ -761,10 +761,10 @@ namespace Yaml.Parsing
         bool sIndentCounted(int n, out int m) // [185, 187]
         {
             m = 0;
-            while (n < 0 || text[p] == ' ')
+            while (n < 0 || Text[P] == ' ')
             {
                 n++;
-                p++;
+                P++;
                 m++;
             }
             return m > 0;
@@ -777,7 +777,7 @@ namespace Yaml.Parsing
         }
         private bool StartOfLine() // [66, 79, 206]
         {   // TODO: how about "---" ?
-            return p == 0 || text[p - 1] == '\n' || text[p - 1] == '\r' || text[p - 1] == '\ufeff';
+            return P == 0 || Text[P - 1] == '\n' || Text[P - 1] == '\r' || Text[P - 1] == '\ufeff';
         }
         #endregion
         #region 6.3 Line Prefixes
@@ -823,7 +823,7 @@ namespace Yaml.Parsing
         {
             return
                 bBreak() &&
-                Action(() => stringValue.Append(' '));
+                Action(() => StringValue.Append(' '));
         }
         private bool b_lFolded(int n, Context c) // [73] 
         {
@@ -842,7 +842,7 @@ namespace Yaml.Parsing
         #region 6.6 Comments
         private bool c_nbCommentText() // [75] 
         {
-            return text[p] == '#' && Repeat(nbChar);
+            return Text[P] == '#' && Repeat(nbChar);
         }
         bool bComment() // [76] 
         {
@@ -850,7 +850,7 @@ namespace Yaml.Parsing
         }
         bool EndOfFile() // [76, 206]
         {
-            return p == text.Length - 1; // text[text.Length-1] == '\0' /* guard char */
+            return P == Text.Length - 1; // text[text.Length-1] == '\0' /* guard char */
         }
         bool s_bComment() // [77] 
         {
@@ -901,7 +901,7 @@ namespace Yaml.Parsing
         bool lDirective() // [82] 
         {
             return RewindUnless(() =>
-                text[p++] == '%' &&
+                Text[P++] == '%' &&
                 RewindUnless(() =>
                     nsYamlDirective() ||
                     nsTagDirective() ||
@@ -930,7 +930,7 @@ namespace Yaml.Parsing
                 sSeparateInLine() &&
                 Save(() =>
                     OneAndRepeat(Charsets.nsHexDigit) &&
-                    text[p++] == '.' &&
+                    Text[P++] == '.' &&
                     OneAndRepeat(Charsets.nsHexDigit),
                     ref version)
                 ) &&
@@ -949,7 +949,7 @@ namespace Yaml.Parsing
             return RewindUnless(() =>
                 Accept("TAG") && sSeparateInLine() &&
                 ErrorUnless(() =>
-                    text[p++] == '!' &&
+                    Text[P++] == '!' &&
                     cTagHandle(out tag_handle) && sSeparateInLine() &&
                     nsTagPrefix(out tag_prefix),
                     "Invalid TAG directive found."
@@ -961,7 +961,7 @@ namespace Yaml.Parsing
         {
             var _tag_handle = tag_handle = "";
             if (Save(() => Optional(RewindUnless(() =>
-                   Repeat(Charsets.nsWordChar) && text[p++] == '!'
+                   Repeat(Charsets.nsWordChar) && Text[P++] == '!'
                    )),
                     s => _tag_handle = s))
             {
@@ -978,14 +978,14 @@ namespace Yaml.Parsing
         }
         private bool c_nsLocalTagPrefix(out string tag_prefix) // [94] 
         {
-            Debug.Assert(stringValue.Length == 0);
+            Debug.Assert(StringValue.Length == 0);
             if (RewindUnless(() =>
-                   text[p++] == '!' &&
+                   Text[P++] == '!' &&
                    Repeat(nsUriChar)
                 ))
             {
-                tag_prefix = "!" + stringValue.ToString();
-                stringValue.Length = 0;
+                tag_prefix = "!" + StringValue.ToString();
+                StringValue.Length = 0;
                 return true;
             }
             tag_prefix = "";
@@ -993,11 +993,11 @@ namespace Yaml.Parsing
         }
         private bool nsGlobalTagPrefix(out string tag_prefix) // [95] 
         {
-            Debug.Assert(stringValue.Length == 0);
+            Debug.Assert(StringValue.Length == 0);
             if (RewindUnless(() => nsTagChar() && Repeat(nsUriChar)))
             {
-                tag_prefix = stringValue.ToString();
-                stringValue.Length = 0;
+                tag_prefix = StringValue.ToString();
+                StringValue.Length = 0;
                 return true;
             }
             tag_prefix = "";
@@ -1007,19 +1007,19 @@ namespace Yaml.Parsing
         #region 6.9 Node Properties
         bool c_nsProperties(int n, Context c) // [96] 
         {
-            state.Anchor = null;
-            state.Tag = null;
+            base.State.Anchor = null;
+            base.State.Tag = null;
             return
                 (c_nsTagProperty() && Optional(RewindUnless(() => sSeparate(n, c) && c_nsAnchorProperty()))) ||
                 (c_nsAnchorProperty() && Optional(RewindUnless(() => sSeparate(n, c) && c_nsTagProperty())));
         }
         bool c_nsTagProperty() // [97]' 
         {
-            if (text[p] != '!')
+            if (Text[P] != '!')
                 return false;
 
             // reduce '!' here to improve perfomance
-            p++;
+            P++;
             return
                 cVerbatimTag() ||
                 c_nsShorthandTag() ||
@@ -1028,11 +1028,11 @@ namespace Yaml.Parsing
         private bool cVerbatimTag() // [98]' 
         {
             return
-                text[p] == '<' &&
+                Text[P] == '<' &&
                 ErrorUnless(
-                    text[p++] == '<' &&
+                    Text[P++] == '<' &&
                     OneAndRepeat(nsUriChar) &&
-                    text[p++] == '>',
+                    Text[P++] == '>',
                     "Invalid verbatim tag"
                 ) &&
                 SetTag(GetStringValue());
@@ -1052,22 +1052,22 @@ namespace Yaml.Parsing
         }
         string GetStringValue()
         {
-            var s = stringValue.ToString();
-            stringValue.Length = 0;
+            var s = StringValue.ToString();
+            StringValue.Length = 0;
             return s;
         }
         private bool cNonSpecificTag() // [100]' 
         {
             // disable tag resolution to restrict tag to be ( map | seq | str )
-            state.Tag = "";
+            base.State.Tag = "";
             return true; /* empty */
         }
         bool c_nsAnchorProperty() // [101] 
         {
-            if (text[p] != '&')
+            if (Text[P] != '&')
                 return false;
-            p++;
-            return Save(nsAnchorName, s => state.Anchor = s);
+            P++;
+            return Save(this.nsAnchorName, s => base.State.Anchor = s);
         }
         private bool nsAnchorName() // [103] 
         {
@@ -1083,7 +1083,7 @@ namespace Yaml.Parsing
             string anchor_name = "";
             var pos = CurrentPosition;
             return RewindUnless(() =>
-                text[p++] == '*' &&
+                Text[P++] == '*' &&
                 Save(() => nsAnchorName(), s => anchor_name = s)
             ) &&
             SetValue(Anchors[anchor_name]);
@@ -1095,7 +1095,7 @@ namespace Yaml.Parsing
         /// </summary>
         private bool eScalar()
         {
-            Debug.Assert(stringValue.Length == 0);
+            Debug.Assert(StringValue.Length == 0);
             return SetValue(CreateScalar("!!null", CurrentPosition)); /* empty */
         }
         /// <summary>
@@ -1110,26 +1110,26 @@ namespace Yaml.Parsing
         #region 7.3.1 Double-Quoted Style
         private bool nbDoubleChar() // [107] 
         {
-            if (text[p] != '\\' && text[p] != '"' && Charsets.nbJson(text[p]))
+            if (Text[P] != '\\' && Text[P] != '"' && Charsets.nbJson(Text[P]))
             {
-                stringValue.Append(text[p++]);
+                StringValue.Append(Text[P++]);
                 return true;
             }
             return c_nsEscChar();
         }
         bool nsDoubleChar() // [108] 
         {
-            return !Charsets.sWhite(text[p]) && nbDoubleChar();
+            return !Charsets.sWhite(Text[P]) && nbDoubleChar();
         }
         private bool cDoubleQuoted(int n, Context c) // [109] 
         {
             Position pos = CurrentPosition;
-            Debug.Assert(stringValue.Length == 0);
-            return text[p] == '"' &&
+            Debug.Assert(StringValue.Length == 0);
+            return Text[P] == '"' &&
                 ErrorUnlessWithAdditionalCondition(() =>
-                    text[p++] == '"' &&
+                    Text[P++] == '"' &&
                     nbDoubleText(n, c) &&
-                    text[p++] == '"',
+                    Text[P++] == '"',
                     c == Context.FlowOut,
                     "Closing quotation \" was not found." +
                     (TabCharFoundForIndentation ? " Tab char \\t can not be used for indentation." : "")
@@ -1158,7 +1158,7 @@ namespace Yaml.Parsing
         {
             return RewindUnless(() =>
                 Repeat_sWhiteAsString() &&
-                text[p++] == '\\' && bNonContent() &&
+                Text[P++] == '\\' && bNonContent() &&
                 Repeat(() => lEmpty(n, Context.FlowIn)) &&
                 sFlowLinePrefix(n)
                 );
@@ -1191,33 +1191,33 @@ namespace Yaml.Parsing
         #region 7.3.2 Single-Quoted Style
         bool nbSingleChar() // [118] 
         {
-            if (text[p] != '\'' && Charsets.nbJson(text[p]))
+            if (Text[P] != '\'' && Charsets.nbJson(Text[P]))
             {
-                stringValue.Append(text[p++]);
+                StringValue.Append(Text[P++]);
                 return true;
             }
             // [117] cQuotedQuote
-            if (text[p] == '\'' && text[p + 1] == '\'')
+            if (Text[P] == '\'' && Text[P + 1] == '\'')
             {
-                stringValue.Append('\'');
-                p += 2;
+                StringValue.Append('\'');
+                P += 2;
                 return true;
             }
             return false;
         }
         bool nsSingleChar() // [119] 
         {
-            return !Charsets.sWhite(text[p]) && nbSingleChar();
+            return !Charsets.sWhite(Text[P]) && nbSingleChar();
         }
         private bool cSingleQuoted(int n, Context c) // [120] 
         {
-            Debug.Assert(stringValue.Length == 0);
+            Debug.Assert(StringValue.Length == 0);
             Position pos = CurrentPosition;
-            return text[p] == '\'' &&
+            return Text[P] == '\'' &&
                 ErrorUnlessWithAdditionalCondition(() =>
-                    text[p++] == '\'' &&
+                    Text[P++] == '\'' &&
                     nbSingleText(n, c) &&
-                    text[p++] == '\'',
+                    Text[P++] == '\'',
                     c == Context.FlowOut,
                     "Closing quotation \' was not found." +
                     (TabCharFoundForIndentation ? " Tab char \\t can not be used for indentation." : "")
@@ -1265,21 +1265,21 @@ namespace Yaml.Parsing
         #region 7.3.3 Plain Style
         private bool nsPlainFirst(Context c) // [126] 
         {
-            if (Charsets.nsPlainFirstSub(text[p]) ||
-                   ((text[p] == '?' || text[p] == ':' || text[p] == '-') && nsPlainSafe(c, text[p + 1])))
+            if (Charsets.nsPlainFirstSub(Text[P]) ||
+                   ((Text[P] == '?' || Text[P] == ':' || Text[P] == '-') && nsPlainSafe(c, Text[P + 1])))
             {
                 WarnIfCharWasBreakInYAML1_1();
-                stringValue.Append(text[p++]);
+                StringValue.Append(Text[P++]);
                 return true;
             }
             return false;
         }
         private bool nsPlainSafe(Context c) // [127] 
         {
-            if (!nsPlainSafe(c, text[p]))
+            if (!nsPlainSafe(c, Text[P]))
                 return false;
             WarnIfCharWasBreakInYAML1_1();
-            stringValue.Append(text[p++]);
+            StringValue.Append(Text[P++]);
             return true;
         }
         private bool nsPlainSafe(Context c, char cc) // [127] 
@@ -1298,17 +1298,17 @@ namespace Yaml.Parsing
         }
         private bool nsPlainChar(Context c) // [130] 
         {
-            if (text[p] != ':' && text[p] != '#' && nsPlainSafe(c))
+            if (Text[P] != ':' && Text[P] != '#' && nsPlainSafe(c))
                 return true;
             if (( /* An ns-char preceding '#' */
-                    p != 0 &&
-                    Charsets.nsChar(text[p - 1]) &&
-                    text[p] == '#') ||
+                    P != 0 &&
+                    Charsets.nsChar(Text[P - 1]) &&
+                    Text[P] == '#') ||
                 ( /* ':' Followed by an ns-plain-safe */
-                    text[p] == ':' && nsPlainSafe(c, text[p + 1]))
+                    Text[P] == ':' && nsPlainSafe(c, Text[P + 1]))
                 )
             {
-                stringValue.Append(text[p++]);
+                StringValue.Append(Text[P++]);
                 return true;
             }
             return false;
@@ -1318,7 +1318,7 @@ namespace Yaml.Parsing
             if (cForbidden())
                 return false;
             var pos = CurrentPosition;
-            Debug.Assert(stringValue.Length == 0);
+            Debug.Assert(StringValue.Length == 0);
             switch (c)
             {
                 case Context.FlowOut:
@@ -1382,12 +1382,12 @@ namespace Yaml.Parsing
             YamlSequence sequence = null;
             Position pos = CurrentPosition;
             return RewindUnless(() =>
-                text[p++] == '[' &&
+                Text[P++] == '[' &&
                 ErrorUnlessWithAdditionalCondition(() =>
                     Optional(sSeparate(n, c)) &&
                     Optional(ns_sFlowSeqEntries(n, InFlow(c),
                                 sequence = CreateSequence(pos))) &&
-                    text[p++] == ']',
+                    Text[P++] == ']',
                     c == Context.FlowOut,
                     "Closing brace ] was not found." +
                     (TabCharFoundForIndentation ? " Tab char \\t can not be used for indentation." : "")
@@ -1403,7 +1403,7 @@ namespace Yaml.Parsing
                 Action(() => sequence.Add(GetValue())) &&
                 Optional(sSeparate(n, c)) &&
                 Optional(RewindUnless(() =>
-                    text[p++] == ',' &&
+                    Text[P++] == ',' &&
                     Optional(sSeparate(n, c)) &&
                     Optional(ns_sFlowSeqEntries(n, c, sequence))
                     ));
@@ -1431,11 +1431,11 @@ namespace Yaml.Parsing
             Position pos = CurrentPosition;
             YamlMapping mapping = null;
             return RewindUnless(() =>
-                text[p++] == '{' &&
+                Text[P++] == '{' &&
                 Optional(sSeparate(n, c)) &&
                 ErrorUnlessWithAdditionalCondition(() =>
                     Optional(ns_sFlowMapEntries(n, InFlow(c), mapping = CreateMapping(pos))) &&
-                    text[p++] == '}',
+                    Text[P++] == '}',
                     c == Context.FlowOut,
                     "Closing brace }} was not found." +
                     (TabCharFoundForIndentation ? " Tab char \\t can not be used for indentation." : "")
@@ -1451,7 +1451,7 @@ namespace Yaml.Parsing
                 Action(() => mapping.Add(key, GetValue())) &&
                 Optional(sSeparate(n, c)) &&
                 Optional(RewindUnless(() =>
-                    text[p++] == ',' &&
+                    Text[P++] == ',' &&
                     Optional(sSeparate(n, c)) &&
                     Optional(ns_sFlowMapEntries(n, c, mapping))
                 ));
@@ -1460,7 +1460,7 @@ namespace Yaml.Parsing
         {
             YamlNode _key = null;
             return (
-                RewindUnless(() => text[p++] == '?' && sSeparate(n, c) && nsFlowMapExplicitEntry(n, c, ref _key)) ||
+                RewindUnless(() => Text[P++] == '?' && sSeparate(n, c) && nsFlowMapExplicitEntry(n, c, ref _key)) ||
                 nsFlowMapImplicitEntry(n, c, ref _key)
             ) &&
             Assign(out key, _key);
@@ -1502,7 +1502,7 @@ namespace Yaml.Parsing
         private bool c_nsFlowMapSeparateValue(int n, Context c) // [147] 
         {
             return RewindUnless(() =>
-                text[p++] == ':' /* Not followed by an ns-plain-safe(c) */ && !nsPlainSafe(c, text[p]) && (
+                Text[P++] == ':' /* Not followed by an ns-plain-safe(c) */ && !nsPlainSafe(c, Text[P]) && (
                     RewindUnless(() => sSeparate(n, c) && nsFlowNode(n, c)) ||
                     eNode() /* Value */
                 )
@@ -1520,7 +1520,7 @@ namespace Yaml.Parsing
         private bool c_nsFlowMapAdjacentValue(int n, Context c) // [149] 
         {
             return RewindUnless(() =>
-                text[p++] == ':' && (
+                Text[P++] == ':' && (
                     RewindUnless(() => Optional(sSeparate(n, c)) && nsFlowNode(n, c)) ||
                     eNode() /* Value */
                     )
@@ -1530,7 +1530,7 @@ namespace Yaml.Parsing
         {
             YamlNode _key = null;
             return (
-                RewindUnless(() => text[p++] == '?' && sSeparate(n, c) && nsFlowMapExplicitEntry(n, c, ref _key)) ||
+                RewindUnless(() => Text[P++] == '?' && sSeparate(n, c) && nsFlowMapExplicitEntry(n, c, ref _key)) ||
                 nsFlowPairEntry(n, c, ref _key)
             ) &&
             Assign(out key, _key);
@@ -1559,10 +1559,10 @@ namespace Yaml.Parsing
         private bool ns_sImplicitYamlKey(Context c) // [154] 
         {
             /* At most 1024 characters altogether */
-            int start = p;
+            int start = P;
             if (nsFlowYamlNode(-1 /* not used */, c) && Optional(sSeparateInLine))
             {
-                ErrorUnless((p - start) < 1024, "The implicit key was too long.");
+                ErrorUnless((P - start) < 1024, "The implicit key was too long.");
                 return true;
             }
             return false;
@@ -1570,10 +1570,10 @@ namespace Yaml.Parsing
         private bool c_sImplicitJsonKey(Context c) // [155] 
         {
             /* At most 1024 characters altogether */
-            int start = p;
+            int start = P;
             if (cFlowJsonNode(-1 /* not used */, c) && Optional(sSeparateInLine))
             {
-                ErrorUnless((p - start) < 1024, "The implicit key was too long.");
+                ErrorUnless((P - start) < 1024, "The implicit key was too long.");
                 return true;
             }
             return false;
@@ -1617,7 +1617,7 @@ namespace Yaml.Parsing
                 RewindUnless(() => c_nsProperties(n, c) &&
                     (RewindUnless(() => sSeparate(n, c) && nsFlowContent(n, c)) || eScalar())))
                 return true;
-            if (text[p] == '@' || text[p] == '`')
+            if (Text[P] == '@' || Text[P] == '`')
                 Error("Reserved indicators '@' and '`' can't start a plain scalar.");
             return false;
         }
@@ -1651,24 +1651,24 @@ namespace Yaml.Parsing
         }
         bool cIndentationIndicator(ref int m) // [163] 
         {
-            if (Charsets.nsDecDigit(text[p]))
+            if (Charsets.nsDecDigit(Text[P]))
             {
-                m = text[p] - '0';
-                p++;
+                m = Text[P] - '0';
+                P++;
                 return true;
             }
             return false;
         }
         bool cChompingIndicator(ref ChompingIndicator t) // [164] 
         {
-            switch (text[p])
+            switch (Text[P])
             {
                 case '-':
-                    p++;
+                    P++;
                     t = ChompingIndicator.Strip;
                     return true;
                 case '+':
-                    p++;
+                    P++;
                     t = ChompingIndicator.Keep;
                     return true;
             }
@@ -1713,19 +1713,19 @@ namespace Yaml.Parsing
                         if (s.Length > max)
                         {
                             max = s.Length;
-                            maxp = p;
+                            maxp = P;
                         }
                     }) && bBreak())
                 ) &&
                 Save(() => Repeat(Charsets.sSpace), s => m = s.Length - n) &&
-                Action(() => { if (text[p] == '\t') TabCharFoundForIndentation = true; }) &&
+                Action(() => { if (Text[P] == '\t') TabCharFoundForIndentation = true; }) &&
                 false // force Rewind
             );
             if (m < 1 && TabCharFoundForIndentation)
                 Error("Tab character found for indentation.");
             if (m < max - n)
             {
-                p = maxp;
+                P = maxp;
                 Error("Too many indentation was found.");
             }
             return m <= 1 ? 1 : m;
@@ -1734,13 +1734,13 @@ namespace Yaml.Parsing
         #region 8.1.2. Literal Style
         bool c_lLiteral(int n) // [170] 
         {
-            Debug.Assert(stringValue.Length == 0);
+            Debug.Assert(StringValue.Length == 0);
 
             int m = 0;
             var t = ChompingIndicator.Clip;
             Position pos = CurrentPosition;
             return RewindUnless(() =>
-                text[p++] == '|' &&
+                Text[P++] == '|' &&
                 c_bBlockHeader(out m, out t) &&
                 Action(() => { if (m == 0) m = AutoDetectIndentation(n); }) &&
                 ErrorUnless(lLiteralContent(n + m, t), "Illegal literal text found.")
@@ -1752,7 +1752,7 @@ namespace Yaml.Parsing
             return RewindUnless(() =>
                 Repeat(() => lEmpty(n, Context.BlockIn)) &&
                 sIndent(n) &&
-                Save(() => Repeat(nbChar), s => stringValue.Append(s))
+                Save(() => Repeat(nbChar), s => StringValue.Append(s))
             );
         }
         bool b_nbLiteralNext(int n) // [172] 
@@ -1774,13 +1774,13 @@ namespace Yaml.Parsing
         #region 8.1.3. Folded Style
         private bool c_lFolded(int n) // [174] 
         {
-            Debug.Assert(stringValue.Length == 0);
+            Debug.Assert(StringValue.Length == 0);
 
             int m = 0;
             var t = ChompingIndicator.Clip;
             Position pos = CurrentPosition;
             return RewindUnless(() =>
-                text[p++] == '>' &&
+                Text[P++] == '>' &&
                 c_bBlockHeader(out m, out t) &&
                 WarningIf(t == ChompingIndicator.Keep,
                   "Keep line breaks for folded text '>+' is invalid") &&
@@ -1793,7 +1793,7 @@ namespace Yaml.Parsing
         {
             return RewindUnless(() =>
                 sIndent(n) &&
-                Save(() => nsChar() && Repeat(nbChar), s => stringValue.Append(s))
+                Save(() => nsChar() && Repeat(nbChar), s => StringValue.Append(s))
             );
         }
         private bool l_nbFoldedLines(int n) // [176] 
@@ -1805,7 +1805,7 @@ namespace Yaml.Parsing
         {
             return RewindUnless(() =>
                 sIndent(n) &&
-                Save(() => sWhite() && Repeat(nbChar), s => stringValue.Append(s))
+                Save(() => sWhite() && Repeat(nbChar), s => StringValue.Append(s))
             );
         }
         private bool b_lSpaced(int n) // [178] 
@@ -1854,7 +1854,7 @@ namespace Yaml.Parsing
             return OneAndRepeat(() => RewindUnless(() =>
                 sIndent(n + m) &&
                 Action(() => { if (sequence == null) pos = CurrentPosition; }) &&
-                text[p] == '-' && !Charsets.nsChar(text[p + 1]) &&
+                Text[P] == '-' && !Charsets.nsChar(Text[P + 1]) &&
                 Action(() => { if (sequence == null) sequence = CreateSequence(pos); }) &&
                 c_lBlockSeqEntry(n + m, sequence)
             )) &&
@@ -1862,8 +1862,8 @@ namespace Yaml.Parsing
         }
         private bool c_lBlockSeqEntry(int n, YamlSequence sequence) // [184] 
         {
-            Debug.Assert(text[p] == '-' && !Charsets.nsChar(text[p + 1]));
-            p++;
+            Debug.Assert(Text[P] == '-' && !Charsets.nsChar(Text[P + 1]));
+            P++;
             return
                 s_lBlockIndented(n, Context.BlockIn) &&
                 Action(() => sequence.Add(GetValue()));
@@ -1882,12 +1882,12 @@ namespace Yaml.Parsing
             YamlSequence sequence = null;
             Position pos = CurrentPosition;
             return
-                text[p] == '-' && !Charsets.nsChar(text[p + 1]) &&
+                Text[P] == '-' && !Charsets.nsChar(Text[P + 1]) &&
                 Action(() => sequence = CreateSequence(pos)) &&
                 c_lBlockSeqEntry(n, sequence) &&
                 Repeat(() => RewindUnless(() =>
                     sIndent(n) &&
-                    text[p] == '-' && !Charsets.nsChar(text[p + 1]) &&
+                    Text[P] == '-' && !Charsets.nsChar(Text[P + 1]) &&
                     c_lBlockSeqEntry(n, sequence))) &&
                 SetValue(sequence);
         }
@@ -1933,7 +1933,7 @@ namespace Yaml.Parsing
         private bool c_lBlockMapExplicitKey(int n, ref YamlNode key) // [190] 
         {
             return RewindUnless(() =>
-                text[p++] == '?' &&
+                Text[P++] == '?' &&
                 s_lBlockIndented(n, Context.BlockOut)
             ) &&
             Assign(out key, GetValue());
@@ -1942,7 +1942,7 @@ namespace Yaml.Parsing
         {
             return RewindUnless(() =>
                 sIndent(n) &&
-                text[p++] == ':' &&
+                Text[P++] == ':' &&
                 s_lBlockIndented(n, Context.BlockOut)
             );
         }
@@ -1964,7 +1964,7 @@ namespace Yaml.Parsing
         private bool c_lBlockMapImplicitValue(int n) // [194] 
         {
             return RewindUnless(() =>
-                text[p++] == ':' &&
+                Text[P++] == ':' &&
                 (s_lBlockNode(n, Context.BlockOut) || (eNode() && s_lComments()))
             );
         }
@@ -2001,7 +2001,7 @@ namespace Yaml.Parsing
         }
         bool s_lBlockInBlock(int n, Context c) // [198] 
         {
-            Debug.Assert(stringValue.Length == 0);
+            Debug.Assert(StringValue.Length == 0);
             return
                 s_lBlockScalar(n, c) ||
                 s_lBlockCollection(n, c);
@@ -2065,23 +2065,23 @@ namespace Yaml.Parsing
         }
         bool cForbidden() // [206] 
         {
-            if (!StartOfLine() || (text.Length - p) < 3)
+            if (!StartOfLine() || (Text.Length - P) < 3)
                 return false;
-            var s = text.Substring(p, 3);
+            var s = Text.Substring(P, 3);
             if (s != "---" && s != "...")
                 return false;
             return
-                text.Length - p == 3 + 1 ||
-                Charsets.sWhite(text[p + 3]) ||
-                Charsets.bChar(text[p + 3]);
+                Text.Length - P == 3 + 1 ||
+                Charsets.sWhite(Text[P + 3]) ||
+                Charsets.bChar(Text[P + 3]);
         }
         bool lBareDocument() // [207] 
         {
-            var length = stringValue.Length;
-            var s = stringValue.ToString();
-            stringValue.Length = 0;
+            var length = StringValue.Length;
+            var s = StringValue.ToString();
+            StringValue.Length = 0;
             Debug.Assert(length == 0, $"stringValue should be empty but '{s}' was found");
-            state.Value = null;
+            base.State.Value = null;
 
             TagPrefixes.SetupDefaultTagPrefixes();
             return
@@ -2115,10 +2115,10 @@ namespace Yaml.Parsing
         {
             TagPrefixes.Reset();
             Anchors.RewindDepth = 0;
-            state.AnchorDepth = 0;
+            base.State.AnchorDepth = 0;
             WarningAdded.Clear();
             Warnings.Clear();
-            stringValue.Length = 0;
+            StringValue.Length = 0;
             bool BomReduced = false;
             if (Repeat(lDocumentPrefix) &&
                 Optional(lAnyDocument) &&
@@ -2128,7 +2128,7 @@ namespace Yaml.Parsing
                         OneAndRepeat(() => lDocumentSuffix() && Action(() => BomReduced = false)) &&
                         Repeat(lDocumentPrefix) && Optional(lAnyDocument)) ||
                     RewindUnless(() =>
-                        Repeat(() => Action(() => BomReduced |= Charsets.cByteOrdermark(text[p])) && lDocumentPrefix()) &&
+                        Repeat(() => Action(() => BomReduced |= Charsets.cByteOrdermark(Text[P])) && lDocumentPrefix()) &&
                         Optional(lExplicitDocument() && Action(() => BomReduced = false)))
                     ) &&
                 EndOfFile())
@@ -2138,23 +2138,23 @@ namespace Yaml.Parsing
                 Error("A BOM (\\ufeff) must not appear inside a document.");
             }
             else
-            if (Charsets.cIndicator(text[p]))
+            if (Charsets.cIndicator(Text[P]))
             {
                 Error("Plain text can not start with indicator characters -?:,[]{{}}#&*!|>'\"%@`");
             }
             else
-            if (text[p] == ' ' && StartOfLine())
+            if (Text[P] == ' ' && StartOfLine())
             {
                 Error("Extra line was found. Maybe indentation was incorrect.");
             }
             else
-            if (Charsets.nbChar(text[p]))
+            if (Charsets.nbChar(Text[P]))
             {
                 Error("Extra content was found. Maybe indentation was incorrect.");
             }
             else
             {
-                var charValue = (text[p] < 0x100) ? $"'\\x{(int)text[p]:x2}'" : $"'\\u{(int)text[p]:x4}'";
+                var charValue = (Text[P] < 0x100) ? $"'\\x{(int)Text[P]:x2}'" : $"'\\u{(int)Text[P]:x4}'";
                 Error($"An illegal character {charValue} appeared.");
             }
             return false;
