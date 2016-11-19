@@ -942,9 +942,9 @@ namespace YamlSerializerTest.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 1st non-empty,
+        ///   Looks up a localized string similar to 1st non-empty
         ///
-        /// 2nd non-empty, 
+        /// 2nd non-empty 
         ///	3rd non-empty
         ///.
         /// </summary>
@@ -1175,9 +1175,9 @@ namespace YamlSerializerTest.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &quot; 1st non-empty,
+        ///   Looks up a localized string similar to &quot; 1st non-empty
         ///
-        /// 2nd non-empty, 
+        /// 2nd non-empty 
         ///	3rd non-empty &quot;
         ///.
         /// </summary>
@@ -1212,9 +1212,9 @@ namespace YamlSerializerTest.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos; 1st non-empty,
+        ///   Looks up a localized string similar to &apos; 1st non-empty
         ///
-        /// 2nd non-empty, 
+        /// 2nd non-empty 
         ///	3rd non-empty &apos;
         ///.
         /// </summary>
@@ -1627,6 +1627,17 @@ namespace YamlSerializerTest.Properties {
         internal static string Example9_6 {
             get {
                 return ResourceManager.GetString("Example9_6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to - hel􏿿lo♥
+        ///- &quot;hel\U0010fffflo\u2665&quot;
+        ///.
+        /// </summary>
+        internal static string Unicode32bitsEscape {
+            get {
+                return ResourceManager.GetString("Unicode32bitsEscape", resourceCulture);
             }
         }
     }

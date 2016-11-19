@@ -744,7 +744,6 @@ namespace Yaml.Parsing
 
             const int escapeIndicatorLength = 2;
 
-            char c = '\0';
             int v1 = 0;
             int v2 = 0;
             int v3 = 0;
@@ -752,73 +751,73 @@ namespace Yaml.Parsing
             switch (Text[P + 1])
             {
                 case '0':
-                    c = '\0';
+                    StringValue.Append('\0');
                     break;
                 case 'a':
-                    c = '\a';
+                    StringValue.Append('\a');
                     break;
                 case 'b':
-                    c = '\b';
+                    StringValue.Append('\b');
                     break;
                 case 't':
                 case '\t':
-                    c = '\t';
+                    StringValue.Append('\t');
                     break;
                 case 'n':
-                    c = '\n';
+                    StringValue.Append('\n');
                     break;
                 case 'v':
-                    c = '\v';
+                    StringValue.Append('\v');
                     break;
                 case 'f':
-                    c = '\f';
+                    StringValue.Append('\f');
                     break;
                 case 'r':
-                    c = '\r';
+                    StringValue.Append('\r');
                     break;
                 case 'e':
-                    c = '\x1b';
+                    StringValue.Append('\x1b');
                     break;
                 case ' ':
-                    c = ' ';
+                    StringValue.Append(' ');
                     break;
                 case '"':
-                    c = '"';
+                    StringValue.Append('"');
                     break;
                 case '/':
-                    c = '/';
+                    StringValue.Append('/');
                     break;
                 case '\\':
-                    c = '\\';
+                    StringValue.Append('\\');
                     break;
                 case 'N':
-                    c = '\x85';
+                    StringValue.Append('\x85');
                     break;
                 case '_':
-                    c = '\xa0';
+                    StringValue.Append('\xa0');
                     break;
                 case 'L':
-                    c = '\u2028';
+                    StringValue.Append('\u2028');
                     break;
                 case 'P':
-                    c = '\u2029';
+                    StringValue.Append('\u2029');
                     break;
                 case 'x':
                     if (!HexValue(P + 2, out v1))
                         InvalidEscapeSequence(escapeIndicatorLength + 2);
-                    c = (char)v1;
+                    StringValue.Append((char)v1);
                     P += 2;
                     break;
                 case 'u':
                     if (!(HexValue(P + 2, out v1) && HexValue(P + 4, out v2)))
                         InvalidEscapeSequence(escapeIndicatorLength + 4);
-                    c = (char)((v1 << 8) + v2);
+                    StringValue.Append((char)((v1 << 8) + v2));
                     P += 4;
                     break;
                 case 'U':
                     if (!(HexValue(P + 2, out v1) && HexValue(P + 4, out v2) && HexValue(P + 6, out v3) && HexValue(P + 8, out v4)))
                         InvalidEscapeSequence(escapeIndicatorLength + 8);
-                    c = (char)((v1 << 24) + (v2 << 16) + (v3 << 8) + v4);
+                    StringValue.Append(char.ConvertFromUtf32((v1 << 24) + (v2 << 16) + (v3 << 8) + v4));
                     P += 8;
                     break;
                 default:
@@ -827,8 +826,7 @@ namespace Yaml.Parsing
                         InvalidEscapeSequence(escapeIndicatorLength);
                     return false;
             }
-            P += 2;
-            StringValue.Append(c);
+            P += escapeIndicatorLength;
             return true;
         }
         void InvalidEscapeSequence(int n)

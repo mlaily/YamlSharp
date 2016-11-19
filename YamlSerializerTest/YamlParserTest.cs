@@ -117,7 +117,7 @@ namespace YamlSerializerTest
     }
 
     // http://www.yaml.org/spec/1.2/spec.html
-    namespace YamlVersion1_2_20090721
+    namespace YamlVersion1_2_20091001
     {
         [TestFixture]
         public class Chapter2_1 : YamlTestFixture
@@ -2116,6 +2116,25 @@ namespace YamlSerializerTest
                     map(
                         "x", 1,
                         "y", 3)
+                );
+            }
+        }
+    }
+
+    namespace Other
+    {
+        [TestFixture]
+        public class UnicodeSupportTest : YamlTestFixture
+        {
+            [Test]
+            public void Support32BitsCodePoints()
+            {
+                AssertResults(
+                    parser.Parse(Resources.Unicode32bitsEscape),
+                    seq(
+                        str("hel􏿿lo♥"),
+                        str("hel􏿿lo♥")
+                    )
                 );
             }
         }
