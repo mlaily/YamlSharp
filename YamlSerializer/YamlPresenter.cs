@@ -303,9 +303,9 @@ namespace Yaml
         private static Regex OneLine = new Regex(@"^([^\n\r]|\n)*(\r?\n|\r)?$");
         private static Regex UntilBreak = new Regex(@"[^\r\n]*(\r?\n|\r)");
 
-        class DoubleQuote : Parser<DoubleQuote.State>
+        class DoubleQuote : Parser<DoubleQuote.ParserState>
         {
-            internal struct State { }
+            internal struct ParserState { }
             Func<char, bool> nbDoubleSafeCharset = Charset(c =>
                 (0x100 <= c && c != '\u2028' && c != '\u2029') ||
                 c == 0x09 ||
