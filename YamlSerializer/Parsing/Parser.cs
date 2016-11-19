@@ -168,7 +168,6 @@ namespace Yaml.Parsing
         /// Reporting syntax error by throwing <see cref="ParseErrorException"/>.
         /// </summary>
         /// <param name="message"><see cref="string.Format(string,object[])"/> template for the error message.</param>
-        /// <param name="args"><see cref="string.Format(string,object[])"/> parameters if required</param>
         /// <returns>Because it throw exception, nothing will be returned in reality.</returns>
         public bool Error(string message)
         {
@@ -180,7 +179,6 @@ namespace Yaml.Parsing
         /// </summary>
         /// <param name="rule">Some reduction rule that must match.</param>
         /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
-        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
         /// <returns>Always true; otherwise an exception thrown.</returns>
         protected bool ErrorUnless(bool rule, string message)
         {
@@ -193,7 +191,6 @@ namespace Yaml.Parsing
         /// </summary>
         /// <param name="rule">Some reduction rule that must match.</param>
         /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
-        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
         /// <returns>Always true; otherwise an exception is thrown.</returns>
         protected bool ErrorUnless(Func<bool> rule, string message)
         {
@@ -207,7 +204,6 @@ namespace Yaml.Parsing
         /// <param name="toBeError">Additional condition: if this parameter is false, 
         /// rewinding occurs, instead of throwing exception.</param>
         /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
-        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
         /// <returns>true if the reduction rule matches; otherwise false.</returns>
         protected bool ErrorUnlessWithAdditionalCondition(Func<bool> rule, bool toBeError, string message)
         {
@@ -227,7 +223,6 @@ namespace Yaml.Parsing
         /// </summary>
         /// <param name="condition">True to throw exception.</param>
         /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
-        /// <param name="args">Parameters for <see cref="string.Format(string,object[])"/> template</param>
         /// <returns>Always true.</returns>
         protected bool ErrorIf(bool condition, string message)
         {
@@ -252,7 +247,6 @@ namespace Yaml.Parsing
         /// </example>
         /// <param name="condition">If true, warning is given; otherwise do nothing.</param>
         /// <param name="message"><see cref="string.Format(string,object[])"/> template for the warning message.</param>
-        /// <param name="args"><see cref="string.Format(string,object[])"/> parameters if required</param>
         /// <returns>Always true.</returns>
         protected bool WarningIf(bool condition, string message)
         {
@@ -277,7 +271,6 @@ namespace Yaml.Parsing
         /// </example>
         /// <param name="condition">If false, warning is given; otherwise do nothing.</param>
         /// <param name="message"><see cref="string.Format(string,object[])"/> template for the warning message.</param>
-        /// <param name="args"><see cref="string.Format(string,object[])"/> parameters if required</param>
         /// <returns>Always true.</returns>
         protected bool WarningUnless(bool condition, string message)
         {
@@ -299,7 +292,6 @@ namespace Yaml.Parsing
         /// </code>
         /// </example>
         /// <param name="message"><see cref="string.Format(string,object[])"/> template for the warning message.</param>
-        /// <param name="args"><see cref="string.Format(string,object[])"/> parameters if required</param>
         /// <returns>Always true.</returns>
         protected bool Warning(string message)
         {
