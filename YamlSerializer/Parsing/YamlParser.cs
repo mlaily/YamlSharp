@@ -340,6 +340,7 @@ namespace Yaml.Parsing
         /// </summary>
         private static class Charsets
         {
+            #region only have to match 16 bits or less code points
             public static bool cByteOrdermark(string text, int p) // [3] 
             {
                 char c = text[p];
@@ -426,8 +427,9 @@ namespace Yaml.Parsing
                         c == 0x85 ||    // next line
                         c == 0x0c;      // form feed
             }
+            #endregion
 
-            #region Requires unicode support
+            #region have to match 32 bits code points
             //public static bool cPrintable(char c) // [1] 
             //{
             //    return
@@ -444,28 +446,75 @@ namespace Yaml.Parsing
             {
                 length = 0;
                 char c = text[p];
-                if (c == 0x09 || (0x20 <= c /* && c<=0x10ffff */ ))
+                bool matchedHighSurrogate = false;
+                if (c == 0x09 // tab
+                              // Basic Multilingual Plane, minus chars < 0x20. (control chars)
+                              // (Surrogate code values are in the range U+D800 through U+DFFF and are matched below.)
+                    || (0x20 <= c && c <= 0xD7FF)
+                    || (0xE000 <= c && c <= 0xFFFF))
                 {
                     length++;
                     return true;
                 }
+                // High surrogate
+                else if (0xD800 <= c && c <= 0xDBFF)
+                {
+                    // Json seems to allow a high surrogate code point not followed by a low surrogate,
+                    // even if the unicode standard says this is not supposed to happen.
+                    length++;
+                    matchedHighSurrogate = true;
+                    // We will try to find a matching low surrogate below...
+                }
+                else if (0xDC00 <= c && c <= 0xDFFF)
+                {
+                    // Low surrogate occuring first. Json seems to allow this,
+                    // but the unicode standard says this is not supposed to happen. whatever... 
+                    length++;
+                    return true;
+                }
+
+                if (matchedHighSurrogate)
+                {
+                    // Try to match a low surrogate following the high surrogate
+                    char c2 = text[p + 1];
+                    if (0xDC00 <= c2 && c2 <= 0xDFFF)
+                        length++;
+                    // Json seems to allow a high surrogate code point not followed by a low surrogate,
+                    // even if the unicode standard says this is not supposed to happen.
+                    return true;
+                }
+
                 return false;
             }
             public static bool nbChar(string text, int p, out int length)
             {
                 length = 0;
                 char c = text[p];
-                if ( //  ( 0x10000 < c && c < 0x110000 ) || 
-                        (0xe000 <= c && c <= 0xfffd && c != 0xFEFF) ||
-                        (0xa0 <= c && c <= 0xd7ff) ||
-                        c == 0x85 ||
-                        (0x20 <= c && c <= 0x7e) ||
-                        //  c == 0x0d ||
-                        //  c == 0x0a ||
-                        c == 0x09)
+                if (// 16 bits:
+                    // (Surrogate code values are in the range U+D800 through U+DFFF.)
+                    (0xA0 <= c && c <= 0xD7FF)
+                    || (0xE000 <= c && c <= 0xFFFD && c != 0xFEFF /* - c_byte_order_mark */)
+                    // 8 bits:
+                    || c == 0x85
+                    || (0x20 <= c && c <= 0x7E)
+                    // || c == 0x0A // - b_char
+                    // || c == 0x0D // - b_char
+                    || c == 0x09)
                 {
                     length++;
                     return true;
+                }
+                // 32 bits (U+10000 to U+10FFFF):
+                // High surrogate ...
+                else if (0xD800 <= c && c <= 0xDBFF)
+                {
+                    char c2 = text[p + 1];
+                    // ...followed by low surrogate 
+                    if (0xDC00 <= c2 && c2 <= 0xDFFF)
+                    {
+                        length += 2;
+                        return true;
+                    }
                 }
                 return false;
             }
@@ -473,18 +522,31 @@ namespace Yaml.Parsing
             {
                 length = 0;
                 char c = text[p];
-                if (  // nbChar(c) && !sWhite(c)
-                      //  ( 0x10000 < c && c < 0x110000 ) || 
-                        (0xe000 <= c && c <= 0xfffd && c != 0xFEFF) ||
-                        (0xa0 <= c && c <= 0xd7ff) ||
-                        c == 0x85 ||
-                        (0x21 <= c && c <= 0x7e))
-                //  c == 0x0d ||
-                //  c == 0x0a ||
-                //  c == 0x09
+                if (// 16 bits:
+                    // (Surrogate code values are in the range U+D800 through U+DFFF.)
+                    (0xA0 <= c && c <= 0xD7FF)
+                    || (0xE000 <= c && c <= 0xFFFD && c != 0xFEFF /* - c_byte_order_mark */)
+                    // 8 bits:
+                    || c == 0x85
+                    || (0x21 /* - s_white */ <= c && c <= 0x7E))
+                // || c == 0x0A // - b_char
+                // || c == 0x0D // - b_char
+                // || c == 0x09 // - s_white
                 {
                     length++;
                     return true;
+                }
+                // 32 bits (U+10000 to U+10FFFF):
+                // High surrogate ...
+                else if (0xD800 <= c && c <= 0xDBFF)
+                {
+                    char c2 = text[p + 1];
+                    // ...followed by low surrogate 
+                    if (0xDC00 <= c2 && c2 <= 0xDFFF)
+                    {
+                        length += 2;
+                        return true;
+                    }
                 }
                 return false;
             }
