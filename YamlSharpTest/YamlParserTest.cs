@@ -2137,6 +2137,15 @@ namespace YamlSharpTest
                     )
                 );
             }
+
+            [Test]
+            public void SupportUrlEncoded32BitsCodePoints()
+            {
+                AssertResults(
+                    parser.Parse("!hel%F4%8F%BF%BFlo%E2%99%A5+A%20 value"),
+                    str("!hel􏿿lo♥ A ", "value")
+                );
+            }
         }
     }
 }

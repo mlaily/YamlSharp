@@ -418,7 +418,7 @@ namespace YamlSharp.Parsing
             // http://www.cresc.co.jp/tech/java/URLencoding/JavaScript_URLEncoding.htm
             int v1 = -1, v2 = -1, v3 = -1, v4 = -1;
             ErrorUnless(
-                Text[P] == '%' && HexValue(P + 1, out v1) &&
+                HexValue(P + 1, out v1) &&
                 (v1 < 0x80 || (Text[P + 3] == '%' && HexValue(P + 4, out v2))) &&
                 (v1 < 0xe0 || (Text[P + 6] == '%' && HexValue(P + 7, out v3))) &&
                 (v1 < 0xf1 || (Text[P + 9] == '%' && HexValue(P + 10, out v4))),
@@ -426,31 +426,23 @@ namespace YamlSharp.Parsing
                 );
             if (v2 == -1)
             { // 1 byte code
-                StringValue.Append(
-                    (char)v1
-                    );
+                StringValue.Append((char)v1);
                 P += 3;
                 return true;
             }
             if (v3 == -1)
             {
-                StringValue.Append(
-                    (char)(((v1 & 0x1f) << 6) + (v2 & 0x7f))
-                    );
+                StringValue.Append((char)(((v1 & 0x1f) << 6) + (v2 & 0x7f)));
                 P += 6;
                 return true;
             }
             if (v4 == -1)
             {
-                StringValue.Append(
-                    (char)(((v1 & 0x0f) << 12) + ((v2 & 0x7f) << 6) + (v3 & 0x7f))
-                    );
+                StringValue.Append((char)(((v1 & 0x0f) << 12) + ((v2 & 0x7f) << 6) + (v3 & 0x7f)));
                 P += 9;
                 return true;
             }
-            StringValue.Append(
-                (char)(((v1 & 0x07) << 18) + ((v2 & 0x7f) << 12) + ((v3 & 0x7f) << 6) + (v4 & 0x7f))
-                );
+            StringValue.Append(char.ConvertFromUtf32((((v1 & 0x07) << 18) + ((v2 & 0x7f) << 12) + ((v3 & 0x7f) << 6) + (v4 & 0x7f))));
             P += 12;
             return true;
         }
