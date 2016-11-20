@@ -55,7 +55,7 @@ namespace YamlSharp.Parsing
             Warnings = new List<string>();
         }
 
-        private YamlConfig config;
+        private YamlConfig Config;
         private List<YamlNode> ParseResult = new List<YamlNode>();
         /// <summary>
         /// Parse YAML text and returns a list of <see cref="YamlNode"/>.
@@ -74,22 +74,22 @@ namespace YamlSharp.Parsing
         /// <returns>A list of <see cref="YamlNode"/> parsed from the given text</returns>
         public List<YamlNode> Parse(string yaml, YamlConfig config)
         {
-            this.config = config;
+            Config = config;
             Warnings.Clear();
             ParseResult.Clear();
             AlreadyWarnedChars.Clear();
-            if (base.Parse(lYamlStream, yaml + "\0")) // '\0' = guard char
+            if (Parse(lYamlStream, yaml + "\0")) // '\0' = guard char
                 return ParseResult;
             return new List<YamlNode>();
         }
 
         internal bool IsValidPlainText(string plain, YamlConfig config)
         {
-            this.config = config;
+            Config = config;
             Warnings.Clear();
             ParseResult.Clear();
             AlreadyWarnedChars.Clear();
-            return base.Parse(() => nsPlain(0, YamlContext.BlockKey) && EndOfFile(), plain + "\0"); // '\0' = guard char
+            return Parse(() => nsPlain(0, YamlContext.BlockKey) && EndOfFile(), plain + "\0"); // '\0' = guard char
         }
 
         #region Warnings
@@ -194,21 +194,21 @@ namespace YamlSharp.Parsing
         /// </summary>
         protected override void Rewind()
         {
-            Anchors.RewindDepth = base.State.AnchorDepth;
+            Anchors.RewindDepth = State.AnchorDepth;
         }
 
         private bool SetValue(YamlNode v)
         {
-            if (base.State.Value != null && v != null)
+            if (State.Value != null && v != null)
                 throw new Exception();
-            base.State.Value = v;
+            State.Value = v;
             v.OnLoaded();
             return true;
         }
         private YamlNode GetValue()
         {
-            var v = base.State.Value;
-            base.State.Value = null;
+            var v = State.Value;
+            State.Value = null;
             return v;
         }
         #endregion
@@ -244,7 +244,7 @@ namespace YamlSharp.Parsing
                 if (!TagValidator.IsValid(verbatimTag))
                     Warning($"Invalid global tag name '{verbatimTag}' (c.f. RFC 4151) found");
             }
-            base.State.Tag = verbatimTag;
+            State.Tag = verbatimTag;
             return true;
         }
         private YamlTagValidator TagValidator = new YamlTagValidator();
@@ -252,11 +252,11 @@ namespace YamlSharp.Parsing
         private AnchorDictionary Anchors;
         private void RegisterAnchorFor(YamlNode value)
         {
-            if (base.State.Anchor != null)
+            if (State.Anchor != null)
             {
-                Anchors.Add(base.State.Anchor, value);
-                base.State.Anchor = null;
-                base.State.AnchorDepth = Anchors.RewindDepth;
+                Anchors.Add(State.Anchor, value);
+                State.Anchor = null;
+                State.AnchorDepth = Anchors.RewindDepth;
             }
         }
 
@@ -270,51 +270,51 @@ namespace YamlSharp.Parsing
             if (fromStyle != null)
                 fromStyle = YamlNode.ExpandTag(fromStyle);
 
-            if (base.State.Tag != null)
+            if (State.Tag != null)
                 return;
 
             if (fromStyle == null)
-                fromStyle = config.TagResolver.Resolve(StringValue.ToString());
+                fromStyle = Config.TagResolver.Resolve(StringValue.ToString());
 
             if (fromStyle != null)
-                base.State.Tag = fromStyle;
+                State.Tag = fromStyle;
             return;
         }
         private YamlScalar CreateScalar(string autoDetectedTag, Position pos)
         {
             AutoDetectTag(autoDetectedTag);
-            if (base.State.Tag == null || base.State.Tag == "" /* ! was specified */ )
-                base.State.Tag = YamlNode.DefaultTagPrefix + "str";
-            var value = new YamlScalar(base.State.Tag, StringValue.ToString());
+            if (State.Tag == null || State.Tag == "" /* ! was specified */ )
+                State.Tag = YamlNode.DefaultTagPrefix + "str";
+            var value = new YamlScalar(State.Tag, StringValue.ToString());
             value.Raw = pos.Raw;
             value.Column = pos.Column;
             StringValue.Length = 0;
             RegisterAnchorFor(value);
-            base.State.Tag = null;
+            State.Tag = null;
             return value;
         }
         private YamlSequence CreateSequence(Position pos)
         {
-            if (base.State.Tag == null || base.State.Tag == "" /* ! was specified */ )
-                base.State.Tag = YamlNode.DefaultTagPrefix + "seq";
+            if (State.Tag == null || State.Tag == "" /* ! was specified */ )
+                State.Tag = YamlNode.DefaultTagPrefix + "seq";
             var seq = new YamlSequence();
-            seq.Tag = base.State.Tag;
+            seq.Tag = State.Tag;
             seq.Raw = pos.Raw;
             seq.Column = pos.Column;
             RegisterAnchorFor(seq);
-            base.State.Tag = null;
+            State.Tag = null;
             return seq;
         }
         private YamlMapping CreateMapping(Position pos)
         {
-            if (base.State.Tag == null || base.State.Tag == "" /* ! was specified */ )
-                base.State.Tag = YamlNode.DefaultTagPrefix + "map";
+            if (State.Tag == null || State.Tag == "" /* ! was specified */ )
+                State.Tag = YamlNode.DefaultTagPrefix + "map";
             var map = new YamlMapping();
-            map.Tag = base.State.Tag;
+            map.Tag = State.Tag;
             map.Raw = pos.Raw;
             map.Column = pos.Column;
             RegisterAnchorFor(map);
-            base.State.Tag = null;
+            State.Tag = null;
             return map;
         }
 
@@ -351,11 +351,11 @@ namespace YamlSharp.Parsing
         }
         bool bAsLineFeed() // [29] 
         {
-            if (config.NormalizeLineBreaks)
+            if (Config.NormalizeLineBreaks)
             {
                 if (bBreak())
                 {
-                    StringValue.Append(config.LineBreakForInput);
+                    StringValue.Append(Config.LineBreakForInput);
                     return true;
                 }
                 return false;
@@ -864,8 +864,8 @@ namespace YamlSharp.Parsing
         #region 6.9 Node Properties
         bool c_nsProperties(int n, YamlContext c) // [96] 
         {
-            base.State.Anchor = null;
-            base.State.Tag = null;
+            State.Anchor = null;
+            State.Tag = null;
             return
                 (c_nsTagProperty() && Optional(RewindUnless(() => sSeparate(n, c) && c_nsAnchorProperty()))) ||
                 (c_nsAnchorProperty() && Optional(RewindUnless(() => sSeparate(n, c) && c_nsTagProperty())));
@@ -916,7 +916,7 @@ namespace YamlSharp.Parsing
         private bool cNonSpecificTag() // [100]' 
         {
             // disable tag resolution to restrict tag to be ( map | seq | str )
-            base.State.Tag = "";
+            State.Tag = "";
             return true; /* empty */
         }
         bool c_nsAnchorProperty() // [101] 
@@ -924,7 +924,7 @@ namespace YamlSharp.Parsing
             if (Text[P] != '&')
                 return false;
             P++;
-            return Save(this.nsAnchorName, s => base.State.Anchor = s);
+            return Save(nsAnchorName, s => State.Anchor = s);
         }
         private bool nsAnchorName() // [103] 
         {
@@ -1914,7 +1914,7 @@ namespace YamlSharp.Parsing
         #region 9.1. Documents
         private bool lDocumentPrefix() // [202] 
         {
-            return Optional(Parsing.Charset.cByteOrdermark) && Repeat(this.lComment);
+            return Optional(Parsing.Charset.cByteOrdermark) && Repeat(lComment);
         }
         private bool cDirectivesEnd() // [203] 
         {
@@ -1949,7 +1949,7 @@ namespace YamlSharp.Parsing
             var s = StringValue.ToString();
             StringValue.Length = 0;
             Debug.Assert(length == 0, $"stringValue should be empty but '{s}' was found");
-            base.State.Value = null;
+            State.Value = null;
 
             TagPrefixes.SetupDefaultTagPrefixes();
             return
@@ -1983,18 +1983,18 @@ namespace YamlSharp.Parsing
         {
             TagPrefixes.Reset();
             Anchors.RewindDepth = 0;
-            base.State.AnchorDepth = 0;
+            State.AnchorDepth = 0;
             WarningAdded.Clear();
             Warnings.Clear();
             StringValue.Length = 0;
             bool BomReduced = false;
-            if (Repeat(this.lDocumentPrefix) &&
-                Optional(this.lAnyDocument) &&
+            if (Repeat(lDocumentPrefix) &&
+                Optional(lAnyDocument) &&
                 Repeat(() =>
                     TagPrefixes.Reset() &&
                     RewindUnless(() =>
                         OneAndRepeat(() => lDocumentSuffix() && Action(() => BomReduced = false)) &&
-                        Repeat(this.lDocumentPrefix) && Optional(this.lAnyDocument)) ||
+                        Repeat(lDocumentPrefix) && Optional(lAnyDocument)) ||
                     RewindUnless(() =>
                         Repeat(() => Action(() => BomReduced |= Parsing.Charset.cByteOrdermark(Text, P)) && lDocumentPrefix()) &&
                         Optional(lExplicitDocument() && Action(() => BomReduced = false)))
