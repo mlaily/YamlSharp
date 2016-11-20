@@ -561,8 +561,7 @@ namespace YamlSharp.Parsing
         /// <returns>Always true.</returns>
         protected bool Optional(Func<bool> rule) // ? 
         {
-            return
-                RewindUnless(() => rule()) || true;
+            return RewindUnless(rule) || true;
         }
         #endregion
 
@@ -887,7 +886,7 @@ namespace YamlSharp.Parsing
         /// <returns>true if <paramref name="rule"/> matches; otherwise false.</returns>
         protected bool Save(Func<bool> rule, ref string value)
         {
-            var value_ = "";
+            string value_ = "";
             var result = Save(rule, s => value_ = s);
             if (result)
                 value = value_;

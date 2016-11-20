@@ -33,7 +33,7 @@ namespace YamlSharp
             }
             );
         }
-        static Regex NonUriChar = new Regex(@"[^0-9A-Za-z\-_.!~*'()\\;/?:@&=$,\[\]]");
+        static Regex NonUriChar = new Regex(@"[^0-9A-Za-z\-_.!~*'()\\;/?:@&=$,\[\]]", RegexOptions.Compiled);
 
         /// <summary>
         /// Escape the string in URI encoding format.
@@ -52,7 +52,7 @@ namespace YamlSharp
             }
             );
         }
-        static Regex NonTagChar = new Regex(@"[^0-9A-Za-z\-_.!~*'()\\;/?:@&=$]");
+        static Regex NonTagChar = new Regex(@"[^0-9A-Za-z\-_.!~*'()\\;/?:@&=$]", RegexOptions.Compiled);
 
         static char[] intToHex = new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
         static string IntToHex(int c)

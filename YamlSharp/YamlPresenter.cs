@@ -299,9 +299,9 @@ namespace YamlSharp
             }
         }
         private static DoubleQuote DoubleQuotedString = new DoubleQuote();
-        private static Regex ForbiddenChars = new Regex(@"[\x00-\x08\x0B\x0C\x0E-\x1F]");
-        private static Regex OneLine = new Regex(@"^([^\n\r]|\n)*(\r?\n|\r)?$");
-        private static Regex UntilBreak = new Regex(@"[^\r\n]*(\r?\n|\r)");
+        private static Regex ForbiddenChars = new Regex(@"[\x00-\x08\x0B\x0C\x0E-\x1F]", RegexOptions.Compiled);
+        private static Regex OneLine = new Regex(@"^([^\n\r]|\n)*(\r?\n|\r)?$", RegexOptions.Compiled);
+        private static Regex UntilBreak = new Regex(@"[^\r\n]*(\r?\n|\r)", RegexOptions.Compiled);
 
         class DoubleQuote : Parser<DoubleQuote.ParserState>
         {
@@ -582,6 +582,6 @@ namespace YamlSharp
             return tag;
         }
         // has a tag handle and the body contains only ns-tag-char.
-        static Regex CanBeShorthand = new Regex(@"^!([-0-9a-zA-Z]*!)?[-0-9a-zA-Z%#;/?:@&=+$_.^*'\(\)]*$");
+        static Regex CanBeShorthand = new Regex(@"^!([-0-9a-zA-Z]*!)?[-0-9a-zA-Z%#;/?:@&=+$_.^*'\(\)]*$", RegexOptions.Compiled);
     }
 }

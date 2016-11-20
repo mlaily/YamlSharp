@@ -124,6 +124,7 @@ namespace YamlSharp.Serialization
             return obj;
         }
 
+        private static Regex binaryArray = new Regex(@" *\[([0-9 ,]+)\][\r\n]+((.+|[\r\n])+)", RegexOptions.Compiled);
         object ScalarToObject(YamlScalar node, Type type)
         {
             if (type == null)
@@ -146,19 +147,18 @@ namespace YamlSharp.Serialization
             {
                 // Split dimension from base64 strings
                 var s = node.Value;
-                var regex = new Regex(@" *\[([0-9 ,]+)\][\r\n]+((.+|[\r\n])+)");
                 int[] dimension;
                 byte[] binary;
                 var elementSize = Marshal.SizeOf(type.GetElementType());
                 if (type.GetArrayRank() == 1)
                 {
-                    binary = System.Convert.FromBase64CharArray(s.ToCharArray(), 0, s.Length);
+                    binary = Convert.FromBase64CharArray(s.ToCharArray(), 0, s.Length);
                     var arrayLength = binary.Length / elementSize;
                     dimension = new int[] { arrayLength };
                 }
                 else
                 {
-                    var m = regex.Match(s);
+                    var m = binaryArray.Match(s);
                     if (!m.Success)
                         throw new FormatException("Illegal binary array");
                     // Create array from dimension
@@ -167,7 +167,7 @@ namespace YamlSharp.Serialization
                         throw new FormatException("Illegal binary array");
                     // Fill values
                     s = m.Groups[2].Value;
-                    binary = System.Convert.FromBase64CharArray(s.ToCharArray(), 0, s.Length);
+                    binary = Convert.FromBase64CharArray(s.ToCharArray(), 0, s.Length);
                 }
                 var paramType = dimension.Select(n => typeof(int) /* n.GetType() */).ToArray();
                 var array = (Array)type.GetConstructor(paramType).Invoke(dimension.Cast<object>().ToArray());

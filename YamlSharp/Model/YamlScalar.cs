@@ -152,7 +152,8 @@ namespace YamlSharp.Model
             UpdateNativeObject();
         }
 
-        void UpdateNativeObject()
+        private static Regex floatRegex = new Regex(@"0|[1-9][0-9]*", RegexOptions.Compiled);
+        private void UpdateNativeObject()
         {
             object value;
             if (NativeObjectAvailable = DefaultConfig.TagResolver.Decode(this, out value))
@@ -161,7 +162,7 @@ namespace YamlSharp.Model
             }
             else
             {
-                if ((ShorthandTag() == "!!float") && (Value != null) && new Regex(@"0|[1-9][0-9]*").IsMatch(Value))
+                if ((ShorthandTag() == "!!float") && (Value != null) && floatRegex.IsMatch(Value))
                 {
                     NativeObject = Convert.ToDouble(Value);
                     NativeObjectAvailable = true;

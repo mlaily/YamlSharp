@@ -67,8 +67,8 @@ namespace YamlSharp.Unused
             escapeTable['\u2029'] = @"\P";
 
             // Create escaping regexp
-            escapeRegexp = new Regex(@"[\x00-\x1f\/\x85\xa0\u2028\u2029" + "\"]");
-            escapeNonprintable = new Regex(@"[\x7f-\x84\x86-\x9f\ud800-\udfff\ufffe\uffff]");
+            escapeRegexp = new Regex(@"[\x00-\x1f\/\x85\xa0\u2028\u2029" + "\"]", RegexOptions.Compiled);
+            escapeNonprintable = new Regex(@"[\x7f-\x84\x86-\x9f\ud800-\udfff\ufffe\uffff]", RegexOptions.Compiled);
 
             // Create unescaping table
             for (char c = '\0'; c < controlCodes.Length; c++)
@@ -84,8 +84,7 @@ namespace YamlSharp.Unused
                     pattern += "|";
                 pattern += Regex.Escape(esc);
             });
-            unescapeRegexp = new Regex(pattern +
-                @"|\\x[0-9a-fA-F]{2}|\\u[0-9a-fA-F]{4}|\\U[0-9a-fA-F]{8}");
+            unescapeRegexp = new Regex(pattern + @"|\\x[0-9a-fA-F]{2}|\\u[0-9a-fA-F]{4}|\\U[0-9a-fA-F]{8}", RegexOptions.Compiled);
         }
 
         /// <summary>
