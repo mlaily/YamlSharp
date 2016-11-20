@@ -992,8 +992,8 @@ namespace YamlSharp.Parsing
                     nbDoubleText(n, c) &&
                     Text[P++] == '"',
                     c == YamlContext.FlowOut,
-                    "Closing quotation \" was not found." +
-                    (TabCharFoundForIndentation ? " Tab char \\t can not be used for indentation." : "")
+                    "Closing “\"” was not found." +
+                    (TabCharFoundForIndentation ? " Tab character \\t can not be used for indentation." : "")
                 ) &&
                 SetValue(CreateScalar("!!str", pos));
         }
@@ -1082,8 +1082,8 @@ namespace YamlSharp.Parsing
                     nbSingleText(n, c) &&
                     Text[P++] == '\'',
                     c == YamlContext.FlowOut,
-                    "Closing quotation \' was not found." +
-                    (TabCharFoundForIndentation ? " Tab char \\t can not be used for indentation." : "")
+                    "Closing “'” was not found." +
+                    (TabCharFoundForIndentation ? " Tab character \\t can not be used for indentation." : "")
                 ) &&
                 SetValue(CreateScalar("!!str", pos));
         }
@@ -1260,8 +1260,8 @@ namespace YamlSharp.Parsing
                                 sequence = CreateSequence(pos))) &&
                     Text[P++] == ']',
                     c == YamlContext.FlowOut,
-                    "Closing brace ] was not found." +
-                    (TabCharFoundForIndentation ? " Tab char \\t can not be used for indentation." : "")
+                    "Closing “]” was not found." +
+                    (TabCharFoundForIndentation ? " Tab character \\t can not be used for indentation." : "")
                 )
             ) &&
             SetValue(sequence);
@@ -1308,8 +1308,8 @@ namespace YamlSharp.Parsing
                     Optional(ns_sFlowMapEntries(n, InFlow(c), mapping = CreateMapping(pos))) &&
                     Text[P++] == '}',
                     c == YamlContext.FlowOut,
-                    "Closing brace }} was not found." +
-                    (TabCharFoundForIndentation ? " Tab char \\t can not be used for indentation." : "")
+                    "Closing “}” was not found." +
+                    (TabCharFoundForIndentation ? " Tab character \\t can not be used for indentation." : "")
                 )
             ) &&
             SetValue(mapping);
@@ -1593,7 +1593,7 @@ namespace YamlSharp.Parsing
             if (m < max - n)
             {
                 P = maxp;
-                Error("Too many indentation was found.");
+                Error("Too much indentation was found.");
             }
             return m <= 1 ? 1 : m;
         }
@@ -2008,7 +2008,7 @@ namespace YamlSharp.Parsing
 
             if (BomReduced)
             {
-                Error("A BOM (\\ufeff) must not appear inside a document.");
+                Error("A BOM (\\uFEFF) must not appear inside a document.");
             }
             else
             if (Parsing.Charset.cIndicator(Text, P))
