@@ -44,13 +44,14 @@
     <DocumentationFile>bin\Debug\YamlSharp.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>none</DebugType>
+    <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\YamlSharp.XML</DocumentationFile>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -110,16 +111,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>REM cd "$(TargetDir)"
-REM del $(ProjectName).zip
-REM del $(ProjectName)Src.zip
-REM cd ..\..\..
-REM zip -9 -r -D "$(TargetDir)$(ProjectName)Src.zip" $(ProjectName) $(ProjectName)Test -x $(ProjectName)\bin\* -x $(ProjectName)\Help\* -x $(ProjectName)\obj\* -x $(ProjectName)\publish\* -x $(ProjectName)Test\bin\* -x $(ProjectName)Test\obj\* -x *.VisualState.xml
-REM cd "$(TargetDir)"
-REM copy ..\..\Readme.txt Readme.txt
-REM copy ..\..\ChangeLog.txt ChangeLog.txt
-REM copy "..\..\Help\Release\YAML Serializer.chm" "YAML Serializer.chm"
-REM zip -9 -n zip $(ProjectName).zip Readme.txt ChangeLog.txt YamlSharp.XML $(TargetFileName) "YAML Serializer.chm"
-</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
 </Project>
