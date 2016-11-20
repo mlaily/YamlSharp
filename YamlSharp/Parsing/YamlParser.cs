@@ -340,7 +340,7 @@ namespace YamlSharp.Parsing
         /// </summary>
         private static class Charsets
         {
-            #region only have to match 16 bits or less code points
+            #region Only have to match 16 bits or less code points
             public static bool cByteOrdermark(string text, int p) // [3] 
             {
                 char c = text[p];
@@ -348,47 +348,77 @@ namespace YamlSharp.Parsing
             }
             public static bool cIndicator(string text, int p) // [22]
             {
+                //return c < 0x100 &&
+                //     "-?:,[]{}#&*!|>'\"%@`".Contains(c);
                 char c = text[p];
-                return c < 0x100 &&
-                      "-?:,[]{}#&*!|>'\"%@`".Contains(c);
+                switch (c)
+                {
+                    case '-':
+                    case '?':
+                    case ':':
+                    case ',':
+                    case '[':
+                    case ']':
+                    case '{':
+                    case '}':
+                    case '#':
+                    case '&':
+                    case '*':
+                    case '!':
+                    case '|':
+                    case '>':
+                    case '\'':
+                    case '\"':
+                    case '%':
+                    case '@':
+                    case '`':
+                        return true;
+                    default:
+                        return false;
+                }
             }
             public static bool cFlowIndicator(string text, int p) // [23]
             {
+                //return c < 0x100 &&
+                //        ",[]{}".Contains(c);
                 char c = text[p];
-                return c < 0x100 &&
-                        ",[]{}".Contains(c);
+                switch (c)
+                {
+                    case ',':
+                    case '[':
+                    case ']':
+                    case '{':
+                    case '}':
+                        return true;
+                    default:
+                        return false;
+                }
             }
             public static bool nsDecDigit(string text, int p)
             {
                 char c = text[p];
-                return c < 0x100 &&
-                        ('0' <= c && c <= '9');
+                return ('0' <= c && c <= '9');
             }
             public static bool nsHexDigit(string text, int p)
             {
                 char c = text[p];
-                return c < 0x100 && (
-                            nsDecDigit(text, p) ||
-                            ('A' <= c && c <= 'F') ||
-                            ('a' <= c && c <= 'f')
-                            );
+                return (('0' <= c && c <= '9') // nsDecDigit
+                    || ('A' <= c && c <= 'F')
+                    || ('a' <= c && c <= 'f'));
             }
             public static bool nsAsciiLetter(string text, int p)
             {
                 char c = text[p];
-                return c < 0x100 && (
-                            ('A' <= c && c <= 'Z') ||
-                            ('a' <= c && c <= 'z')
-                            );
+                return (('A' <= c && c <= 'Z')
+                    || ('a' <= c && c <= 'z'));
             }
             public static bool nsWordChar(string text, int p)
             {
                 char c = text[p];
-                return c < 0x100 && (
-                            nsDecDigit(text, p) ||
-                            nsAsciiLetter(text, p) ||
-                            c == '-'
-                            );
+                return (('0' <= c && c <= '9')  // nsDecDigit
+                    || ('A' <= c && c <= 'Z')   // nsAsciiLetter
+                    || ('a' <= c && c <= 'z')   // nsAsciiLetter
+                    || c == '-');
             }
             public static bool sSpace(string text, int p)
             {
@@ -403,16 +433,47 @@ namespace YamlSharp.Parsing
             public static bool nsUriCharSub(string text, int p)
             {
                 char c = text[p];
-                return c < 0x100 && (
-                           nsWordChar(text, p) ||
-                           @"#;/?:@&=$,_.!~*'()[]".Contains(c)
-                           );
+                if (('0' <= c && c <= '9')    // nsWordChar
+                    || ('A' <= c && c <= 'Z') // nsWordChar
+                    || ('a' <= c && c <= 'z') // nsWordChar
+                    || c == '-')              // nsWordChar
+                {
+                    return true;
+                }
+                else
+                {
+                    switch (c)
+                    {
+                        case '#':
+                        case ';':
+                        case '/':
+                        case '?':
+                        case ':':
+                        case '@':
+                        case '&':
+                        case '=':
+                        case '$':
+                        case ',':
+                        case '_':
+                        case '.':
+                        case '!':
+                        case '~':
+                        case '*':
+                        case '\'':
+                        case '(':
+                        case ')':
+                        case '[':
+                        case ']':
+                            return true;
+                        default:
+                            return false;
+                    }
+                }
             }
             public static bool nsTagCharSub(string text, int p)
             {
                 char c = text[p];
-                return c < 0x100 &&
-                        nsUriCharSub(text, p) && !(c == '!' || cFlowIndicator(text, p));
+                return nsUriCharSub(text, p) && !(c == '!' || cFlowIndicator(text, p));
             }
             public static bool bChar(string text, int p)
             {
@@ -429,16 +490,16 @@ namespace YamlSharp.Parsing
             }
             #endregion
 
-            #region have to match 32 bits code points
+            #region Have to match 32 bits code points
             private static bool IsHighSurrogate(char c) => 0xD800 <= c && c <= 0xDBFF;
             private static bool IsLowSurrogate(char c) => 0xDC00 <= c && c <= 0xDFFF;
             public static bool nbJson(string text, int p, out int length) // [2] 
             {
                 char c = text[p];
-                if (c == 0x09 // tab
-                              // Basic Multilingual Plane, minus chars < 0x20. (control chars)
-                              // (Surrogate code values are in the range U+D800 through U+DFFF and are matched below.)
-                    || (0x20 <= c && c <= 0xD7FF)
+                // Basic Multilingual Plane, minus chars < 0x20. (control chars)
+                // (Surrogate code values are in the range U+D800 through U+DFFF and are matched below.)
+                if ((0x20 <= c && c <= 0xD7FF)
+                    || c == 0x09 // tab
                     || (0xE000 <= c && c <= 0xFFFF))
                 {
                     length = 1;
@@ -490,13 +551,11 @@ namespace YamlSharp.Parsing
             public static bool nbChar(string text, int p, out int length)
             {
                 char c = text[p];
-                if (// 16 bits:
-                    // (Surrogate code values are in the range U+D800 through U+DFFF.)
-                    (0xA0 <= c && c <= 0xD7FF)
+                // (Surrogate code values are in the range U+D800 through U+DFFF.)
+                if ((0x20 <= c && c <= 0x7E)
+                    || (0xA0 <= c && c <= 0xD7FF)
                     || (0xE000 <= c && c <= 0xFFFD && c != 0xFEFF /* - c_byte_order_mark */)
-                    // 8 bits:
                     || c == 0x85
-                    || (0x20 <= c && c <= 0x7E)
                     // || c == 0x0A // - b_char
                     // || c == 0x0D // - b_char
                     || c == 0x09)
@@ -522,13 +581,11 @@ namespace YamlSharp.Parsing
             }
             private static bool nsChar8And16BitsOny(char c)
             {
-                // 16 bits:
                 // (Surrogate code values are in the range U+D800 through U+DFFF.)
-                return (0xA0 <= c && c <= 0xD7FF)
+                return (0x21 /* - s_white */ <= c && c <= 0x7E)
+                    || (0xA0 <= c && c <= 0xD7FF)
                     || (0xE000 <= c && c <= 0xFFFD && c != 0xFEFF /* - c_byte_order_mark */)
-                    // 8 bits:
-                    || c == 0x85
-                    || (0x21 /* - s_white */ <= c && c <= 0x7E);
+                    || c == 0x85;
                 //  || c == 0x0A // - b_char
                 //  || c == 0x0D // - b_char
                 //  || c == 0x09 // - s_white
