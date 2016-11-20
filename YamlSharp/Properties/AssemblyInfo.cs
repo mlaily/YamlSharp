@@ -35,7 +35,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyVersion("0.9.0.2")]
 [assembly: AssemblyFileVersion("0.9.0.2")]
 
-// for test
-#if DEBUG
 [assembly: InternalsVisibleTo("YamlSharpTest")]
-#endif
