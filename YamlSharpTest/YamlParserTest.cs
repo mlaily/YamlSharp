@@ -483,7 +483,7 @@ namespace YamlSharpTest
                         "- Invalid use of BOM\n" +
                         "\ufeff\n" +
                         "- Inside a document.\n"),
-                    "A BOM (\\ufeff) must not appear inside a document."
+                        YamlParser.BomCannotAppearInsideDocumentError
                 );
 
                 // Other Invalid Char \u####
@@ -492,7 +492,7 @@ namespace YamlSharpTest
                         "- Invalid char appears\n" +
                         "\ufefe\n" +
                         "- Inside a document.\n"),
-                    "Extra content was found. Maybe indentation was incorrect."
+                        YamlParser.ExtraContentFoundError
                 );
 
                 // Other Invalid Char \x##
@@ -619,7 +619,7 @@ namespace YamlSharpTest
             {
                 AssertParseError(() =>
                     parser.Parse(Resources.Example5_10),
-                    "Reserved indicators '@' and '`' can't start a plain scalar."
+                    YamlParser.ReservedIndicatorsCantStartPlainScalarError
                 );
 
             }
@@ -928,7 +928,7 @@ namespace YamlSharpTest
             {
                 AssertParseError(() =>
                     parser.Parse(Resources.Example6_15),
-                    "The YAML directive must only be given at most once per document."
+                    YamlParser.YamlDirectiveMustOnlyOccurOncePerDocumentError
                 );
 
                 // It seems repeated YAML directives are allowed if a stream contains
@@ -1060,7 +1060,7 @@ namespace YamlSharpTest
             {
                 AssertParseError(() =>
                     parser.Parse(Resources.Example6_25a),
-                    "Empty local tag was found."
+                    YamlParser.EmptyLocalTagError
                 );
 
                 AssertResultsWithWarnings(
@@ -1098,7 +1098,7 @@ namespace YamlSharpTest
                 );
                 AssertParseError(() =>
                     parser.Parse("%TAG !e!\n"),
-                    "Invalid TAG directive found."
+                    YamlParser.InvalidTagDirectiveError
                 );
             }
 
@@ -1419,12 +1419,12 @@ namespace YamlSharpTest
             {
                 AssertParseError(() =>
                     parser.Parse(Resources.Example7_22a),
-                    "Closing brace ] was not found."
+                    YamlParser.ClosingBracketError
                 );
 
                 AssertParseError(() =>
                     parser.Parse(Resources.Example7_22b),
-                    "The implicit key was too long."
+                    YamlParser.ImplicitKeyTooLongError
                 );
             }
 
@@ -1502,17 +1502,17 @@ namespace YamlSharpTest
             {
                 AssertParseError(() =>
                     parser.Parse(Resources.Example8_3a),
-                    "Too many indentation was found."
+                    YamlParser.TooMuchIndentationError
                 );
 
                 AssertParseError(() =>
                     parser.Parse(Resources.Example8_3b),
-                    "Extra line was found. Maybe indentation was incorrect."
+                    YamlParser.ExtraLineFoundError
                 );
 
                 AssertParseError(() =>
                     parser.Parse(Resources.Example8_3c),
-                    "Extra line was found. Maybe indentation was incorrect."
+                    YamlParser.ExtraLineFoundError
                 );
             }
 

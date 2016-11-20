@@ -154,6 +154,33 @@ namespace YamlSharp.Parsing
                 warningNbCharLookup[c] = false; // Mark as already warned
             }
         }
+
+        private const string TabErrorMessagePart = " Tab character \\t cannot be used for indentation.";
+        internal const string ClosingDoubleQuoteError = "Closing “\"” was not found.";
+        internal const string ClosingDoubleQuoteAndTabError = "Closing “\"” was not found." + TabErrorMessagePart;
+        internal const string ClosingQuoteError = "Closing “'” was not found.";
+        internal const string ClosingQuoteAndTabError = "Closing “'” was not found." + TabErrorMessagePart;
+        internal const string ClosingBracketError = "Closing “]” was not found.";
+        internal const string ClosingBracketAndTabError = "Closing “]” was not found." + TabErrorMessagePart;
+        internal const string ClosingBraceError = "Closing “}” was not found.";
+        internal const string ClosingBraceAndTabError = "Closing “}” was not found." + TabErrorMessagePart;
+        internal const string ReservedIndicatorsCantStartPlainScalarError = "Reserved indicators “@” and “`” can't start a plain scalar.";
+        internal const string InvalidTagDirectiveError = "Invalid TAG directive found.";
+        internal const string YamlDirectiveMustOnlyOccurOncePerDocumentError = "The YAML directive must only be given at most once per document.";
+        internal const string EmptyLocalTagError = "Empty local tag was found.";
+        internal const string InvalidVerbatimTagError = "Invalid verbatim tag";
+        internal const string ImplicitKeyTooLongError = "The implicit key was too long.";
+        internal const string TabFoundForIndentationError = "Tab character found for indentation.";
+        internal const string TooMuchIndentationError = "Too much indentation was found.";
+        internal const string IllegalLiteralTextError = "Illegal literal text found.";
+        internal const string IllegalFoldedStringError = "Illegal folded string found.";
+        internal const string IllegalBlockMappingExplicitEntryError = "Illegal block mapping explicit entry";
+        internal const string BomCannotAppearInsideDocumentError = "A BOM (\\uFEFF) must not appear inside a document.";
+        internal const string PlainTextCannotStartWithIndicatorError = "Plain text cannot start with indicator characters -?:,[]{{}}#&*!|>'\"%@`";
+        internal const string ExtraLineFoundError = "Extra line was found. Maybe indentation was incorrect.";
+        internal const string ExtraContentFoundError = "Extra content was found. Maybe indentation was incorrect.";
+
+        internal const string KeepLineBreakForFoldedTextIsInvalidWarning = "Keep line breaks for folded text '>+' is invalid";
         #endregion
 
         #region Debug.Assert
@@ -249,7 +276,7 @@ namespace YamlSharp.Parsing
             if (verbatimTag.StartsWith("!", StringComparison.Ordinal))
             {
                 if (verbatimTag == "!")
-                    Error("Empty local tag was found.");
+                    Error(EmptyLocalTagError);
             }
             else
             {
@@ -808,7 +835,7 @@ namespace YamlSharp.Parsing
                 Action(() =>
                 {
                     if (YamlDirectiveAlreadyAppeared)
-                        Error("The YAML directive must only be given at most once per document.");
+                        Error(YamlDirectiveMustOnlyOccurOncePerDocumentError);
                     YamlDirective(version);
                     YamlDirectiveAlreadyAppeared = true;
                 });
@@ -823,7 +850,7 @@ namespace YamlSharp.Parsing
                     Text[P++] == '!' &&
                     cTagHandle(out tag_handle) && sSeparateInLine() &&
                     nsTagPrefix(out tag_prefix),
-                    "Invalid TAG directive found."
+                    InvalidTagDirectiveError
                 )
             ) &&
             Action(() => TagPrefixes.Add(tag_handle, tag_prefix));
@@ -904,7 +931,7 @@ namespace YamlSharp.Parsing
                     Text[P++] == '<' &&
                     OneAndRepeat(nsUriChar) &&
                     Text[P++] == '>',
-                    "Invalid verbatim tag"
+                    InvalidVerbatimTagError
                 ) &&
                 SetTag(GetStringValue());
         }
@@ -1004,8 +1031,7 @@ namespace YamlSharp.Parsing
                     nbDoubleText(n, c) &&
                     Text[P++] == '"',
                     c == YamlContext.FlowOut,
-                    "Closing “\"” was not found." +
-                    (TabCharFoundForIndentation ? " Tab character \\t can not be used for indentation." : "")
+                    TabCharFoundForIndentation ? ClosingDoubleQuoteAndTabError : ClosingDoubleQuoteError
                 ) &&
                 SetValue(CreateScalar("!!str", pos));
         }
@@ -1094,8 +1120,7 @@ namespace YamlSharp.Parsing
                     nbSingleText(n, c) &&
                     Text[P++] == '\'',
                     c == YamlContext.FlowOut,
-                    "Closing “'” was not found." +
-                    (TabCharFoundForIndentation ? " Tab character \\t can not be used for indentation." : "")
+                    TabCharFoundForIndentation ? ClosingQuoteAndTabError : ClosingQuoteError
                 ) &&
                 SetValue(CreateScalar("!!str", pos));
         }
@@ -1272,8 +1297,7 @@ namespace YamlSharp.Parsing
                                 sequence = CreateSequence(pos))) &&
                     Text[P++] == ']',
                     c == YamlContext.FlowOut,
-                    "Closing “]” was not found." +
-                    (TabCharFoundForIndentation ? " Tab character \\t can not be used for indentation." : "")
+                    TabCharFoundForIndentation ? ClosingBracketAndTabError : ClosingBracketError
                 )
             ) &&
             SetValue(sequence);
@@ -1320,8 +1344,7 @@ namespace YamlSharp.Parsing
                     Optional(ns_sFlowMapEntries(n, InFlow(c), mapping = CreateMapping(pos))) &&
                     Text[P++] == '}',
                     c == YamlContext.FlowOut,
-                    "Closing “}” was not found." +
-                    (TabCharFoundForIndentation ? " Tab character \\t can not be used for indentation." : "")
+                    TabCharFoundForIndentation ? ClosingBraceAndTabError : ClosingBraceError
                 )
             ) &&
             SetValue(mapping);
@@ -1447,7 +1470,7 @@ namespace YamlSharp.Parsing
             int start = P;
             if (nsFlowYamlNode(-1 /* not used */, c) && Optional(sSeparateInLine))
             {
-                ErrorUnless((P - start) < 1024, "The implicit key was too long.");
+                ErrorUnless((P - start) < 1024, ImplicitKeyTooLongError);
                 return true;
             }
             return false;
@@ -1458,7 +1481,7 @@ namespace YamlSharp.Parsing
             int start = P;
             if (cFlowJsonNode(-1 /* not used */, c) && Optional(sSeparateInLine))
             {
-                ErrorUnless((P - start) < 1024, "The implicit key was too long.");
+                ErrorUnless((P - start) < 1024, ImplicitKeyTooLongError);
                 return true;
             }
             return false;
@@ -1503,7 +1526,7 @@ namespace YamlSharp.Parsing
                     (RewindUnless(() => sSeparate(n, c) && nsFlowContent(n, c)) || eScalar())))
                 return true;
             if (Text[P] == '@' || Text[P] == '`')
-                Error("Reserved indicators '@' and '`' can't start a plain scalar.");
+                Error(ReservedIndicatorsCantStartPlainScalarError);
             return false;
         }
         #endregion
@@ -1601,11 +1624,11 @@ namespace YamlSharp.Parsing
                 false // force Rewind
             );
             if (m < 1 && TabCharFoundForIndentation)
-                Error("Tab character found for indentation.");
+                Error(TabFoundForIndentationError);
             if (m < max - n)
             {
                 P = maxp;
-                Error("Too much indentation was found.");
+                Error(TooMuchIndentationError);
             }
             return m <= 1 ? 1 : m;
         }
@@ -1622,7 +1645,7 @@ namespace YamlSharp.Parsing
                 Text[P++] == '|' &&
                 c_bBlockHeader(out m, out t) &&
                 Action(() => { if (m == 0) m = AutoDetectIndentation(n); }) &&
-                ErrorUnless(lLiteralContent(n + m, t), "Illegal literal text found.")
+                ErrorUnless(lLiteralContent(n + m, t), IllegalLiteralTextError)
             ) &&
             SetValue(CreateScalar("!!str", pos));
         }
@@ -1661,10 +1684,9 @@ namespace YamlSharp.Parsing
             return RewindUnless(() =>
                 Text[P++] == '>' &&
                 c_bBlockHeader(out m, out t) &&
-                WarningIf(t == ChompingIndicator.Keep,
-                  "Keep line breaks for folded text '>+' is invalid") &&
+                WarningIf(t == ChompingIndicator.Keep, KeepLineBreakForFoldedTextIsInvalidWarning) &&
                 Action(() => { if (m == 0) m = AutoDetectIndentation(n); }) &&
-                ErrorUnless(lFoldedContent(n + m, t), "Illegal folded string found.")
+                ErrorUnless(lFoldedContent(n + m, t), IllegalFoldedStringError)
             ) &&
             SetValue(CreateScalar("!!str", pos));
         }
@@ -1807,7 +1829,7 @@ namespace YamlSharp.Parsing
                 c_lBlockMapExplicitKey(n, ref _key) &&
                 ErrorUnless(
                     (lBlockMapExplicitValue(n) || eNode()),
-                    "Illegal block mapping explicit entry"
+                    IllegalBlockMappingExplicitEntryError
                 )
             ) &&
             Assign(out key, _key);
@@ -2020,22 +2042,22 @@ namespace YamlSharp.Parsing
 
             if (BomReduced)
             {
-                Error("A BOM (\\uFEFF) must not appear inside a document.");
+                Error(BomCannotAppearInsideDocumentError);
             }
             else
             if (Parsing.Charset.cIndicator(Text, P))
             {
-                Error("Plain text can not start with indicator characters -?:,[]{{}}#&*!|>'\"%@`");
+                Error(PlainTextCannotStartWithIndicatorError);
             }
             else
             if (Text[P] == ' ' && StartOfLine())
             {
-                Error("Extra line was found. Maybe indentation was incorrect.");
+                Error(ExtraLineFoundError);
             }
             else
             if (Parsing.Charset.nbChar(Text, P, out dontCare))
             {
-                Error("Extra content was found. Maybe indentation was incorrect.");
+                Error(ExtraContentFoundError);
             }
             else
             {

@@ -187,7 +187,7 @@ namespace YamlSharp.Parsing
         /// Report error by throwing <see cref="ParseErrorException"/> when the <paramref name="rule"/> does not match.
         /// </summary>
         /// <param name="rule">Some reduction rule that must match.</param>
-        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
+        /// <param name="message">Error message</param>
         /// <returns>Always true; otherwise an exception thrown.</returns>
         protected bool ErrorUnless(bool rule, string message)
         {
@@ -199,7 +199,7 @@ namespace YamlSharp.Parsing
         /// Report error by throwing <see cref="ParseErrorException"/> when the <paramref name="rule"/> does not match.
         /// </summary>
         /// <param name="rule">Some reduction rule that must match.</param>
-        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
+        /// <param name="message">Error message</param>
         /// <returns>Always true; otherwise an exception is thrown.</returns>
         protected bool ErrorUnless(Func<bool> rule, string message)
         {
@@ -212,7 +212,7 @@ namespace YamlSharp.Parsing
         /// <param name="rule">Some reduction rule that must match.</param>
         /// <param name="toBeError">Additional condition: if this parameter is false, 
         /// rewinding occurs, instead of throwing exception.</param>
-        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
+        /// <param name="message">Error message</param>
         /// <returns>true if the reduction rule matches; otherwise false.</returns>
         protected bool ErrorUnlessWithAdditionalCondition(Func<bool> rule, bool toBeError, string message)
         {
@@ -231,7 +231,7 @@ namespace YamlSharp.Parsing
         /// Report error by throwing <see cref="ParseErrorException"/> when <paramref name="condition"/> is true.
         /// </summary>
         /// <param name="condition">True to throw exception.</param>
-        /// <param name="message">Error message as <see cref="string.Format(string,object[])"/> template</param>
+        /// <param name="message">Error message</param>
         /// <returns>Always true.</returns>
         protected bool ErrorIf(bool condition, string message)
         {
