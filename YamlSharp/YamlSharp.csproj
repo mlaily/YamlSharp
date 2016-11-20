@@ -74,6 +74,7 @@
     <Compile Include="Model\YamlScalar.cs" />
     <Compile Include="Model\YamlSequence.cs" />
     <Compile Include="RehashableDictionary.cs" />
+    <Compile Include="Serialization\ObjectActivator.cs" />
     <Compile Include="Serialization\YamlSerializeAttribute.cs" />
     <Compile Include="Serialization\YamlSerializer.cs" />
     <Compile Include="Unused\YamlDoubleQuoteEscaping.cs" />
