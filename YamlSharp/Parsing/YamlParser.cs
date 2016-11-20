@@ -423,13 +423,58 @@ namespace YamlSharp.Parsing
             {
                 char c = text[p];
                 return c == 0x2029 ||  // paragraph separator
-                        c == 0x2028 ||  // line separator
-                        c == 0x85 ||    // next line
-                        c == 0x0c;      // form feed
+                       c == 0x2028 ||  // line separator
+                       c == 0x85 ||    // next line
+                       c == 0x0C;      // form feed
             }
             #endregion
 
             #region have to match 32 bits code points
+            private static bool IsHighSurrogate(char c) => 0xD800 <= c && c <= 0xDBFF;
+            private static bool IsLowSurrogate(char c) => 0xDC00 <= c && c <= 0xDFFF;
+            public static bool nbJson(string text, int p, out int length) // [2] 
+            {
+                char c = text[p];
+                if (c == 0x09 // tab
+                              // Basic Multilingual Plane, minus chars < 0x20. (control chars)
+                              // (Surrogate code values are in the range U+D800 through U+DFFF and are matched below.)
+                    || (0x20 <= c && c <= 0xD7FF)
+                    || (0xE000 <= c && c <= 0xFFFF))
+                {
+                    length = 1;
+                    return true;
+                }
+                // High surrogate
+                else if (IsHighSurrogate(c))
+                {
+                    // Try to match a low surrogate following the high surrogate
+                    char c2 = text[p + 1];
+                    if (IsLowSurrogate(c2))
+                    {
+                        // Found a 32 bits code point
+                        length = 2;
+                        return true;
+                    }
+                    else
+                    {
+                        // We didn't found a low surrogate following our high surrogate.
+                        // Json seems to allow a high surrogate code point not followed by a low surrogate though,
+                        // even if the unicode standard says this is not supposed to happen.
+                        length = 1;
+                        return true;
+                    }
+                }
+                else if (IsLowSurrogate(c))
+                {
+                    // Low surrogate occuring first. Json seems to allow this,
+                    // but the unicode standard says this is not supposed to happen. Whatever... 
+                    length = 1;
+                    return true;
+                }
+
+                length = 0;
+                return false;
+            }
             //public static bool cPrintable(char c) // [1] 
             //{
             //    return
@@ -442,53 +487,8 @@ namespace YamlSharp.Parsing
             //        c == 0x0a ||
             //        c == 0x09;
             //}
-            public static bool nbJson(string text, int p, out int length) // [2] 
-            {
-                length = 0;
-                char c = text[p];
-                bool matchedHighSurrogate = false;
-                if (c == 0x09 // tab
-                              // Basic Multilingual Plane, minus chars < 0x20. (control chars)
-                              // (Surrogate code values are in the range U+D800 through U+DFFF and are matched below.)
-                    || (0x20 <= c && c <= 0xD7FF)
-                    || (0xE000 <= c && c <= 0xFFFF))
-                {
-                    length++;
-                    return true;
-                }
-                // High surrogate
-                else if (0xD800 <= c && c <= 0xDBFF)
-                {
-                    // Json seems to allow a high surrogate code point not followed by a low surrogate,
-                    // even if the unicode standard says this is not supposed to happen.
-                    length++;
-                    matchedHighSurrogate = true;
-                    // We will try to find a matching low surrogate below...
-                }
-                else if (0xDC00 <= c && c <= 0xDFFF)
-                {
-                    // Low surrogate occuring first. Json seems to allow this,
-                    // but the unicode standard says this is not supposed to happen. whatever... 
-                    length++;
-                    return true;
-                }
-
-                if (matchedHighSurrogate)
-                {
-                    // Try to match a low surrogate following the high surrogate
-                    char c2 = text[p + 1];
-                    if (0xDC00 <= c2 && c2 <= 0xDFFF)
-                        length++;
-                    // Json seems to allow a high surrogate code point not followed by a low surrogate,
-                    // even if the unicode standard says this is not supposed to happen.
-                    return true;
-                }
-
-                return false;
-            }
             public static bool nbChar(string text, int p, out int length)
             {
-                length = 0;
                 char c = text[p];
                 if (// 16 bits:
                     // (Surrogate code values are in the range U+D800 through U+DFFF.)
@@ -501,53 +501,60 @@ namespace YamlSharp.Parsing
                     // || c == 0x0D // - b_char
                     || c == 0x09)
                 {
-                    length++;
+                    length = 1;
                     return true;
                 }
                 // 32 bits (U+10000 to U+10FFFF):
                 // High surrogate ...
-                else if (0xD800 <= c && c <= 0xDBFF)
+                else if (IsHighSurrogate(c))
                 {
                     char c2 = text[p + 1];
                     // ...followed by low surrogate 
-                    if (0xDC00 <= c2 && c2 <= 0xDFFF)
+                    if (IsLowSurrogate(c2))
                     {
-                        length += 2;
+                        length = 2;
                         return true;
                     }
                 }
+
+                length = 0;
                 return false;
             }
-            public static bool nsChar(string text, int p, out int length)
+            private static bool nsChar8And16BitsOny(char c)
             {
-                length = 0;
-                char c = text[p];
-                if (// 16 bits:
-                    // (Surrogate code values are in the range U+D800 through U+DFFF.)
-                    (0xA0 <= c && c <= 0xD7FF)
+                // 16 bits:
+                // (Surrogate code values are in the range U+D800 through U+DFFF.)
+                return (0xA0 <= c && c <= 0xD7FF)
                     || (0xE000 <= c && c <= 0xFFFD && c != 0xFEFF /* - c_byte_order_mark */)
                     // 8 bits:
                     || c == 0x85
-                    || (0x21 /* - s_white */ <= c && c <= 0x7E))
-                // || c == 0x0A // - b_char
-                // || c == 0x0D // - b_char
-                // || c == 0x09 // - s_white
+                    || (0x21 /* - s_white */ <= c && c <= 0x7E);
+                //  || c == 0x0A // - b_char
+                //  || c == 0x0D // - b_char
+                //  || c == 0x09 // - s_white
+            }
+            public static bool nsChar(string text, int p, out int length)
+            {
+                char c = text[p];
+                if (nsChar8And16BitsOny(c))
                 {
-                    length++;
+                    length = 1;
                     return true;
                 }
                 // 32 bits (U+10000 to U+10FFFF):
                 // High surrogate ...
-                else if (0xD800 <= c && c <= 0xDBFF)
+                else if (IsHighSurrogate(c))
                 {
                     char c2 = text[p + 1];
                     // ...followed by low surrogate 
-                    if (0xDC00 <= c2 && c2 <= 0xDFFF)
+                    if (IsLowSurrogate(c2))
                     {
-                        length += 2;
+                        length = 2;
                         return true;
                     }
                 }
+
+                length = 0;
                 return false;
             }
             public static bool nsAnchorChar(string text, int p, out int length)
@@ -579,19 +586,37 @@ namespace YamlSharp.Parsing
                 {
                     case Context.FlowOut:
                     case Context.BlockKey:
-                        return Charsets.nsPlainSafeOut(text, p, out length);
+                        return nsPlainSafeOut(text, p, out length);
                     case Context.FlowIn:
                     case Context.FlowKey:
-                        return Charsets.nsPlainSafeIn(text, p, out length);
+                        return nsPlainSafeIn(text, p, out length);
                     default:
                         throw new NotImplementedException();
                 }
             }
             public static bool PrecedingIsNsChar(string text, int p)
             {
-                int dontCare;
-                return p != 0 &&
-                    Charsets.nsChar(text, p - 1, out dontCare);
+                if (p == 0)
+                    return false;
+
+                char c = text[p - 1];
+                if (nsChar8And16BitsOny(c))
+                {
+                    return true;
+                }
+                else
+                {
+                    // We also have to try to match a 32 bits code point
+                    if (p < 2)
+                    {
+                        return false;
+                    }
+                    else
+                    {
+                        char cHigh = text[p - 2];
+                        return IsHighSurrogate(cHigh) && IsLowSurrogate(c);
+                    }
+                }
             }
             #endregion
         }
