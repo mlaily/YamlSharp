@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using YamlSharp;
+using YamlSharp.Serialization;
 
 namespace YamlSharp.Model
 {
@@ -107,7 +107,7 @@ namespace YamlSharp.Model
         /// // "a\n  b\ncde"        // original line breaks are lost
         /// </code>
         /// </example>
-        public bool NormalizeLineBreaks = true;
+        public bool NormalizeLineBreaks { get; set; } = true;
         /// <summary>
         /// If true, all <see cref="YamlScalar"/>s whose text expression contains line breaks 
         /// will be presented as double quoted texts, where the line break characters are escaped 
@@ -191,7 +191,7 @@ namespace YamlSharp.Model
         /// // "a\n  b\ncde"        // original line breaks are lost
         /// </code>
         /// </example>
-        public bool ExplicitlyPreserveLineBreaks = true;
+        public bool ExplicitlyPreserveLineBreaks { get; set; } = true;
         /// <summary>
         /// Line break to be used when <see cref="YamlNode"/> is presented in YAML stream. 
         /// "\r", "\r\n", "\n" are allowed. "\r\n" is defalut.
@@ -260,7 +260,7 @@ namespace YamlSharp.Model
         /// // "a\n  b\ncde"        // original line breaks are lost
         /// </code>
         /// </example>
-        public string LineBreakForOutput = "\r\n";
+        public string LineBreakForOutput { get; set; } = "\r\n";
         /// <summary>
         /// <para>The YAML parser normalizes line breaks in a YAML stream to this value.</para>
         /// 
@@ -350,11 +350,11 @@ namespace YamlSharp.Model
         /// // "a\n  b\ncde"        // original line breaks are lost
         /// </code>
         /// </example>
-        public string LineBreakForInput = "\n";
+        public string LineBreakForInput { get; set; } = "\n";
         /// <summary>
-        /// If true, tag for the root node is omitted by <see cref="YamlSharp.Serialization.YamlSerializer"/>.
+        /// If true, tag for the root node is omitted by <see cref="YamlSerializer"/>.
         /// </summary>
-        public bool OmitTagForRootNode = false;
+        public bool OmitTagForRootNode { get; set; } = false;
         /// <summary>
         /// If true, the verbatim style of a tag, i.e. !&lt; &gt; is avoided as far as possible.
         /// </summary>
@@ -378,7 +378,7 @@ namespace YamlSharp.Model
         {
             TagResolver.AddRule<T>(tag, regex, decode, encode);
         }
-        internal YamlTagResolver TagResolver = new YamlTagResolver();
+        internal YamlTagResolver TagResolver { get; set; } = new YamlTagResolver();
 
         /// <summary>
         /// Add an ability of instantiating an instance of a class that has no default constructer.
@@ -417,8 +417,7 @@ namespace YamlSharp.Model
         {
             Activator.Add<T>(activator);
         }
-        internal YamlSharp.Serialization.ObjectActivator Activator =
-            new YamlSharp.Serialization.ObjectActivator();
+        internal ObjectActivator Activator { get; } = new ObjectActivator();
 
         /// <summary>
         /// Gets or sets CultureInfo with which the .NET native values are converted
@@ -429,7 +428,6 @@ namespace YamlSharp.Model
             get { return TypeConverter.Culture; }
             set { TypeConverter.Culture = value; }
         }
-        internal YamlSharp.Serialization.EasyTypeConverter TypeConverter =
-            new YamlSharp.Serialization.EasyTypeConverter();
+        internal EasyTypeConverter TypeConverter { get; } = new EasyTypeConverter();
     }
 }
