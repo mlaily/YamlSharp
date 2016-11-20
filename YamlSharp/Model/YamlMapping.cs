@@ -156,7 +156,7 @@ namespace YamlSharp.Model
         {
             mapping.Added += ChildAdded;
             mapping.Removed += ChildRemoved;
-            if (nodes.Length / 2 != nodes.Length / 2.0)
+            if (nodes.Length % 2 != 0)
                 throw new ArgumentException("Even number of arguments are expected.");
             Tag = DefaultTagPrefix + "map";
             for (int i = 0; i < nodes.Length; i += 2)

@@ -234,7 +234,7 @@ namespace YamlSharp.Parsing
         {
             Debug.Assert(verbatimTag != "");
             // validate tag
-            if (verbatimTag.StartsWith("!"))
+            if (verbatimTag.StartsWith("!", StringComparison.Ordinal))
             {
                 if (verbatimTag == "!")
                     Error("Empty local tag was found.");

@@ -46,7 +46,7 @@ namespace YamlSharp.Serialization
 
         private static Type TypeFromTag(string tag)
         {
-            if (tag.StartsWith(YamlNode.DefaultTagPrefix))
+            if (tag.StartsWith(YamlNode.DefaultTagPrefix, StringComparison.Ordinal))
             {
                 switch (tag.Substring(YamlNode.DefaultTagPrefix.Length))
                 {

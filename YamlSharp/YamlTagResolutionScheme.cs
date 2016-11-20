@@ -191,7 +191,7 @@ namespace YamlSharp
             {
                 algorithms.Add(
                     entry.Key,
-                    new Regex("^(" + entry.Value + ")$")
+                    new Regex("^(" + entry.Value + ")$", RegexOptions.Compiled)
                 );
             }
 
@@ -281,7 +281,7 @@ namespace YamlSharp
         {
             Tag = YamlNode.ExpandTag(tag);
             PatternSource = regex;
-            Pattern = new Regex("^(?:" + regex + ")$");
+            Pattern = new Regex("^(?:" + regex + ")$", RegexOptions.Compiled);
             Decoder = decoder;
             Encoder = encoder;
         }

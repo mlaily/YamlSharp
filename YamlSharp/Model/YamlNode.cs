@@ -840,7 +840,7 @@ namespace YamlSharp.Model
         /// <returns>Tag in formal style.</returns>
         public static string ExpandTag(string tag)
         {
-            if (tag.StartsWith("!!"))
+            if (tag.StartsWith("!!", StringComparison.Ordinal))
                 return DefaultTagPrefix + tag.Substring(2);
             return tag;
         }
@@ -864,7 +864,7 @@ namespace YamlSharp.Model
         /// <returns>Tag in compact style.</returns>
         public static string ShorthandTag(string tag)
         {
-            if (tag != null && tag.StartsWith(DefaultTagPrefix))
+            if (tag != null && tag.StartsWith(DefaultTagPrefix, StringComparison.Ordinal))
                 return "!!" + tag.Substring(DefaultTagPrefix.Length);
             return tag;
         }

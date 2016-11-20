@@ -564,7 +564,7 @@ namespace YamlSharp
                 return "";
             if (config.DontUseVerbatimTag)
             {
-                if (tag.StartsWith("!"))
+                if (tag.StartsWith("!", StringComparison.Ordinal))
                 {
                     tag = UriEncoding.EscapeForTag(tag);
                 }
