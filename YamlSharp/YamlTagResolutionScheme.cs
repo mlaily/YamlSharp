@@ -24,7 +24,7 @@ namespace YamlSharp
         /// <summary>
         /// Add default tag resolution rules to the rule list.
         /// </summary>
-        void AddDefaultRules()
+        private void AddDefaultRules()
         {
             BeginUpdate();
             AddRule<int>("!!int", @"([-+]?(0|[1-9][0-9_]*))",
@@ -104,7 +104,7 @@ namespace YamlSharp
         /// <summary>
         /// List of tag resolution rules.
         /// </summary>
-        List<YamlTagResolutionRule> Rules = new List<YamlTagResolutionRule>();
+        private List<YamlTagResolutionRule> Rules = new List<YamlTagResolutionRule>();
         /// <summary>
         /// Add a tag resolution rule that is invoked when <paramref name="regex"/> matches 
         /// the <see cref="YamlScalar.Value">Value of</see> a <see cref="YamlScalar"/> node.
@@ -144,7 +144,7 @@ namespace YamlSharp
                 Update();
         }
 
-        int UpdateCounter = 0;
+        private int UpdateCounter = 0;
         /// <summary>
         /// Supress invoking slow internal calculation method when 
         /// <see cref="AddRule&lt;T&gt;(string,string,Func&lt;Match,T&gt;,Func&lt;T,string&gt;)"/> called.
@@ -168,8 +168,8 @@ namespace YamlSharp
                 Update();
         }
 
-        Dictionary<string, Regex> algorithms;
-        void Update()
+        private Dictionary<string, Regex> algorithms;
+        private void Update()
         {
             // Tag to joined regexp source
             var sources = new Dictionary<string, string>();
@@ -304,5 +304,4 @@ namespace YamlSharp
             return Encoder != null;
         }
     }
-
 }

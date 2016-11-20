@@ -6,7 +6,7 @@ using System.Text;
 namespace YamlSharp.Model
 {
     /// <summary>
-    /// Abstract base class of <see cref="YamlNode"/> that have child nodes.
+    /// Abstract base class for <see cref="YamlNode"/> that have child nodes.
     /// 
     /// <see cref="YamlMapping"/> and <see cref="YamlSequence"/> inherites from this class.
     /// </summary>
@@ -18,11 +18,7 @@ namespace YamlSharp.Model
         /// </summary>
         /// <returns>Hash value for the object.</returns>
         protected override int GetHashCodeCore()
-        {
-            return GetHashCodeCoreSub(0,
-                new Dictionary<YamlNode, int>(
-                        TypeUtils.EqualityComparerByRef<YamlNode>.Default));
-        }
+            => GetHashCodeCoreSub(0, new Dictionary<YamlNode, int>(TypeUtils.EqualityComparerByRef<YamlNode>.Default));
 
         /// <summary>
         /// Calculates the hash code for a collection object. This function is called recursively 

@@ -378,7 +378,7 @@ namespace YamlSharp.Model
         {
             TagResolver.AddRule<T>(tag, regex, decode, encode);
         }
-        internal YamlTagResolver TagResolver { get; set; } = new YamlTagResolver();
+        internal YamlTagResolver TagResolver { get; } = new YamlTagResolver();
 
         /// <summary>
         /// Add an ability of instantiating an instance of a class that has no default constructer.

@@ -7,7 +7,7 @@ namespace YamlSharp.Model
 {
     /// <summary>
     /// Represents a mapping node in a YAML document. 
-    /// Use <see cref="IDictionary&lt;YamlNode,YamlNode&gt;">IDictionary&lt;YamlNode,YamlNode&gt;</see> interface to
+    /// Use <see cref="IDictionary{YamlNode,YamlNode}"/> interface to
     /// manipulate child key/value pairs.
     /// </summary>
     /// <remarks>
@@ -44,18 +44,16 @@ namespace YamlSharp.Model
     /// </example>
     public class YamlMapping : YamlComplexNode, IDictionary<YamlNode, YamlNode>
     {
-        RehashableDictionary<YamlNode, YamlNode> mapping =
-            new RehashableDictionary<YamlNode, YamlNode>();
+        RehashableDictionary<YamlNode, YamlNode> mapping = new RehashableDictionary<YamlNode, YamlNode>();
 
         /// <summary>
         /// Calculates the hash code for a collection object. This function is called recursively 
-        /// on the child objects with the sub cache code repository for the nodes already appeared
+        /// on the child objects with the sub cache code repository for the nodes that have already appeared
         /// in the node tree.
         /// </summary>
         /// <param name="path">The cache code for the path where this node was found.</param>
         /// <param name="dict">Repository of the nodes that already appeared in the node tree.
         /// Sub hash code for the nodes can be refered to from this dictionary.</param>
-        /// <returns></returns>
         protected override int GetHashCodeCoreSub(int path, Dictionary<YamlNode, int> dict)
         {
             if (dict.ContainsKey(this))
@@ -69,23 +67,23 @@ namespace YamlSharp.Model
             var result = Tag.GetHashCode();
             foreach (var item in this)
             {
-                int hash_for_key;
+                int hashForKey;
                 if (item.Key is YamlComplexNode)
                 {
-                    hash_for_key = GetHashCodeCoreSub(path * 317, dict);
+                    hashForKey = GetHashCodeCoreSub(path * 317, dict);
                 }
                 else
                 {
-                    hash_for_key = item.Key.GetHashCode();
+                    hashForKey = item.Key.GetHashCode();
                 }
-                result += hash_for_key * 971;
+                result += hashForKey * 971;
                 if (item.Value is YamlComplexNode)
                 {
-                    result += GetHashCodeCoreSub(path * 317 + hash_for_key * 151, dict);
+                    result += GetHashCodeCoreSub(path * 317 + hashForKey * 151, dict);
                 }
                 else
                 {
-                    result += item.Value.GetHashCode() ^ hash_for_key;
+                    result += item.Value.GetHashCode() ^ hashForKey;
                 }
             }
             return result;
@@ -114,27 +112,27 @@ namespace YamlSharp.Model
             foreach (var item in this)
             {
                 var candidates = bb.ItemsFromHashCode(item.Key.GetHashCode());
-                KeyValuePair<YamlNode, YamlNode> theone = new KeyValuePair<YamlNode, YamlNode>();
+                KeyValuePair<YamlNode, YamlNode> theOne = new KeyValuePair<YamlNode, YamlNode>();
                 if (!candidates.Any(subitem =>
                 {
                     if (item.Key.Equals(subitem.Key, repository))
                     {
-                        theone = subitem;
+                        theOne = subitem;
                         return true;
                     }
                     repository.CurrentStatus = status;
                     return false;
                 }))
                     return false;
-                if (!item.Value.Equals(theone.Value, repository))
+                if (!item.Value.Equals(theOne.Value, repository))
                     return false;
             }
             return true;
         }
 
-        internal ICollection<KeyValuePair<YamlNode, YamlNode>> ItemsFromHashCode(int key_hash)
+        internal ICollection<KeyValuePair<YamlNode, YamlNode>> ItemsFromHashCode(int keyHash)
         {
-            return mapping.ItemsFromHash(key_hash);
+            return mapping.ItemsFromHash(keyHash);
         }
 
         /// <summary>

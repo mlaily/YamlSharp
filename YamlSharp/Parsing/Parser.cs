@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace YamlSharp.Parsing
 {
     /// <summary>
-    /// <para>When <see cref="Parser&lt;State&gt;"/> reports syntax error by exception, this class is thrown.</para>
+    /// <para>When <see cref="Parser{State}"/> reports syntax error by exception, this class is thrown.</para>
     /// 
     /// <para>Sytax errors can also be reported by simply returing false with giving some warnings.</para>
     /// </summary>
@@ -21,7 +21,16 @@ namespace YamlSharp.Parsing
         public ParseErrorException(string message) : base(message) { }
     }
 
+    /// <summary>
+    /// Represents a charset parser validating a single character from the "<paramref name="p"/>" position in "<paramref name="text"/>".
+    /// </summary>
     public delegate bool CharsetValidator(string text, int p);
+    /// <summary>
+    /// Represents a charset parser validating a character from the "<paramref name="p"/>" position in "<paramref name="text"/>".
+    /// Unlike <see cref="CharsetValidator"/>, the characters validated by this method can be 32 bits unicode code points.
+    /// <paramref name="length"/> is either 0 (No character was matched - false will be returned),
+    /// 1 (a single UTF-16 character was matched), or 2 (a single 32 bits unicode code point was matched).
+    /// </summary>
     public delegate bool UnicodeCharsetValidator(string text, int p, out int length);
 
     /// <summary>

@@ -674,7 +674,7 @@ namespace YamlSharp.Model
         /// Gets YAML's default tag prefix.
         /// </summary>
         /// <value>"tag:yaml.org,2002:"</value>
-        public static string DefaultTagPrefix { get; private set; }
+        public static string DefaultTagPrefix { get; }
         /// <summary>
         /// Gets or sets the default configuration to customize serialization of <see cref="YamlNode"/>.
         /// </summary>
