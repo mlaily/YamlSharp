@@ -151,14 +151,6 @@ namespace YamlSharp.Parsing
             char c = text[p];
             return c == '\n' || c == '\r';
         }
-        public static bool nbCharWithWarning(string text, int p)
-        {
-            char c = text[p];
-            return c == 0x2029 ||  // paragraph separator
-                   c == 0x2028 ||  // line separator
-                   c == 0x85 ||    // next line
-                   c == 0x0C;      // form feed
-        }
         #endregion
 
         #region Have to match 32 bits code points

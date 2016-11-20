@@ -77,7 +77,7 @@ namespace YamlSharp.Parsing
             Config = config;
             Warnings.Clear();
             ParseResult.Clear();
-            AlreadyWarnedChars.Clear();
+            InitializeWarningNbCharLookup();
             if (Parse(lYamlStream, yaml + "\0")) // '\0' = guard char
                 return ParseResult;
             return new List<YamlNode>();
@@ -88,7 +88,7 @@ namespace YamlSharp.Parsing
             Config = config;
             Warnings.Clear();
             ParseResult.Clear();
-            AlreadyWarnedChars.Clear();
+            InitializeWarningNbCharLookup();
             return Parse(() => nsPlain(0, YamlContext.BlockKey) && EndOfFile(), plain + "\0"); // '\0' = guard char
         }
 
@@ -132,14 +132,26 @@ namespace YamlSharp.Parsing
             if (version != "1.2")
                 Warning($"YAML version %{version} was specified but ignored");
         }
-        Dictionary<char, bool> AlreadyWarnedChars = new Dictionary<char, bool>();
+        private const char MaxWarningNbCharValue = (char)0x2029;
+        // TODO: replace with BitArray? (after profiling)
+        private bool[] warningNbCharLookup;
+        private void InitializeWarningNbCharLookup()
+        {
+            warningNbCharLookup = new bool[MaxWarningNbCharValue + 1];
+            warningNbCharLookup[0x2029] = true; // paragraph separator
+            warningNbCharLookup[0x2028] = true; // line separator
+            warningNbCharLookup[0x85] = true; // next line
+            warningNbCharLookup[0x0C] = true; // form feed
+        }
         private void WarnIfCharWasBreakInYAML1_1()
         {
-            if (Parsing.Charset.nbCharWithWarning(Text, P) && !AlreadyWarnedChars.ContainsKey(Text[P]))
+            char c = Text[P];
+            if (c <= MaxWarningNbCharValue && warningNbCharLookup[c])
             {
-                var charValue = Text[P] < 0x100 ? $"\\x{(int)Text[P]:x2}" : $"\\u{(int)Text[P]:x4}";
+                // c is a warning non-break char not already found
+                var charValue = c < 0x100 ? $"\\x{(int)c:x2}" : $"\\u{(int)c:x4}";
                 Warning($"{charValue} is treated as non-break character unlike YAML 1.1");
-                AlreadyWarnedChars.Add(Text[P], true);
+                warningNbCharLookup[c] = false; // Mark as already warned
             }
         }
         #endregion
