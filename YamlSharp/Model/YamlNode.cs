@@ -674,7 +674,7 @@ namespace YamlSharp.Model
         /// Gets YAML's default tag prefix.
         /// </summary>
         /// <value>"tag:yaml.org,2002:"</value>
-        public static string DefaultTagPrefix { get; }
+        public const string DefaultTagPrefix = "tag:yaml.org,2002:";
         /// <summary>
         /// Gets or sets the default configuration to customize serialization of <see cref="YamlNode"/>.
         /// </summary>
@@ -685,7 +685,6 @@ namespace YamlSharp.Model
         static YamlNode()
         {
             // Initializing order matters !
-            DefaultTagPrefix = "tag:yaml.org,2002:";
             DefaultConfig = new YamlConfig();
             DefaultParser = new YamlParser();
             DefaultPresenter = new YamlPresenter();

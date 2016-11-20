@@ -119,7 +119,7 @@ namespace YamlSharp.Parsing
         /// </summary>
         /// <param name="name">Name of the directive</param>
         /// <param name="args">Parameters for the directive</param>
-        protected virtual void ReservedDirective(string name, params string[] args)
+        protected virtual void ReservedDirective(string name, IList<string> args)
         {
             Warning($"Custom directive %{name} was ignored");
         }
@@ -560,7 +560,9 @@ namespace YamlSharp.Parsing
                     s += Text.Substring(P + i, length);
                 }
                 else
+                {
                     break;
+                }
             Error($"{s} is not a valid escape sequence.");
         }
         bool HexValue(int p, out int v)
@@ -634,7 +636,7 @@ namespace YamlSharp.Parsing
         }
         private bool StartOfLine() // [66, 79, 206]
         {   // TODO: how about "---" ?
-            return P == 0 || Text[P - 1] == '\n' || Text[P - 1] == '\r' || Text[P - 1] == '\ufeff';
+            return P == 0 || Text[P - 1] == '\n' || Text[P - 1] == '\r' || Text[P - 1] == '\uFEFF';
         }
         #endregion
         #region 6.3 Line Prefixes
@@ -776,7 +778,7 @@ namespace YamlSharp.Parsing
                     sSeparateInLine() && Save(() => OneAndRepeat(nsChar), s => args.Add(s))
                 )
             ) &&
-            Action(() => ReservedDirective(name, args.ToArray()));
+            Action(() => ReservedDirective(name, args));
         }
         bool YamlDirectiveAlreadyAppeared = false;
         bool nsYamlDirective() // [86] 
@@ -941,7 +943,7 @@ namespace YamlSharp.Parsing
             var pos = CurrentPosition;
             return RewindUnless(() =>
                 Text[P++] == '*' &&
-                Save(() => nsAnchorName(), s => anchor_name = s)
+                Save(nsAnchorName, s => anchor_name = s)
             ) &&
             SetValue(Anchors[anchor_name]);
         }
