@@ -169,6 +169,7 @@ namespace YamlSharp.Parsing
             /// Column in a text.
             /// </summary>
             public int Column;
+            public override string ToString() => $"{Raw}:{Column}";
         }
         #endregion
 
@@ -343,6 +344,7 @@ namespace YamlSharp.Parsing
         /// }
         /// </code>
         /// </example>
+        [System.Diagnostics.DebuggerHidden]
         protected bool RewindUnless(Func<bool> rule) // (join) 
         {
             var savedp = P;
@@ -392,6 +394,7 @@ namespace YamlSharp.Parsing
         /// }
         /// </code>
         /// </example>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Repeat(Func<bool> rule) // * 
         {
             // repeat while condition() returns true and 
@@ -435,6 +438,7 @@ namespace YamlSharp.Parsing
         /// }
         /// </code>
         /// </example>
+        [System.Diagnostics.DebuggerHidden]
         protected bool OneAndRepeat(Func<bool> rule)  // + 
         {
             return rule() && Repeat(rule);
@@ -463,6 +467,7 @@ namespace YamlSharp.Parsing
         /// <param name="n">Repetition count.</param>
         /// <param name="rule">Reduction rule to be repeated.</param>
         /// <returns>true if the rule matches; otherwise false.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Repeat(int n, Func<bool> rule)
         {
             return RewindUnless(() =>
@@ -502,6 +507,7 @@ namespace YamlSharp.Parsing
         /// <param name="max">Maximum repetition count. Negative value is treated as positive infinity.</param>
         /// <param name="rule">Reduction rule to be repeated.</param>
         /// <returns>true if the rule matches; otherwise false.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Repeat(int min, int max, Func<bool> rule)
         {
             return RewindUnless(() =>
@@ -535,6 +541,7 @@ namespace YamlSharp.Parsing
         /// </example>
         /// <param name="rule">Reduction rule that is optional.</param>
         /// <returns>Always true.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Optional(bool rule) // ? 
         {
             return rule || true;
@@ -559,6 +566,7 @@ namespace YamlSharp.Parsing
         /// </example>
         /// <param name="rule">Reduction rule that is optional.</param>
         /// <returns>Always true.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Optional(Func<bool> rule) // ? 
         {
             return RewindUnless(rule) || true;
@@ -596,6 +604,7 @@ namespace YamlSharp.Parsing
         /// }
         /// </code>
         /// </example>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Accept(Func<char, bool> charset)
         {
             if (P < Text.Length && charset(Text[P]))
@@ -640,6 +649,7 @@ namespace YamlSharp.Parsing
         /// }
         /// </code>
         /// </example>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Accept(char c)
         {
             if (P < Text.Length && Text[P] == c)
@@ -664,6 +674,7 @@ namespace YamlSharp.Parsing
         /// }
         /// </code>
         /// </example>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Accept(string s)
         {
             if (P + s.Length >= Text.Length)
@@ -679,6 +690,7 @@ namespace YamlSharp.Parsing
         /// </summary>
         /// <param name="r">Sequence of characters to be accepted.</param>
         /// <returns>true if the rule matches; otherwise false.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Accept(Regex r)
         {
             var m = r.Match(Text, P);
@@ -692,6 +704,7 @@ namespace YamlSharp.Parsing
         /// </summary>
         /// <param name="charset">Character set to be accepted.</param>
         /// <returns>Always true.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Repeat(CharsetValidator charset)
         {
             while (charset(Text, P))
@@ -703,6 +716,7 @@ namespace YamlSharp.Parsing
         /// </summary>
         /// <param name="charset">Character set to be accepted.</param>
         /// <returns>true if the rule matches; otherwise false.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected bool OneAndRepeat(CharsetValidator charset)
         {
             if (!charset(Text, P))
@@ -711,6 +725,7 @@ namespace YamlSharp.Parsing
                 ;
             return true;
         }
+        [System.Diagnostics.DebuggerHidden]
         protected bool OneAndRepeat(UnicodeCharsetValidator charset)
         {
             int length;
@@ -763,6 +778,7 @@ namespace YamlSharp.Parsing
         /// </summary>
         /// <param name="charset">Character set to be accepted.</param>
         /// <returns>Always true.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Optional(CharsetValidator charset) // ? 
         {
             if (!charset(Text, P))
@@ -818,6 +834,7 @@ namespace YamlSharp.Parsing
         /// </code></example>
         /// <param name="definition">A simple but slow comparison-based definition of the charsert.</param>
         /// <returns>A performance-optimized table-based delegate built from the given <paramref name="definition"/>.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected static Func<char, bool> Charset(Func<char, bool> definition)
         {
             return Charset(0x100, definition);
@@ -865,6 +882,7 @@ namespace YamlSharp.Parsing
         /// <param name="tableSize">Character table size.</param>
         /// <param name="definition">A simple but slow comparison-based definition of the charsert.</param>
         /// <returns>A performance-optimized table-based delegate built from the given <paramref name="definition"/>.</returns>
+        [System.Diagnostics.DebuggerHidden]
         private static Func<char, bool> Charset(int tableSize, Func<char, bool> definition)
         {
             var table = new bool[tableSize];
@@ -884,6 +902,7 @@ namespace YamlSharp.Parsing
         /// the part of the source text reduced in the <paramref name="rule"/> is set; 
         /// otherwise String.Empty is set.</param>
         /// <returns>true if <paramref name="rule"/> matches; otherwise false.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Save(Func<bool> rule, ref string value)
         {
             string value_ = "";
@@ -921,6 +940,7 @@ namespace YamlSharp.Parsing
         ///         Save(()=> SubRule(), s => MessageBox.Show(s));
         /// }
         /// </code></example>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Save(Func<bool> rule, Action<string> save)
         {
             int start = P;
@@ -943,6 +963,7 @@ namespace YamlSharp.Parsing
         ///         Action(()=> do_some_action());
         /// }
         /// </code></example>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Action(Action action)
         {
             action();
@@ -955,6 +976,7 @@ namespace YamlSharp.Parsing
         /// <param name="var">Variable to be assigned.</param>
         /// <param name="value">Value to be assigned.</param>
         /// <returns>Always true.</returns>
+        [System.Diagnostics.DebuggerHidden]
         protected bool Assign<T>(out T var, T value)
         {
             var = value;
