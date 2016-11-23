@@ -50,7 +50,7 @@ namespace YamlSharp.Parsing
         /// <param name="startRule">Starting rule.</param>
         /// <param name="text">Text to be parsed.</param>
         /// <returns></returns>
-        protected bool Parse(Func<bool> startRule, string text)
+        protected bool Parse(Func<Reply<TState>> startRule, string text)
         {
             this.Text = text;
             InitializeParser();
@@ -215,7 +215,7 @@ namespace YamlSharp.Parsing
         /// rewinding occurs, instead of throwing exception.</param>
         /// <param name="message">Error message</param>
         /// <returns>true if the reduction rule matches; otherwise false.</returns>
-        protected bool ErrorUnlessWithAdditionalCondition(Func<bool> rule, bool toBeError, string message)
+        protected bool ErrorUnlessWithAdditionalCondition(Func<Reply<TState>> rule, bool toBeError, string message)
         {
             if (toBeError)
             {
@@ -345,7 +345,7 @@ namespace YamlSharp.Parsing
         /// </code>
         /// </example>
         [System.Diagnostics.DebuggerHidden]
-        protected bool RewindUnless(Func<bool> rule) // (join) 
+        protected bool RewindUnless(Func<Reply<TState>> rule) // (join) 
         {
             var savedp = P;
             var stringValueLength = StringValue.Length;
@@ -395,7 +395,7 @@ namespace YamlSharp.Parsing
         /// </code>
         /// </example>
         [System.Diagnostics.DebuggerHidden]
-        protected bool Repeat(Func<bool> rule) // * 
+        protected bool Repeat(Func<Reply<TState>> rule) // * 
         {
             // repeat while condition() returns true and 
             // it reduces any part of text.
@@ -439,7 +439,7 @@ namespace YamlSharp.Parsing
         /// </code>
         /// </example>
         [System.Diagnostics.DebuggerHidden]
-        protected bool OneAndRepeat(Func<bool> rule)  // + 
+        protected bool OneAndRepeat(Func<Reply<TState>> rule)  // + 
         {
             return rule() && Repeat(rule);
         }
@@ -567,7 +567,7 @@ namespace YamlSharp.Parsing
         /// <param name="rule">Reduction rule that is optional.</param>
         /// <returns>Always true.</returns>
         [System.Diagnostics.DebuggerHidden]
-        protected bool Optional(Func<bool> rule) // ? 
+        protected bool Optional(Func<Reply<TState>> rule) // ? 
         {
             return RewindUnless(rule) || true;
         }
@@ -903,7 +903,7 @@ namespace YamlSharp.Parsing
         /// otherwise String.Empty is set.</param>
         /// <returns>true if <paramref name="rule"/> matches; otherwise false.</returns>
         [System.Diagnostics.DebuggerHidden]
-        protected bool Save(Func<bool> rule, ref string value)
+        protected bool Save(Func<Reply<TState>> rule, ref string value)
         {
             string value_ = "";
             var result = Save(rule, s => value_ = s);
@@ -918,7 +918,7 @@ namespace YamlSharp.Parsing
         /// </summary>
         /// <param name="rule">Reduction rule to match.</param>
         /// <returns>true if <paramref name="rule"/> matches; otherwise false.</returns>
-        protected bool Save(Func<bool> rule)
+        protected bool Save(Func<Reply<TState>> rule)
         {
             return
                 Save(rule, s => StringValue.Append(s));
@@ -941,7 +941,7 @@ namespace YamlSharp.Parsing
         /// }
         /// </code></example>
         [System.Diagnostics.DebuggerHidden]
-        protected bool Save(Func<bool> rule, Action<string> save)
+        protected bool Save(Func<Reply<TState>> rule, Action<string> save)
         {
             int start = P;
             var result = rule();

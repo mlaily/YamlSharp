@@ -90,7 +90,7 @@ namespace YamlSharp.Parsing
             );
         }
 
-        private bool alphaNum()
+        Reply<Status> alphaNum()
         {
             return
                 Accept(alphaNumCharset);

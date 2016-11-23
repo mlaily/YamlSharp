@@ -9,6 +9,23 @@ using YamlSharp.Model;
 
 namespace YamlSharp.Parsing
 {
+    public class Reply<TState> where TState : struct
+    {
+        bool Result;
+        TState State;
+        public Reply(bool result)
+        {
+            Result = result;
+        }
+        public static implicit operator bool(Reply<TState> x)
+        {
+            return x.Result;
+        }
+        public static implicit operator Reply<TState>(bool x)
+        {
+            return new Reply<TState>(x);
+        }
+    }
     /// <summary>
     /// <para>A text parser for<br/>
     /// YAML Ain’t Markup Language (YAML™) Version 1.2<br/>
@@ -361,18 +378,18 @@ namespace YamlSharp.Parsing
 
         #region Chapter 5. Character Set
 
-        bool nbChar() // [27] 
+        Reply<ParserState> nbChar() // [27] 
         {
             WarnIfCharWasBreakInYAML1_1();
             int length = 0;
             if (Parsing.Charset.nbChar(Text, P, out length))
             {
                 P += length;
-                return true;
+                return new Reply<ParserState>(true);
             }
-            return false;
+            return new Reply<ParserState>(false);
         }
-        bool bBreak() // [28] 
+        Reply<ParserState> bBreak() // [28] 
         {   // \r\n? | \n 
             if (Text[P] == '\r')
             {
@@ -388,7 +405,7 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        bool bAsLineFeed() // [29] 
+        Reply<ParserState> bAsLineFeed() // [29] 
         {
             if (Config.NormalizeLineBreaks)
             {
@@ -404,11 +421,11 @@ namespace YamlSharp.Parsing
                 return Save(() => bBreak(), s => StringValue.Append(s));
             }
         }
-        bool bNonContent() // [30] 
+        Reply<ParserState> bNonContent() // [30] 
         {
             return bBreak();
         }
-        bool sWhite() // [33] 
+        Reply<ParserState> sWhite() // [33] 
         {
             if (Text[P] == ' ' || Text[P] == '\t')
             {
@@ -417,14 +434,14 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        bool Repeat_sWhiteAsString()
+        Reply<ParserState> Repeat_sWhiteAsString()
         {
             var start = P;
             while (Parsing.Charset.sWhite(Text, P))
                 StringValue.Append(Text[P++]);
             return true;
         }
-        bool nsChar() // [34] 
+        Reply<ParserState> nsChar() // [34] 
         {
             WarnIfCharWasBreakInYAML1_1();
             int length = 0;
@@ -435,7 +452,7 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        bool nsUriChar() // [39] 
+        Reply<ParserState> nsUriChar() // [39] 
         {
             if (Parsing.Charset.nsUriCharSub(Text, P))
             {
@@ -444,7 +461,7 @@ namespace YamlSharp.Parsing
             }
             return nsUriEscapedChar();
         }
-        bool nsUriEscapedChar()
+        Reply<ParserState> nsUriEscapedChar()
         {
             if (Text[P] == '+')
             {
@@ -485,7 +502,7 @@ namespace YamlSharp.Parsing
             P += 12;
             return true;
         }
-        bool nsTagChar() // [40] 
+        Reply<ParserState> nsTagChar() // [40] 
         {
             if (Parsing.Charset.nsTagCharSub(Text, P))
             {
@@ -494,7 +511,7 @@ namespace YamlSharp.Parsing
             }
             return nsUriEscapedChar();
         }
-        bool c_nsEscChar() // [62] 
+        Reply<ParserState> c_nsEscChar() // [62] 
         {
             if (Text[P] != '\\')
                 return false;
@@ -604,7 +621,7 @@ namespace YamlSharp.Parsing
                 }
             Error($"{s} is not a valid escape sequence.");
         }
-        bool HexValue(int p, out int v)
+        Reply<ParserState> HexValue(int p, out int v)
         {
             v = 0;
             if (Text.Length <= p + 1 || !Parsing.Charset.nsHexDigit(Text, p) || !Parsing.Charset.nsHexDigit(Text, p + 1))
@@ -625,7 +642,7 @@ namespace YamlSharp.Parsing
         #region Chapter 6. Basic Structures 
         #region 6.1 Indentation Spaces
         bool TabCharFoundForIndentation = false;
-        bool sIndent(int n) // [63] 
+        Reply<ParserState> sIndent(int n) // [63] 
         {
             TabCharFoundForIndentation = false;
             Debug.Assert(StartOfLine() || EndOfFile());
@@ -639,7 +656,7 @@ namespace YamlSharp.Parsing
             P += n;
             return true;
         }
-        bool sIndentLT(int n) // [64] 
+        Reply<ParserState> sIndentLT(int n) // [64] 
         {
             Debug.Assert(StartOfLine() || EndOfFile());
             int i = 0;
@@ -652,11 +669,11 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        bool sIndentLE(int n) // [65] 
+        Reply<ParserState> sIndentLE(int n) // [65] 
         {
             return sIndentLT(n + 1);
         }
-        bool sIndentCounted(int n, out int m) // [185, 187]
+        Reply<ParserState> sIndentCounted(int n, out int m) // [185, 187]
         {
             m = 0;
             while (n < 0 || Text[P] == ' ')
@@ -669,17 +686,17 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 6.2 Separation Spaces
-        private bool sSeparateInLine() // [66] 
+        Reply<ParserState> sSeparateInLine() // [66] 
         {
             return OneAndRepeat(Parsing.Charset.sWhite) || StartOfLine();
         }
-        private bool StartOfLine() // [66, 79, 206]
+        Reply<ParserState> StartOfLine() // [66, 79, 206]
         {   // TODO: how about "---" ?
             return P == 0 || Text[P - 1] == '\n' || Text[P - 1] == '\r' || Text[P - 1] == '\uFEFF';
         }
         #endregion
         #region 6.3 Line Prefixes
-        private bool sLinePrefix(int n, YamlContext c) // [67] 
+        Reply<ParserState> sLinePrefix(int n, YamlContext c) // [67] 
         {
             switch (c)
             {
@@ -694,7 +711,7 @@ namespace YamlSharp.Parsing
                     throw new NotImplementedException();
             }
         }
-        private bool sBlockLinePrefix(int n) // [68] 
+        Reply<ParserState> sBlockLinePrefix(int n) // [68] 
         {
             return sIndent(n);
         }
@@ -704,14 +721,14 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 6.4 Empty Lines
-        private bool lEmpty(int n, YamlContext c) // [70] 
+        Reply<ParserState> lEmpty(int n, YamlContext c) // [70] 
         {
             return
                 RewindUnless(() => (sLinePrefix(n, c) || sIndentLT(n)) && bAsLineFeed());
         }
         #endregion
         #region 6.5 Line Folding
-        private bool b_lTrimmed(int n, YamlContext c) // [71] 
+        Reply<ParserState> b_lTrimmed(int n, YamlContext c) // [71] 
         {
             return RewindUnless(() =>
                 bNonContent() && OneAndRepeat(() => lEmpty(n, c))
@@ -723,11 +740,11 @@ namespace YamlSharp.Parsing
                 bBreak() &&
                 Action(() => StringValue.Append(' '));
         }
-        private bool b_lFolded(int n, YamlContext c) // [73] 
+        Reply<ParserState> b_lFolded(int n, YamlContext c) // [73] 
         {
             return b_lTrimmed(n, c) || bAsSpace();
         }
-        private bool sFlowFolded(int n) // [74] 
+        Reply<ParserState> sFlowFolded(int n) // [74] 
         {
             return RewindUnless(() =>
                 Optional(sSeparateInLine) &&
@@ -738,26 +755,26 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 6.6 Comments
-        private bool c_nbCommentText() // [75] 
+        Reply<ParserState> c_nbCommentText() // [75] 
         {
             return Text[P] == '#' && Repeat(nbChar);
         }
-        bool bComment() // [76] 
+        Reply<ParserState> bComment() // [76] 
         {
             return bNonContent() || EndOfFile();
         }
-        bool EndOfFile() // [76, 206]
+        Reply<ParserState> EndOfFile() // [76, 206]
         {
             return P == Text.Length - 1; // text[text.Length-1] == '\0' /* guard char */
         }
-        bool s_bComment() // [77] 
+        Reply<ParserState> s_bComment() // [77] 
         {
             return RewindUnless(() =>
                   Optional(sSeparateInLine() && Optional(c_nbCommentText)) &&
                 bComment()
             );
         }
-        bool lComment() // [78] 
+        Reply<ParserState> lComment() // [78] 
         {
             return RewindUnless(() =>
                 sSeparateInLine() &&
@@ -766,13 +783,13 @@ namespace YamlSharp.Parsing
                 );
 
         }
-        bool s_lComments() // [79] 
+        Reply<ParserState> s_lComments() // [79] 
         {
             return (s_bComment() || StartOfLine()) && Repeat(lComment);
         }
         #endregion
         #region 6.7 Separation Lines
-        bool sSeparate(int n, YamlContext c) // [80] 
+        Reply<ParserState> sSeparate(int n, YamlContext c) // [80] 
         {
             switch (c)
             {
@@ -788,7 +805,7 @@ namespace YamlSharp.Parsing
                     throw new NotImplementedException();
             }
         }
-        bool sSeparateLines(int n) // [81] 
+        Reply<ParserState> sSeparateLines(int n) // [81] 
         {
             return
                 RewindUnless(() => s_lComments() && sFlowLinePrefix(n)) ||
@@ -796,7 +813,7 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 6.8 Directives
-        bool lDirective() // [82] 
+        Reply<ParserState> lDirective() // [82] 
         {
             return RewindUnless(() =>
                 Text[P++] == '%' &&
@@ -807,7 +824,7 @@ namespace YamlSharp.Parsing
                 s_lComments()
                 );
         }
-        bool nsReservedDirective() // [83] 
+        Reply<ParserState> nsReservedDirective() // [83] 
         {
             var name = "";
             var args = new List<string>();
@@ -820,7 +837,7 @@ namespace YamlSharp.Parsing
             Action(() => ReservedDirective(name, args));
         }
         bool YamlDirectiveAlreadyAppeared = false;
-        bool nsYamlDirective() // [86] 
+        Reply<ParserState> nsYamlDirective() // [86] 
         {
             string version = "";
             return RewindUnless(() =>
@@ -840,7 +857,7 @@ namespace YamlSharp.Parsing
                     YamlDirectiveAlreadyAppeared = true;
                 });
         }
-        bool nsTagDirective() // [88] 
+        Reply<ParserState> nsTagDirective() // [88] 
         {
             string tag_handle = "";
             string tag_prefix = "";
@@ -855,7 +872,7 @@ namespace YamlSharp.Parsing
             ) &&
             Action(() => TagPrefixes.Add(tag_handle, tag_prefix));
         }
-        private bool cTagHandle(out string tag_handle) // [89]' 
+        Reply<ParserState> cTagHandle(out string tag_handle) // [89]' 
         {
             var _tag_handle = tag_handle = "";
             if (Save(() => Optional(RewindUnless(() =>
@@ -868,13 +885,13 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        private bool nsTagPrefix(out string tag_prefix) // [93] 
+        Reply<ParserState> nsTagPrefix(out string tag_prefix) // [93] 
         {
             return
                 c_nsLocalTagPrefix(out tag_prefix) ||
                 nsGlobalTagPrefix(out tag_prefix);
         }
-        private bool c_nsLocalTagPrefix(out string tag_prefix) // [94] 
+        Reply<ParserState> c_nsLocalTagPrefix(out string tag_prefix) // [94] 
         {
             Debug.Assert(StringValue.Length == 0);
             if (RewindUnless(() =>
@@ -889,7 +906,7 @@ namespace YamlSharp.Parsing
             tag_prefix = "";
             return false;
         }
-        private bool nsGlobalTagPrefix(out string tag_prefix) // [95] 
+        Reply<ParserState> nsGlobalTagPrefix(out string tag_prefix) // [95] 
         {
             Debug.Assert(StringValue.Length == 0);
             if (RewindUnless(() => nsTagChar() && Repeat(nsUriChar)))
@@ -903,7 +920,7 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 6.9 Node Properties
-        bool c_nsProperties(int n, YamlContext c) // [96] 
+        Reply<ParserState> c_nsProperties(int n, YamlContext c) // [96] 
         {
             State.Anchor = null;
             State.Tag = null;
@@ -911,7 +928,7 @@ namespace YamlSharp.Parsing
                 (c_nsTagProperty() && Optional(RewindUnless(() => sSeparate(n, c) && c_nsAnchorProperty()))) ||
                 (c_nsAnchorProperty() && Optional(RewindUnless(() => sSeparate(n, c) && c_nsTagProperty())));
         }
-        bool c_nsTagProperty() // [97]' 
+        Reply<ParserState> c_nsTagProperty() // [97]' 
         {
             if (Text[P] != '!')
                 return false;
@@ -923,7 +940,7 @@ namespace YamlSharp.Parsing
                 c_nsShorthandTag() ||
                 cNonSpecificTag();
         }
-        private bool cVerbatimTag() // [98]' 
+        Reply<ParserState> cVerbatimTag() // [98]' 
         {
             return
                 Text[P] == '<' &&
@@ -936,7 +953,7 @@ namespace YamlSharp.Parsing
                 SetTag(GetStringValue());
         }
 
-        private bool c_nsShorthandTag() // [99]' 
+        Reply<ParserState> c_nsShorthandTag() // [99]' 
         {
             var tag_handle = "";
             return RewindUnless(() =>
@@ -954,20 +971,20 @@ namespace YamlSharp.Parsing
             StringValue.Length = 0;
             return s;
         }
-        private bool cNonSpecificTag() // [100]' 
+        Reply<ParserState> cNonSpecificTag() // [100]' 
         {
             // disable tag resolution to restrict tag to be ( map | seq | str )
             State.Tag = "";
             return true; /* empty */
         }
-        bool c_nsAnchorProperty() // [101] 
+        Reply<ParserState> c_nsAnchorProperty() // [101] 
         {
             if (Text[P] != '&')
                 return false;
             P++;
             return Save(nsAnchorName, s => State.Anchor = s);
         }
-        private bool nsAnchorName() // [103] 
+        Reply<ParserState> nsAnchorName() // [103] 
         {
             return OneAndRepeat(Parsing.Charset.nsAnchorChar);
         }
@@ -976,7 +993,7 @@ namespace YamlSharp.Parsing
 
         #region Chapter 7. Flow Styles
         #region 7.1 Alias Nodes
-        private bool c_nsAliasNode() // [104] 
+        Reply<ParserState> c_nsAliasNode() // [104] 
         {
             string anchor_name = "";
             var pos = CurrentPosition;
@@ -991,7 +1008,7 @@ namespace YamlSharp.Parsing
         /// <summary>
         /// [105]
         /// </summary>
-        private bool eScalar()
+        Reply<ParserState> eScalar()
         {
             Debug.Assert(StringValue.Length == 0);
             return SetValue(CreateScalar("!!null", CurrentPosition)); /* empty */
@@ -999,14 +1016,14 @@ namespace YamlSharp.Parsing
         /// <summary>
         /// [106]
         /// </summary>
-        private bool eNode()
+        Reply<ParserState> eNode()
         {
             return eScalar();
         }
         #endregion
         #region 7.3 Flow Scalar Styles
         #region 7.3.1 Double-Quoted Style
-        private bool nbDoubleChar() // [107] 
+        Reply<ParserState> nbDoubleChar() // [107] 
         {
             int length;
             if (Text[P] != '\\' && Text[P] != '"' && Parsing.Charset.nbJson(Text, P, out length))
@@ -1017,11 +1034,11 @@ namespace YamlSharp.Parsing
             }
             return c_nsEscChar();
         }
-        bool nsDoubleChar() // [108] 
+        Reply<ParserState> nsDoubleChar() // [108] 
         {
             return !Parsing.Charset.sWhite(Text, P) && nbDoubleChar();
         }
-        private bool cDoubleQuoted(int n, YamlContext c) // [109] 
+        Reply<ParserState> cDoubleQuoted(int n, YamlContext c) // [109] 
         {
             Position pos = CurrentPosition;
             Debug.Assert(StringValue.Length == 0);
@@ -1035,7 +1052,7 @@ namespace YamlSharp.Parsing
                 ) &&
                 SetValue(CreateScalar("!!str", pos));
         }
-        private bool nbDoubleText(int n, YamlContext c) // [110] 
+        Reply<ParserState> nbDoubleText(int n, YamlContext c) // [110] 
         {
             switch (c)
             {
@@ -1049,11 +1066,11 @@ namespace YamlSharp.Parsing
                     throw new NotImplementedException();
             }
         }
-        private bool nbDoubleOneLine(int n) // [111] 
+        Reply<ParserState> nbDoubleOneLine(int n) // [111] 
         {
             return Repeat(nbDoubleChar);
         }
-        private bool sDoubleEscaped(int n) // [112] 
+        Reply<ParserState> sDoubleEscaped(int n) // [112] 
         {
             return RewindUnless(() =>
                 Repeat_sWhiteAsString() &&
@@ -1062,15 +1079,15 @@ namespace YamlSharp.Parsing
                 sFlowLinePrefix(n)
                 );
         }
-        private bool sDoubleBreak(int n) // [113] 
+        Reply<ParserState> sDoubleBreak(int n) // [113] 
         {
             return sDoubleEscaped(n) || sFlowFolded(n);
         }
-        private bool nb_nsDoubleInLine() // [114] 
+        Reply<ParserState> nb_nsDoubleInLine() // [114] 
         {
             return Repeat(() => RewindUnless(() => Repeat_sWhiteAsString() && OneAndRepeat(nsDoubleChar)));
         }
-        private bool sDoubleNextLine(int n) // [115] 
+        Reply<ParserState> sDoubleNextLine(int n) // [115] 
         {
             return
                 sDoubleBreak(n) &&
@@ -1081,14 +1098,14 @@ namespace YamlSharp.Parsing
                     ))
                 ;
         }
-        private bool nbDoubleMultiLine(int n) // [116] 
+        Reply<ParserState> nbDoubleMultiLine(int n) // [116] 
         {
             return nb_nsDoubleInLine() &&
                 (sDoubleNextLine(n) || Repeat(Repeat_sWhiteAsString));
         }
         #endregion
         #region 7.3.2 Single-Quoted Style
-        bool nbSingleChar() // [118] 
+        Reply<ParserState> nbSingleChar() // [118] 
         {
             int length;
             if (Text[P] != '\'' && Parsing.Charset.nbJson(Text, P, out length))
@@ -1106,11 +1123,11 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        bool nsSingleChar() // [119] 
+        Reply<ParserState> nsSingleChar() // [119] 
         {
             return !Parsing.Charset.sWhite(Text, P) && nbSingleChar();
         }
-        private bool cSingleQuoted(int n, YamlContext c) // [120] 
+        Reply<ParserState> cSingleQuoted(int n, YamlContext c) // [120] 
         {
             Debug.Assert(StringValue.Length == 0);
             Position pos = CurrentPosition;
@@ -1124,7 +1141,7 @@ namespace YamlSharp.Parsing
                 ) &&
                 SetValue(CreateScalar("!!str", pos));
         }
-        private bool nbSingleText(int n, YamlContext c) // [121] 
+        Reply<ParserState> nbSingleText(int n, YamlContext c) // [121] 
         {
             switch (c)
             {
@@ -1138,15 +1155,15 @@ namespace YamlSharp.Parsing
                     throw new NotImplementedException();
             }
         }
-        private bool nbSingleOneLine(int n) // [122] 
+        Reply<ParserState> nbSingleOneLine(int n) // [122] 
         {
             return Repeat(nbSingleChar);
         }
-        private bool nb_nsSingleInLine() // [123] 
+        Reply<ParserState> nb_nsSingleInLine() // [123] 
         {
             return Repeat(() => RewindUnless(() => Repeat_sWhiteAsString() && OneAndRepeat(nsSingleChar)));
         }
-        private bool sSingleNextLine(int n) // [124] 
+        Reply<ParserState> sSingleNextLine(int n) // [124] 
         {
             return RewindUnless(() =>
                 sFlowFolded(n) && (
@@ -1156,14 +1173,14 @@ namespace YamlSharp.Parsing
                     )
                 );
         }
-        private bool nbSingleMultiLine(int n) // [125] 
+        Reply<ParserState> nbSingleMultiLine(int n) // [125] 
         {
             return nb_nsSingleInLine() &&
                 (sSingleNextLine(n) || Repeat_sWhiteAsString());
         }
         #endregion
         #region 7.3.3 Plain Style
-        private bool nsPlainFirst(YamlContext c) // [126] 
+        Reply<ParserState> nsPlainFirst(YamlContext c) // [126] 
         {
             int length;
             int dontCare;
@@ -1185,7 +1202,7 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        private bool nsPlainSafe(YamlContext c) // [127] 
+        Reply<ParserState> nsPlainSafe(YamlContext c) // [127] 
         {
             int length;
             if (!Parsing.Charset.nsPlainSafe(Text, P, out length, c))
@@ -1195,7 +1212,7 @@ namespace YamlSharp.Parsing
             P += length;
             return true;
         }
-        private bool nsPlainChar(YamlContext c) // [130] 
+        Reply<ParserState> nsPlainChar(YamlContext c) // [130] 
         {
             if (Text[P] != ':' && Text[P] != '#' && nsPlainSafe(c))
                 return true;
@@ -1221,7 +1238,7 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        private bool nsPlain(int n, YamlContext c) // [131] 
+        Reply<ParserState> nsPlain(int n, YamlContext c) // [131] 
         {
             if (cForbidden())
                 return false;
@@ -1242,18 +1259,18 @@ namespace YamlSharp.Parsing
                     throw new NotImplementedException();
             }
         }
-        private bool nb_nsPlainInLine(YamlContext c) // [132] 
+        Reply<ParserState> nb_nsPlainInLine(YamlContext c) // [132] 
         {
             return Repeat(() => RewindUnless(() =>
                 Repeat_sWhiteAsString() &&
                 OneAndRepeat(() => nsPlainChar(c))
             ));
         }
-        private bool nsPlainOneLine(YamlContext c) // [133] 
+        Reply<ParserState> nsPlainOneLine(YamlContext c) // [133] 
         {
             return nsPlainFirst(c) && nb_nsPlainInLine(c);
         }
-        private bool s_nsPlainNextLine(int n, YamlContext c) // [134] 
+        Reply<ParserState> s_nsPlainNextLine(int n, YamlContext c) // [134] 
         {
             return RewindUnless(() =>
                 sFlowFolded(n) &&
@@ -1261,7 +1278,7 @@ namespace YamlSharp.Parsing
                 nb_nsPlainInLine(c)
             );
         }
-        private bool nsPlainMultiLine(int n, YamlContext c) // [135] 
+        Reply<ParserState> nsPlainMultiLine(int n, YamlContext c) // [135] 
         {
             return
                 nsPlainOneLine(c) &&
@@ -1285,7 +1302,7 @@ namespace YamlSharp.Parsing
             }
         }
         #region 7.4.1 Flow Sequences
-        private bool cFlowSequence(int n, YamlContext c) // [137] 
+        Reply<ParserState> cFlowSequence(int n, YamlContext c) // [137] 
         {
             YamlSequence sequence = null;
             Position pos = CurrentPosition;
@@ -1303,7 +1320,7 @@ namespace YamlSharp.Parsing
             SetValue(sequence);
         }
 
-        private bool ns_sFlowSeqEntries(int n, YamlContext c, YamlSequence sequence) // [138] 
+        Reply<ParserState> ns_sFlowSeqEntries(int n, YamlContext c, YamlSequence sequence) // [138] 
         {
             return
                 nsFlowSeqEntry(n, c) &&
@@ -1315,7 +1332,7 @@ namespace YamlSharp.Parsing
                     Optional(ns_sFlowSeqEntries(n, c, sequence))
                     ));
         }
-        private bool nsFlowSeqEntry(int n, YamlContext c) // [139] 
+        Reply<ParserState> nsFlowSeqEntry(int n, YamlContext c) // [139] 
         {
             YamlNode key = null;
             Position pos = CurrentPosition;
@@ -1333,7 +1350,7 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 7.4.2 Flow Mappings
-        private bool cFlowMapping(int n, YamlContext c) // [140] 
+        Reply<ParserState> cFlowMapping(int n, YamlContext c) // [140] 
         {
             Position pos = CurrentPosition;
             YamlMapping mapping = null;
@@ -1349,7 +1366,7 @@ namespace YamlSharp.Parsing
             ) &&
             SetValue(mapping);
         }
-        private bool ns_sFlowMapEntries(int n, YamlContext c, YamlMapping mapping) // [141] 
+        Reply<ParserState> ns_sFlowMapEntries(int n, YamlContext c, YamlMapping mapping) // [141] 
         {
             YamlNode key = null;
             return
@@ -1362,7 +1379,7 @@ namespace YamlSharp.Parsing
                     Optional(ns_sFlowMapEntries(n, c, mapping))
                 ));
         }
-        private bool nsFlowMapEntry(int n, YamlContext c, ref YamlNode key) // [142] 
+        Reply<ParserState> nsFlowMapEntry(int n, YamlContext c, ref YamlNode key) // [142] 
         {
             YamlNode _key = null;
             return (
@@ -1371,7 +1388,7 @@ namespace YamlSharp.Parsing
             ) &&
             Assign(out key, _key);
         }
-        private bool nsFlowMapExplicitEntry(int n, YamlContext c, ref YamlNode key) // [143] 
+        Reply<ParserState> nsFlowMapExplicitEntry(int n, YamlContext c, ref YamlNode key) // [143] 
         {
             return nsFlowMapImplicitEntry(n, c, ref key) || (
                 eNode() /* Key */ &&
@@ -1379,14 +1396,14 @@ namespace YamlSharp.Parsing
                 eNode() /* Value */
             );
         }
-        private bool nsFlowMapImplicitEntry(int n, YamlContext c, ref YamlNode key) // [144] 
+        Reply<ParserState> nsFlowMapImplicitEntry(int n, YamlContext c, ref YamlNode key) // [144] 
         {
             return
                 nsFlowMapYamlKeyEntry(n, c, ref key) ||
                 c_nsFlowMapEmptyKeyEntry(n, c, ref key) ||
                 c_nsFlowMapJsonKeyEntry(n, c, ref key);
         }
-        private bool nsFlowMapYamlKeyEntry(int n, YamlContext c, ref YamlNode key) // [145] 
+        Reply<ParserState> nsFlowMapYamlKeyEntry(int n, YamlContext c, ref YamlNode key) // [145] 
         {
             return
                 nsFlowYamlNode(n, c) &&
@@ -1395,7 +1412,7 @@ namespace YamlSharp.Parsing
                     eNode()
                 );
         }
-        private bool c_nsFlowMapEmptyKeyEntry(int n, YamlContext c, ref YamlNode key) // [146] 
+        Reply<ParserState> c_nsFlowMapEmptyKeyEntry(int n, YamlContext c, ref YamlNode key) // [146] 
         {
             YamlNode _key = null;
             return RewindUnless(() =>
@@ -1405,7 +1422,7 @@ namespace YamlSharp.Parsing
             ) &&
             Assign(out key, _key);
         }
-        private bool c_nsFlowMapSeparateValue(int n, YamlContext c) // [147] 
+        Reply<ParserState> c_nsFlowMapSeparateValue(int n, YamlContext c) // [147] 
         {
             int dontCare;
             return RewindUnless(() =>
@@ -1416,7 +1433,7 @@ namespace YamlSharp.Parsing
                 )
             );
         }
-        private bool c_nsFlowMapJsonKeyEntry(int n, YamlContext c, ref YamlNode key) // [148] 
+        Reply<ParserState> c_nsFlowMapJsonKeyEntry(int n, YamlContext c, ref YamlNode key) // [148] 
         {
             return
                 cFlowJsonNode(n, c) &&
@@ -1425,7 +1442,7 @@ namespace YamlSharp.Parsing
                     eNode()
                 );
         }
-        private bool c_nsFlowMapAdjacentValue(int n, YamlContext c) // [149] 
+        Reply<ParserState> c_nsFlowMapAdjacentValue(int n, YamlContext c) // [149] 
         {
             return RewindUnless(() =>
                 Text[P++] == ':' && (
@@ -1434,7 +1451,7 @@ namespace YamlSharp.Parsing
                     )
                 );
         }
-        private bool nsFlowPair(int n, YamlContext c, ref YamlNode key) // [150] 
+        Reply<ParserState> nsFlowPair(int n, YamlContext c, ref YamlNode key) // [150] 
         {
             YamlNode _key = null;
             return (
@@ -1443,28 +1460,28 @@ namespace YamlSharp.Parsing
             ) &&
             Assign(out key, _key);
         }
-        private bool nsFlowPairEntry(int n, YamlContext c, ref YamlNode key) // [151] 
+        Reply<ParserState> nsFlowPairEntry(int n, YamlContext c, ref YamlNode key) // [151] 
         {
             return
                 nsFlowPairYamlKeyEntry(n, c, ref key) ||
                 c_nsFlowMapEmptyKeyEntry(n, c, ref key) ||
                 c_nsFlowPairJsonKeyEntry(n, c, ref key);
         }
-        private bool nsFlowPairYamlKeyEntry(int n, YamlContext c, ref YamlNode key) // [152] 
+        Reply<ParserState> nsFlowPairYamlKeyEntry(int n, YamlContext c, ref YamlNode key) // [152] 
         {
             return
                 ns_sImplicitYamlKey(YamlContext.FlowKey) &&
                 Assign(out key, GetValue()) &&
                 c_nsFlowMapSeparateValue(n, c);
         }
-        private bool c_nsFlowPairJsonKeyEntry(int n, YamlContext c, ref YamlNode key) // [153] 
+        Reply<ParserState> c_nsFlowPairJsonKeyEntry(int n, YamlContext c, ref YamlNode key) // [153] 
         {
             return
                 c_sImplicitJsonKey(YamlContext.FlowKey) &&
                 Assign(out key, GetValue()) &&
                 c_nsFlowMapAdjacentValue(n, c);
         }
-        private bool ns_sImplicitYamlKey(YamlContext c) // [154] 
+        Reply<ParserState> ns_sImplicitYamlKey(YamlContext c) // [154] 
         {
             /* At most 1024 characters altogether */
             int start = P;
@@ -1475,7 +1492,7 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        private bool c_sImplicitJsonKey(YamlContext c) // [155] 
+        Reply<ParserState> c_sImplicitJsonKey(YamlContext c) // [155] 
         {
             /* At most 1024 characters altogether */
             int start = P;
@@ -1489,22 +1506,22 @@ namespace YamlSharp.Parsing
         #endregion
         #endregion
         #region 7.5 Flow Nodes
-        private bool nsFlowYamlContent(int n, YamlContext c) // [156] 
+        Reply<ParserState> nsFlowYamlContent(int n, YamlContext c) // [156] 
         {
             return nsPlain(n, c);
         }
-        private bool cFlowJsonContent(int n, YamlContext c) // [157] 
+        Reply<ParserState> cFlowJsonContent(int n, YamlContext c) // [157] 
         {
             return cFlowSequence(n, c) || cFlowMapping(n, c) ||
                    cSingleQuoted(n, c) || cDoubleQuoted(n, c);
         }
-        private bool nsFlowContent(int n, YamlContext c) // [158] 
+        Reply<ParserState> nsFlowContent(int n, YamlContext c) // [158] 
         {
             return
                 nsFlowYamlContent(n, c) ||
                 cFlowJsonContent(n, c);
         }
-        private bool nsFlowYamlNode(int n, YamlContext c) // [159] 
+        Reply<ParserState> nsFlowYamlNode(int n, YamlContext c) // [159] 
         {
             return
                 c_nsAliasNode() ||
@@ -1512,13 +1529,13 @@ namespace YamlSharp.Parsing
                 (c_nsProperties(n, c) && (
                     RewindUnless(() => sSeparate(n, c) && nsFlowYamlContent(n, c)) || eScalar()));
         }
-        private bool cFlowJsonNode(int n, YamlContext c) // [160] 
+        Reply<ParserState> cFlowJsonNode(int n, YamlContext c) // [160] 
         {
             return
                 Optional(RewindUnless(() => c_nsProperties(n, c) && sSeparate(n, c))) &&
                 cFlowJsonContent(n, c);
         }
-        private bool nsFlowNode(int n, YamlContext c) // [161] 
+        Reply<ParserState> nsFlowNode(int n, YamlContext c) // [161] 
         {
             if (c_nsAliasNode() ||
                 nsFlowContent(n, c) ||
@@ -1535,7 +1552,7 @@ namespace YamlSharp.Parsing
         #region Chapter 8. Block Styles
         #region 8.1 Block Scalar Styles
         #region 8.1.1 Block Scalar Headers
-        private bool c_bBlockHeader(out int m, out ChompingIndicator t) // [162] 
+        Reply<ParserState> c_bBlockHeader(out int m, out ChompingIndicator t) // [162] 
         {
             var _m = m = 0;
             var _t = t = ChompingIndicator.Clip;
@@ -1551,7 +1568,7 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        bool cIndentationIndicator(ref int m) // [163] 
+        Reply<ParserState> cIndentationIndicator(ref int m) // [163] 
         {
             if (Parsing.Charset.nsDecDigit(Text, P))
             {
@@ -1561,7 +1578,7 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        bool cChompingIndicator(ref ChompingIndicator t) // [164] 
+        Reply<ParserState> cChompingIndicator(ref ChompingIndicator t) // [164] 
         {
             switch (Text[P])
             {
@@ -1576,27 +1593,27 @@ namespace YamlSharp.Parsing
             }
             return false;
         }
-        private bool bChompedLast(ChompingIndicator t) // [165] 
+        Reply<ParserState> bChompedLast(ChompingIndicator t) // [165] 
         {
             return EndOfFile() || (
                 (t == ChompingIndicator.Strip) ? bNonContent() : bAsLineFeed()
             );
         }
-        private bool lChompedEmpty(int n, ChompingIndicator t) // [166] 
+        Reply<ParserState> lChompedEmpty(int n, ChompingIndicator t) // [166] 
         {
             return (t == ChompingIndicator.Keep) ? lKeepEmpty(n) : lStripEmpty(n);
         }
-        private bool lStripEmpty(int n) // [167] 
+        Reply<ParserState> lStripEmpty(int n) // [167] 
         {
             return Repeat(() => RewindUnless(() => sIndentLE(n) && bNonContent())) &&
                    Optional(lTrailComments(n));
         }
-        private bool lKeepEmpty(int n) // [168] 
+        Reply<ParserState> lKeepEmpty(int n) // [168] 
         {
             return Repeat(() => lEmpty(n, YamlContext.BlockIn)) &&
                    Optional(lTrailComments(n));
         }
-        private bool lTrailComments(int n) // [169] 
+        Reply<ParserState> lTrailComments(int n) // [169] 
         {
             return RewindUnless(() =>
                 sIndentLT(n) &&
@@ -1634,7 +1651,7 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 8.1.2. Literal Style
-        bool c_lLiteral(int n) // [170] 
+        Reply<ParserState> c_lLiteral(int n) // [170] 
         {
             Debug.Assert(StringValue.Length == 0);
 
@@ -1649,7 +1666,7 @@ namespace YamlSharp.Parsing
             ) &&
             SetValue(CreateScalar("!!str", pos));
         }
-        bool l_nbLiteralText(int n) // [171] 
+        Reply<ParserState> l_nbLiteralText(int n) // [171] 
         {
             return RewindUnless(() =>
                 Repeat(() => lEmpty(n, YamlContext.BlockIn)) &&
@@ -1657,7 +1674,7 @@ namespace YamlSharp.Parsing
                 Save(() => Repeat(nbChar), s => StringValue.Append(s))
             );
         }
-        bool b_nbLiteralNext(int n) // [172] 
+        Reply<ParserState> b_nbLiteralNext(int n) // [172] 
         {
             return RewindUnless(() =>
                 bAsLineFeed() &&
@@ -1665,7 +1682,7 @@ namespace YamlSharp.Parsing
                 l_nbLiteralText(n)
             );
         }
-        private bool lLiteralContent(int n, ChompingIndicator t) // [173] 
+        Reply<ParserState> lLiteralContent(int n, ChompingIndicator t) // [173] 
         {
             return RewindUnless(() =>
                 Optional(RewindUnless(() => l_nbLiteralText(n) && Repeat(() => b_nbLiteralNext(n)) && bChompedLast(t))) &&
@@ -1674,7 +1691,7 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 8.1.3. Folded Style
-        private bool c_lFolded(int n) // [174] 
+        Reply<ParserState> c_lFolded(int n) // [174] 
         {
             Debug.Assert(StringValue.Length == 0);
 
@@ -1690,53 +1707,53 @@ namespace YamlSharp.Parsing
             ) &&
             SetValue(CreateScalar("!!str", pos));
         }
-        private bool s_nbFoldedText(int n) // [175] 
+        Reply<ParserState> s_nbFoldedText(int n) // [175] 
         {
             return RewindUnless(() =>
                 sIndent(n) &&
                 Save(() => nsChar() && Repeat(nbChar), s => StringValue.Append(s))
             );
         }
-        private bool l_nbFoldedLines(int n) // [176] 
+        Reply<ParserState> l_nbFoldedLines(int n) // [176] 
         {
             return s_nbFoldedText(n) &&
                 Repeat(() => RewindUnless(() => b_lFolded(n, YamlContext.BlockIn) && s_nbFoldedText(n)));
         }
-        private bool s_nbSpacedText(int n) // [177] 
+        Reply<ParserState> s_nbSpacedText(int n) // [177] 
         {
             return RewindUnless(() =>
                 sIndent(n) &&
                 Save(() => sWhite() && Repeat(nbChar), s => StringValue.Append(s))
             );
         }
-        private bool b_lSpaced(int n) // [178] 
+        Reply<ParserState> b_lSpaced(int n) // [178] 
         {
             return
                 bAsLineFeed() &&
                 !cForbidden() &&
                 Repeat(() => lEmpty(n, YamlContext.BlockIn));
         }
-        private bool l_nbSpacedLines(int n) // [179] 
+        Reply<ParserState> l_nbSpacedLines(int n) // [179] 
         {
             return RewindUnless(() =>
                 s_nbSpacedText(n) &&
                 Repeat(() => RewindUnless(() => b_lSpaced(n) && s_nbSpacedText(n)))
             );
         }
-        private bool l_nbSameLines(int n) // [180] 
+        Reply<ParserState> l_nbSameLines(int n) // [180] 
         {
             return RewindUnless(() =>
                 Repeat(() => lEmpty(n, YamlContext.BlockIn)) &&
                 (l_nbFoldedLines(n) || l_nbSpacedLines(n))
             );
         }
-        private bool l_nbDiffLines(int n) // [181] 
+        Reply<ParserState> l_nbDiffLines(int n) // [181] 
         {
             return
                 l_nbSameLines(n) &&
                 Repeat(() => RewindUnless(() => bAsLineFeed() && !cForbidden() && l_nbSameLines(n)));
         }
-        private bool lFoldedContent(int n, ChompingIndicator t) // [182] 
+        Reply<ParserState> lFoldedContent(int n, ChompingIndicator t) // [182] 
         {
             return RewindUnless(() =>
                 Optional(RewindUnless(() => l_nbDiffLines(n) && bChompedLast(t))) &&
@@ -1747,7 +1764,7 @@ namespace YamlSharp.Parsing
         #endregion
         #region 8.2. Block Collection Styles
         #region 8.2.1 Block Sequences
-        private bool lBlockSequence(int n) // [183] 
+        Reply<ParserState> lBlockSequence(int n) // [183] 
         {
             int m = AutoDetectIndentation(n);
             int dontCare;
@@ -1762,7 +1779,7 @@ namespace YamlSharp.Parsing
             )) &&
             SetValue(sequence);
         }
-        private bool c_lBlockSeqEntry(int n, YamlSequence sequence) // [184] 
+        Reply<ParserState> c_lBlockSeqEntry(int n, YamlSequence sequence) // [184] 
         {
             int dontCare;
             Debug.Assert(Text[P] == '-' && !Parsing.Charset.nsChar(Text, P + 1, out dontCare));
@@ -1771,7 +1788,7 @@ namespace YamlSharp.Parsing
                 s_lBlockIndented(n, YamlContext.BlockIn) &&
                 Action(() => sequence.Add(GetValue()));
         }
-        bool s_lBlockIndented(int n, YamlContext c) // [185] 
+        Reply<ParserState> s_lBlockIndented(int n, YamlContext c) // [185] 
         {
             int m;
             return
@@ -1780,7 +1797,7 @@ namespace YamlSharp.Parsing
                 s_lBlockNode(n, c) ||
                 (eNode() && s_lComments());
         }
-        private bool ns_lCompactSequence(int n) // [186] 
+        Reply<ParserState> ns_lCompactSequence(int n) // [186] 
         {
             YamlSequence sequence = null;
             Position pos = CurrentPosition;
@@ -1797,7 +1814,7 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 8.2.2 Block Mappings
-        private bool lBlockMapping(int n) // [187] 
+        Reply<ParserState> lBlockMapping(int n) // [187] 
         {
             YamlMapping mapping = null;
             int m = 0;
@@ -1817,12 +1834,12 @@ namespace YamlSharp.Parsing
             ) &&
             SetValue(mapping);
         }
-        private bool ns_lBlockMapEntry(int n, ref YamlNode key) // [188] 
+        Reply<ParserState> ns_lBlockMapEntry(int n, ref YamlNode key) // [188] 
         {
             return c_lBlockMapExplicitEntry(n, ref key) ||
                    ns_lBlockMapImplicitEntry(n, ref key);
         }
-        private bool c_lBlockMapExplicitEntry(int n, ref YamlNode key) // [189] 
+        Reply<ParserState> c_lBlockMapExplicitEntry(int n, ref YamlNode key) // [189] 
         {
             YamlNode _key = null;
             return RewindUnless(() =>
@@ -1834,7 +1851,7 @@ namespace YamlSharp.Parsing
             ) &&
             Assign(out key, _key);
         }
-        private bool c_lBlockMapExplicitKey(int n, ref YamlNode key) // [190] 
+        Reply<ParserState> c_lBlockMapExplicitKey(int n, ref YamlNode key) // [190] 
         {
             return RewindUnless(() =>
                 Text[P++] == '?' &&
@@ -1842,7 +1859,7 @@ namespace YamlSharp.Parsing
             ) &&
             Assign(out key, GetValue());
         }
-        private bool lBlockMapExplicitValue(int n) // [191] 
+        Reply<ParserState> lBlockMapExplicitValue(int n) // [191] 
         {
             return RewindUnless(() =>
                 sIndent(n) &&
@@ -1850,7 +1867,7 @@ namespace YamlSharp.Parsing
                 s_lBlockIndented(n, YamlContext.BlockOut)
             );
         }
-        private bool ns_lBlockMapImplicitEntry(int n, ref YamlNode key) // [192] 
+        Reply<ParserState> ns_lBlockMapImplicitEntry(int n, ref YamlNode key) // [192] 
         {
             YamlNode _key = null;
             return RewindUnless(() =>
@@ -1860,19 +1877,19 @@ namespace YamlSharp.Parsing
             ) &&
             Assign(out key, _key);
         }
-        private bool ns_sBlockMapImplicitKey() // [193] 
+        Reply<ParserState> ns_sBlockMapImplicitKey() // [193] 
         {
             return c_sImplicitJsonKey(YamlContext.BlockKey) ||
                    ns_sImplicitYamlKey(YamlContext.BlockKey);
         }
-        private bool c_lBlockMapImplicitValue(int n) // [194] 
+        Reply<ParserState> c_lBlockMapImplicitValue(int n) // [194] 
         {
             return RewindUnless(() =>
                 Text[P++] == ':' &&
                 (s_lBlockNode(n, YamlContext.BlockOut) || (eNode() && s_lComments()))
             );
         }
-        private bool ns_lCompactMapping(int n) // [195] 
+        Reply<ParserState> ns_lCompactMapping(int n) // [195] 
         {
             var mapping = CreateMapping(CurrentPosition);
             YamlNode key = null;
@@ -1889,13 +1906,13 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 8.2.3 Block Nodes
-        bool s_lBlockNode(int n, YamlContext c) // [196] 
+        Reply<ParserState> s_lBlockNode(int n, YamlContext c) // [196] 
         {
             return
                 s_lBlockInBlock(n, c) ||
                 s_lFlowInBlock(n);
         }
-        bool s_lFlowInBlock(int n) // [197] 
+        Reply<ParserState> s_lFlowInBlock(int n) // [197] 
         {
             return RewindUnless(() =>
                 sSeparate(n + 1, YamlContext.FlowOut) &&
@@ -1903,14 +1920,14 @@ namespace YamlSharp.Parsing
                 s_lComments()
                 );
         }
-        bool s_lBlockInBlock(int n, YamlContext c) // [198] 
+        Reply<ParserState> s_lBlockInBlock(int n, YamlContext c) // [198] 
         {
             Debug.Assert(StringValue.Length == 0);
             return
                 s_lBlockScalar(n, c) ||
                 s_lBlockCollection(n, c);
         }
-        bool s_lBlockScalar(int n, YamlContext c) // [199] 
+        Reply<ParserState> s_lBlockScalar(int n, YamlContext c) // [199] 
         {
             return RewindUnless(() =>
                 sSeparate(n + 1, c) &&
@@ -1918,7 +1935,7 @@ namespace YamlSharp.Parsing
                 (c_lLiteral(n) || c_lFolded(n))
                 );
         }
-        bool s_lBlockCollection(int n, YamlContext c) // [200]
+        Reply<ParserState> s_lBlockCollection(int n, YamlContext c) // [200]
         {
             return RewindUnless(() =>
                 Optional(RewindUnless(() => sSeparate(n + 1, c) && c_nsProperties(n + 1, c))) &&
@@ -1948,26 +1965,26 @@ namespace YamlSharp.Parsing
 
         #region Chapter 9. YAML Character Stream
         #region 9.1. Documents
-        private bool lDocumentPrefix() // [202] 
+        Reply<ParserState> lDocumentPrefix() // [202] 
         {
             return Optional(Parsing.Charset.cByteOrdermark) && Repeat(lComment);
         }
-        private bool cDirectivesEnd() // [203] 
+        Reply<ParserState> cDirectivesEnd() // [203] 
         {
             return Accept("---");
         }
-        private bool cDocumentEnd() // [204] 
+        Reply<ParserState> cDocumentEnd() // [204] 
         {
             return Accept("...");
         }
-        bool lDocumentSuffix() // [205] 
+        Reply<ParserState> lDocumentSuffix() // [205] 
         {
             return RewindUnless(() =>
                 cDocumentEnd() &&
                 s_lComments()
             );
         }
-        bool cForbidden() // [206] 
+        Reply<ParserState> cForbidden() // [206] 
         {
             if (!StartOfLine() || (Text.Length - P) < 3)
                 return false;
@@ -1979,7 +1996,7 @@ namespace YamlSharp.Parsing
                 Parsing.Charset.sWhite(Text, P + 3) ||
                 Parsing.Charset.bChar(Text, P + 3);
         }
-        bool lBareDocument() // [207] 
+        Reply<ParserState> lBareDocument() // [207] 
         {
             var length = StringValue.Length;
             var s = StringValue.ToString();
@@ -1992,14 +2009,14 @@ namespace YamlSharp.Parsing
                 s_lBlockNode(-1, YamlContext.BlockIn) &&
                 Action(() => ParseResult.Add(GetValue()));
         }
-        bool lExplicitDocument() // [208] 
+        Reply<ParserState> lExplicitDocument() // [208] 
         {
             return RewindUnless(() =>
                 cDirectivesEnd() &&
                 (lBareDocument() || eNode() && s_lComments() && Action(() => ParseResult.Add(GetValue())))
             );
         }
-        bool lDirectiveDocument() // [209] 
+        Reply<ParserState> lDirectiveDocument() // [209] 
         {
             YamlDirectiveAlreadyAppeared = false;
             return RewindUnless(() =>
@@ -2008,14 +2025,14 @@ namespace YamlSharp.Parsing
         }
         #endregion
         #region 9.2. Streams
-        bool lAnyDocument() // [210] 
+        Reply<ParserState> lAnyDocument() // [210] 
         {
             return
                 lDirectiveDocument() ||
                 lExplicitDocument() ||
                 lBareDocument();
         }
-        private bool lYamlStream() // [211] 
+        Reply<ParserState> lYamlStream() // [211] 
         {
             TagPrefixes.Reset();
             Anchors.RewindDepth = 0;
