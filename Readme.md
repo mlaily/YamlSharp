@@ -22,6 +22,15 @@ Currently, this parser violates the YAML 1.2 specification in the following poin
 - omission of the final line break is allowed in plain / literal / folded text.
 - ':' followed by ns-indicator is excluded from ns-plain-char.
 
+##### Additional notes
+
+This is a recursive descent parser.
+The code is easy to follow and check against the spec, but unfortunately, this comes at the price of performance, because there is a lot of backtracking.
+Implementing memoization could maybe solve the performance problems, but because several mutable states are used, this is non trivial to do at the moment.
+
+A quick benchmark on various examples shows that this parser is about 3 to 4 times slower than YamlDotNet.
+But keep in mind YamlDotNet is not 1.2 compliant, and I'm not sure it follows the spec properly. (This is hard to verify because of its implementation that has little to do with the actual spec)
+
 ## License
 
 This project is distributed under the MIT license as follows:
