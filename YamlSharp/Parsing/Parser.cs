@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -350,8 +351,9 @@ namespace YamlSharp.Parsing
             var savedp = P;
             var stringValueLength = StringValue.Length;
             var savedStatus = State;
-            if (rule())
-                return true;
+            var reply = rule();
+            if (reply)
+                return reply;
             State = savedStatus;
             StringValue.Length = stringValueLength;
             P = savedp;
@@ -968,6 +970,12 @@ namespace YamlSharp.Parsing
         {
             action();
             return true;
+        }
+        protected Reply<TState> ActionAndReturn(Func<Reply<TState>> action)
+        {
+            var reply = action();
+            Debug.Assert(reply == true);
+            return reply;
         }
         /// <summary>
         /// Assign <c>var = value</c> and return true;

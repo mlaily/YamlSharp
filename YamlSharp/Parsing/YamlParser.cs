@@ -13,9 +13,11 @@ namespace YamlSharp.Parsing
     {
         bool Result;
         TState State;
-        public Reply(bool result)
+        YamlNode Value;
+        public Reply(bool result, YamlNode value = null)
         {
             Result = result;
+            Value = value;
         }
         public static implicit operator bool(Reply<TState> x)
         {
@@ -24,6 +26,15 @@ namespace YamlSharp.Parsing
         public static implicit operator Reply<TState>(bool x)
         {
             return new Reply<TState>(x);
+        }
+
+        public static bool operator true(Reply<TState> x)
+        {
+            return x.Result;
+        }
+        public static bool operator false(Reply<TState> x)
+        {
+            return !x.Result;
         }
     }
     /// <summary>
@@ -253,13 +264,18 @@ namespace YamlSharp.Parsing
             Anchors.RewindDepth = State.AnchorDepth;
         }
 
-        private bool SetValue(YamlNode v)
+        private Reply<ParserState> ReturnValue(Reply<ParserState> expression, Func<Reply<ParserState>> setValue)
+        {
+            return expression ? setValue() : expression;
+        }
+
+        private Reply<ParserState> SetValue(YamlNode v)
         {
             if (State.Value != null && v != null)
                 throw new Exception();
             State.Value = v;
             v.OnLoaded();
-            return true;
+            return new Reply<ParserState>(true, v);
         }
         private YamlNode GetValue()
         {
@@ -997,11 +1013,11 @@ namespace YamlSharp.Parsing
         {
             string anchor_name = "";
             var pos = CurrentPosition;
-            return RewindUnless(() =>
+            return ReturnValue(RewindUnless(() =>
                 Text[P++] == '*' &&
                 Save(nsAnchorName, s => anchor_name = s)
-            ) &&
-            SetValue(Anchors[anchor_name]);
+            ),
+            () => SetValue(Anchors[anchor_name]));
         }
         #endregion
         #region 7.2 Empty Nodes
@@ -1042,15 +1058,15 @@ namespace YamlSharp.Parsing
         {
             Position pos = CurrentPosition;
             Debug.Assert(StringValue.Length == 0);
-            return Text[P] == '"' &&
+            return ReturnValue(Text[P] == '"' &&
                 ErrorUnlessWithAdditionalCondition(() =>
                     Text[P++] == '"' &&
                     nbDoubleText(n, c) &&
                     Text[P++] == '"',
                     c == YamlContext.FlowOut,
                     TabCharFoundForIndentation ? ClosingDoubleQuoteAndTabError : ClosingDoubleQuoteError
-                ) &&
-                SetValue(CreateScalar("!!str", pos));
+                ),
+                () => SetValue(CreateScalar("!!str", pos)));
         }
         Reply<ParserState> nbDoubleText(int n, YamlContext c) // [110] 
         {
@@ -1131,15 +1147,15 @@ namespace YamlSharp.Parsing
         {
             Debug.Assert(StringValue.Length == 0);
             Position pos = CurrentPosition;
-            return Text[P] == '\'' &&
+            return ReturnValue(Text[P] == '\'' &&
                 ErrorUnlessWithAdditionalCondition(() =>
                     Text[P++] == '\'' &&
                     nbSingleText(n, c) &&
                     Text[P++] == '\'',
                     c == YamlContext.FlowOut,
                     TabCharFoundForIndentation ? ClosingQuoteAndTabError : ClosingQuoteError
-                ) &&
-                SetValue(CreateScalar("!!str", pos));
+                ),
+                () => SetValue(CreateScalar("!!str", pos)));
         }
         Reply<ParserState> nbSingleText(int n, YamlContext c) // [121] 
         {
@@ -1249,12 +1265,13 @@ namespace YamlSharp.Parsing
                 case YamlContext.FlowOut:
                 case YamlContext.FlowIn:
                     return
-                        nsPlainMultiLine(n, c) &&
-                        SetValue(CreateScalar(null, pos));
+                        ReturnValue(nsPlainMultiLine(n, c),
+                        () => SetValue(CreateScalar(null, pos)));
                 case YamlContext.BlockKey:
                 case YamlContext.FlowKey:
-                    return nsPlainOneLine(c) &&
-                        SetValue(CreateScalar(null, pos));
+                    return
+                        ReturnValue(nsPlainOneLine(c),
+                        () => SetValue(CreateScalar(null, pos)));
                 default:
                     throw new NotImplementedException();
             }
@@ -1306,7 +1323,7 @@ namespace YamlSharp.Parsing
         {
             YamlSequence sequence = null;
             Position pos = CurrentPosition;
-            return RewindUnless(() =>
+            return ReturnValue(RewindUnless(() =>
                 Text[P++] == '[' &&
                 ErrorUnlessWithAdditionalCondition(() =>
                     Optional(sSeparate(n, c)) &&
@@ -1316,8 +1333,8 @@ namespace YamlSharp.Parsing
                     c == YamlContext.FlowOut,
                     TabCharFoundForIndentation ? ClosingBracketAndTabError : ClosingBracketError
                 )
-            ) &&
-            SetValue(sequence);
+            ),
+            () => SetValue(sequence));
         }
 
         Reply<ParserState> ns_sFlowSeqEntries(int n, YamlContext c, YamlSequence sequence) // [138] 
@@ -1338,13 +1355,13 @@ namespace YamlSharp.Parsing
             Position pos = CurrentPosition;
             return
                 RewindUnless(() =>
-                    nsFlowPair(n, c, ref key) &&
-                    Action(() =>
+                    ReturnValue(nsFlowPair(n, c, ref key),
+                    () => ActionAndReturn(() =>
                     {
                         var map = CreateMapping(pos);
                         map.Add(key, GetValue());
-                        SetValue(map);
-                    })
+                        return SetValue(map);
+                    }))
                 ) ||
                 nsFlowNode(n, c);
         }
@@ -1354,7 +1371,7 @@ namespace YamlSharp.Parsing
         {
             Position pos = CurrentPosition;
             YamlMapping mapping = null;
-            return RewindUnless(() =>
+            return ReturnValue(RewindUnless(() =>
                 Text[P++] == '{' &&
                 Optional(sSeparate(n, c)) &&
                 ErrorUnlessWithAdditionalCondition(() =>
@@ -1363,8 +1380,8 @@ namespace YamlSharp.Parsing
                     c == YamlContext.FlowOut,
                     TabCharFoundForIndentation ? ClosingBraceAndTabError : ClosingBraceError
                 )
-            ) &&
-            SetValue(mapping);
+            ),
+            () => SetValue(mapping));
         }
         Reply<ParserState> ns_sFlowMapEntries(int n, YamlContext c, YamlMapping mapping) // [141] 
         {
@@ -1658,13 +1675,13 @@ namespace YamlSharp.Parsing
             int m = 0;
             var t = ChompingIndicator.Clip;
             Position pos = CurrentPosition;
-            return RewindUnless(() =>
+            return ReturnValue(RewindUnless(() =>
                 Text[P++] == '|' &&
                 c_bBlockHeader(out m, out t) &&
                 Action(() => { if (m == 0) m = AutoDetectIndentation(n); }) &&
                 ErrorUnless(lLiteralContent(n + m, t), IllegalLiteralTextError)
-            ) &&
-            SetValue(CreateScalar("!!str", pos));
+            ),
+            () => SetValue(CreateScalar("!!str", pos)));
         }
         Reply<ParserState> l_nbLiteralText(int n) // [171] 
         {
@@ -1698,14 +1715,14 @@ namespace YamlSharp.Parsing
             int m = 0;
             var t = ChompingIndicator.Clip;
             Position pos = CurrentPosition;
-            return RewindUnless(() =>
+            return ReturnValue(RewindUnless(() =>
                 Text[P++] == '>' &&
                 c_bBlockHeader(out m, out t) &&
                 WarningIf(t == ChompingIndicator.Keep, KeepLineBreakForFoldedTextIsInvalidWarning) &&
                 Action(() => { if (m == 0) m = AutoDetectIndentation(n); }) &&
                 ErrorUnless(lFoldedContent(n + m, t), IllegalFoldedStringError)
-            ) &&
-            SetValue(CreateScalar("!!str", pos));
+            ),
+            () => SetValue(CreateScalar("!!str", pos)));
         }
         Reply<ParserState> s_nbFoldedText(int n) // [175] 
         {
@@ -1770,14 +1787,14 @@ namespace YamlSharp.Parsing
             int dontCare;
             YamlSequence sequence = null;
             Position pos = new Position();
-            return OneAndRepeat(() => RewindUnless(() =>
+            return ReturnValue(OneAndRepeat(() => RewindUnless(() =>
                 sIndent(n + m) &&
                 Action(() => { if (sequence == null) pos = CurrentPosition; }) &&
                 Text[P] == '-' && !Parsing.Charset.nsChar(Text, P + 1, out dontCare) &&
                 Action(() => { if (sequence == null) sequence = CreateSequence(pos); }) &&
                 c_lBlockSeqEntry(n + m, sequence)
-            )) &&
-            SetValue(sequence);
+            )),
+            () => SetValue(sequence));
         }
         Reply<ParserState> c_lBlockSeqEntry(int n, YamlSequence sequence) // [184] 
         {
@@ -1803,14 +1820,14 @@ namespace YamlSharp.Parsing
             Position pos = CurrentPosition;
             int dontCare;
             return
-                Text[P] == '-' && !Parsing.Charset.nsChar(Text, P + 1, out dontCare) &&
+                ReturnValue(Text[P] == '-' && !Parsing.Charset.nsChar(Text, P + 1, out dontCare) &&
                 Action(() => sequence = CreateSequence(pos)) &&
                 c_lBlockSeqEntry(n, sequence) &&
                 Repeat(() => RewindUnless(() =>
                     sIndent(n) &&
                     Text[P] == '-' && !Parsing.Charset.nsChar(Text, P + 1, out dontCare) &&
-                    c_lBlockSeqEntry(n, sequence))) &&
-                SetValue(sequence);
+                    c_lBlockSeqEntry(n, sequence))),
+                () => SetValue(sequence));
         }
         #endregion
         #region 8.2.2 Block Mappings
@@ -1819,7 +1836,7 @@ namespace YamlSharp.Parsing
             YamlMapping mapping = null;
             int m = 0;
             YamlNode key = null;
-            return OneAndRepeat(() =>
+            return ReturnValue(OneAndRepeat(() =>
                 sIndent(n + m) &&
                 (m > 0 || sIndentCounted(n, out m)) &&
                 Action(() =>
@@ -1831,8 +1848,8 @@ namespace YamlSharp.Parsing
                 }) &&
                 ns_lBlockMapEntry(n + m, ref key) &&
                 Action(() => mapping.Add(key, GetValue()))
-            ) &&
-            SetValue(mapping);
+            ),
+            () => SetValue(mapping));
         }
         Reply<ParserState> ns_lBlockMapEntry(int n, ref YamlNode key) // [188] 
         {
@@ -1893,7 +1910,7 @@ namespace YamlSharp.Parsing
         {
             var mapping = CreateMapping(CurrentPosition);
             YamlNode key = null;
-            return RewindUnless(() =>
+            return ReturnValue(RewindUnless(() =>
                 ns_lBlockMapEntry(n, ref key) &&
                 Action(() => mapping.Add(key, GetValue())) &&
                 Repeat(() => RewindUnless(() =>
@@ -1901,8 +1918,8 @@ namespace YamlSharp.Parsing
                     ns_lBlockMapEntry(n, ref key) &&
                     Action(() => mapping.Add(key, GetValue()))
                 ))
-            ) &&
-            SetValue(mapping);
+            ),
+            () => SetValue(mapping));
         }
         #endregion
         #region 8.2.3 Block Nodes
